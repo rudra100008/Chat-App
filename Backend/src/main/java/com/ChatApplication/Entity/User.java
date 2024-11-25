@@ -16,11 +16,11 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int user_Id;
-    private String user_name;
+    private String userName;
     private String email;
     private String password;
     private String profile_picture;
-    private String phone_number;
+    private String phoneNumber;
     private UserStatus status;
     private LocalDateTime last_seen;
 
