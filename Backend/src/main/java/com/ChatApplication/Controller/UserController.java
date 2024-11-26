@@ -2,23 +2,52 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/users") // Adjusted to follow REST conventions
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/user")
-    public ResponseEntity<?> postUser(@RequestBody UserDTO userDTO){
+    @PostMapping
+    public ResponseEntity<UserDTO> postUser(@Valid @RequestBody UserDTO userDTO) {
         UserDTO postUser = this.userService.postUser(userDTO);
-        return new ResponseEntity<>(postUser, HttpStatus.CREATED);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(postUser);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> fetchAllUsers() {
+        List<UserDTO> userDTOs = this.userService.fetchAllUser();
+        return ResponseEntity.ok(userDTOs);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDTO> fetchByUserId(@PathVariable int userId) {
+        UserDTO userDTO = this.userService.fetchUser(userId);
+        return ResponseEntity.ok(userDTO);
+    }
+
+    @PatchMapping("/{userId}")
+    public ResponseEntity<UserDTO> updateUser(
+            @PathVariable int userId,
+            @Valid @RequestBody UserDTO userDTO) {
+        UserDTO updatedUser = this.userService.updateUser(userId, userDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<UserDTO> deleteUser(@PathVariable int userId) {
+        UserDTO deletedUser = this.userService.fetchUser(userId);
+        this.userService.deleteUser(userId);
+        return ResponseEntity.ok(deletedUser);
     }
 }
