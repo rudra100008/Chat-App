@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatDTO {
-    private int chat_ID;
+    private int chatId;
     private List<User> participants;
     private List<Message> messages;
 }

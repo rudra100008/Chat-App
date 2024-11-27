@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int message_Id;
+    private int messageId;
     private String content;
     private Timestamp timestamp;
     @ManyToOne

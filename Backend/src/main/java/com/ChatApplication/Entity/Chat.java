@@ -14,7 +14,7 @@ import java.util.List;
 public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int chat_ID;
+    private int chatId;
     // this creates the chat_participant table with column chat_id and user_id
     @ManyToMany
     @JoinTable(
