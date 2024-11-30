@@ -1,6 +1,7 @@
 package com.ChatApplication.Service;
 
 import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.UserDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public interface ChatService {
     List<ChatDTO> fetchUserChats(int userId);
     ChatDTO createChat(List<Integer> participantsId);
     ChatDTO addParticipants(int chatId,int userId);
-    List<ChatDTO> fetchAllParticipants(int chatId);
+    List<UserDTO> fetchChatParticipants(int chatId);
     boolean isUserInChat(int chatId,int userId);
 
 }
