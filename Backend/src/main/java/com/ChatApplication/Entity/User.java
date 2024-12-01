@@ -30,4 +30,6 @@ public class User {
     //this is owned by the field participants in the Chat class
     @ManyToMany(mappedBy = "participants",cascade = CascadeType.ALL)
     private List<Chat> chat;
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
+    private List<ChatName> chatNames;
 }

@@ -1,5 +1,6 @@
 package com.ChatApplication.DTO;
 
+import com.ChatApplication.Entity.ChatName;
 import com.ChatApplication.Entity.UserStatus;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -38,4 +40,5 @@ public class UserDTO {
     private String phoneNumber;
     private UserStatus status;
     private LocalDateTime last_seen;
+    private List<ChatName> chatNames;
 }

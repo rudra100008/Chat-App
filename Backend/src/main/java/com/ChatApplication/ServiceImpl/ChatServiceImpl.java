@@ -3,9 +3,11 @@ package com.ChatApplication.ServiceImpl;
 import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.Chat;
+import com.ChatApplication.Entity.ChatName;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
+import com.ChatApplication.Repository.ChatNameRepository;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
 import com.ChatApplication.Repository.UserRepository;
@@ -26,6 +28,7 @@ public class ChatServiceImpl implements ChatService {
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final ModelMapper modelMapper;
+    private final ChatNameRepository chatNameRepository;
 
 
     @Override
@@ -41,15 +44,41 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createChat(List<Integer> participantsId) {
+        // Validate participants
         List<User> participants = participantsId.stream()
-                .map(
-                        userId->this.userRepository.findById(userId)
-                                .orElseThrow(()-> new ResourceNotFoundException(userId+" not found"))
+                .map(userId -> this.userRepository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException(userId + " not found"))
                 ).toList();
+
+        // Ensure exactly two participants
+        if (participants.size() != 2) {
+            throw new IllegalArgumentException("Chat must have exactly two participants.");
+        }
+
+        User user1 = participants.get(0);
+        User user2 = participants.get(1);
+
+        // Create chat
         Chat chat = new Chat();
         chat.setParticipants(participants);
         Chat savedChat = this.chatRepository.save(chat);
-        return modelMapper.map(savedChat,ChatDTO.class);
+
+        // Create ChatName for each user
+        ChatName chatName1 = new ChatName();
+        chatName1.setUser(user1);  // Important: user2's name for user1's chat
+        chatName1.setChat(savedChat);
+        chatName1.setChatName(user2.getUserName());
+
+        ChatName chatName2 = new ChatName();
+        chatName2.setUser(user2);  // Important: user1's name for user2's chat
+        chatName2.setChat(savedChat);
+        chatName2.setChatName(user1.getUserName());
+
+        // Save ChatNames
+        this.chatNameRepository.save(chatName1);
+        this.chatNameRepository.save(chatName2);
+
+        return modelMapper.map(savedChat, ChatDTO.class);
     }
 
     @Override
