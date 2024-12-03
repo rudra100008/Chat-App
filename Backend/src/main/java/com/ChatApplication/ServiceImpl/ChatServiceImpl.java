@@ -16,9 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +80,20 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
+    public ChatDTO createGroupChat(List<Integer> participantsId,String chatName) {
+        List<User> participants = participantsId.stream()
+                .map(user->this.userRepository.findById(user)
+                        .orElseThrow(()-> new ResourceNotFoundException(user+" not found.")))
+                .toList();
+        Chat chat = new Chat();
+        chat.setParticipants(participants);
+        chat.setChatName(chatName);
+        Chat savedChat = this.chatRepository.save(chat);
+        return modelMapper.map(savedChat,ChatDTO.class);
+    }
+
+    @Override
     public ChatDTO addParticipants(int chatId, int userId) {
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+" not found"));
@@ -109,5 +121,26 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+" not found"));
         return chat.getParticipants().stream().anyMatch(user->user.getUser_Id() == userId);
+    }
+
+    @Override
+    public ChatDTO deleteParticipants(int chatId, int userId) {
+        Chat chat =  this.chatRepository.findById(chatId)
+                .orElseThrow(()-> new ResourceNotFoundException(chatId+"not found."));
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException(userId+"not found"));
+        if(chat.getParticipants().size()<=1){
+            throw new IllegalStateException("Cannot remove the last participants instead delete the chat");
+        }
+        chat.getParticipants().remove(user);
+        Chat updatedChat = this.chatRepository.save(chat);
+        return modelMapper.map(updatedChat,ChatDTO.class);
+    }
+
+    @Override
+    public void deleteChat(int chatId) {
+        Chat chat = this.chatRepository.findById(chatId)
+                .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
+        this.chatRepository.delete(chat);
     }
 }

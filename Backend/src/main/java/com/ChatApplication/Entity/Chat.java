@@ -15,6 +15,7 @@ public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int chatId;
+    private String chatName;
     // this creates the chat_participant table with column chat_id and user_id
     @ManyToMany
     @JoinTable(

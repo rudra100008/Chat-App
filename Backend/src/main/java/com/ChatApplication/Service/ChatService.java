@@ -10,13 +10,17 @@ import java.util.List;
 public interface ChatService {
     // get all the chats of a user
     List<ChatDTO> fetchUserChats(int userId);
-    //create a chat
+    //create a chat with two users
     ChatDTO createChat(List<Integer> participantsId);
+    ChatDTO createGroupChat(List<Integer> participantsId,String chatName);
     // add participants in the chat
     ChatDTO addParticipants(int chatId,int userId);
     // get all the participants in the chat
     List<UserDTO> fetchChatParticipants(int chatId);
     //check if the user is in chat or not
     boolean isUserInChat(int chatId,int userId);
+    //removes the participants from the chat
+    ChatDTO deleteParticipants(int chatId,int userId);
+    void deleteChat(int chatId);
 
 }

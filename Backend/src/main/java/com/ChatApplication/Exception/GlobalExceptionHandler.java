@@ -39,6 +39,11 @@ public class GlobalExceptionHandler {
                 request
         );
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e,WebRequest request){
+        return createErrorResponse(HttpStatus.NOT_ACCEPTABLE,e.getMessage(),request);
+    }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<?> handleLResourceNotFoundException(ResourceNotFoundException e,WebRequest request){
         return createErrorResponse(

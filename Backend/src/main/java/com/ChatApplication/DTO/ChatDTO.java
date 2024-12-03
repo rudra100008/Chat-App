@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ChatDTO {
     private int chatId;
-    private List<User> participants;
-    private List<Message> messages;
+    private String chatName;
+    private List<Integer> participants;
+    private List<Integer> messages;
 }
