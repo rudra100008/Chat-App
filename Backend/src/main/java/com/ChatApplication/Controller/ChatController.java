@@ -18,9 +18,14 @@ import java.util.List;
 public class ChatController {
     private final ChatService chatService;
     @PostMapping
-    public ResponseEntity<?> createChat(@RequestBody List<Integer> participantsIds){
-        ChatDTO chatDTO = this.chatService.createChat(participantsIds);
-        return new ResponseEntity<>(chatDTO, HttpStatus.OK);
+    public ResponseEntity<?> createChat(@RequestBody ChatDTO chatDTO){
+        ChatDTO savedChat = this.chatService.createChat(chatDTO);
+        return new ResponseEntity<>(savedChat, HttpStatus.OK);
+    }
+    @PostMapping("/groupChat")
+    public ResponseEntity<?> createGroupChat(@RequestBody ChatDTO chatDTO){
+        ChatDTO savedGroupChat = this.chatService.createGroupChat(chatDTO);
+        return ResponseEntity.ok(savedGroupChat);
     }
 
 }

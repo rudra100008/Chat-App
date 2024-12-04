@@ -1,9 +1,11 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.ChatName;
+import com.ChatApplication.Entity.Message;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
@@ -16,7 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
+
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,56 +44,57 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional
-    public ChatDTO createChat(List<Integer> participantsId) {
-        // Validate participants
-        List<User> participants = participantsId.stream()
-                .map(userId -> this.userRepository.findById(userId)
-                        .orElseThrow(() -> new ResourceNotFoundException(userId + " not found"))
-                ).toList();
-
-        // Ensure exactly two participants
-        if (participants.size() != 2) {
-            throw new IllegalArgumentException("Chat must have exactly two participants.");
-        }
-
-        User user1 = participants.get(0);
-        User user2 = participants.get(1);
-
-        // Create chat
+    public ChatDTO createChat(ChatDTO chatDTO) {
         Chat chat = new Chat();
+        chat.setChatName(chatDTO.getChatName());
+
+        // Initialize the messages list
+        chat.setMessages(new ArrayList<>());
+
+        List<User> participants = new ArrayList<>();
+        for(int userId : chatDTO.getParticipants()){
+            Optional<User> user = this.userRepository.findById(userId);
+            user.ifPresent(participants::add);
+        }
         chat.setParticipants(participants);
+
         Chat savedChat = this.chatRepository.save(chat);
 
-        // Create ChatName for each user
-        ChatName chatName1 = new ChatName();
-        chatName1.setUser(user1);  // Important: user2's name for user1's chat
-        chatName1.setChat(savedChat);
-        chatName1.setChatName(user2.getUserName());
-
-        ChatName chatName2 = new ChatName();
-        chatName2.setUser(user2);  // Important: user1's name for user2's chat
-        chatName2.setChat(savedChat);
-        chatName2.setChatName(user1.getUserName());
-
-        // Save ChatNames
-        this.chatNameRepository.save(chatName1);
-        this.chatNameRepository.save(chatName2);
-
-        return modelMapper.map(savedChat, ChatDTO.class);
+        return new ChatDTO(
+                savedChat.getChatId(),
+                savedChat.getChatName(),
+                savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
+                // Check if messages is null before streaming
+                savedChat.getMessages() != null
+                        ? savedChat.getMessages().stream().map(Message::getMessageId).toList()
+                        : Collections.emptyList()
+        );
     }
 
     @Override
     @Transactional
-    public ChatDTO createGroupChat(List<Integer> participantsId,String chatName) {
-        List<User> participants = participantsId.stream()
-                .map(user->this.userRepository.findById(user)
-                        .orElseThrow(()-> new ResourceNotFoundException(user+" not found.")))
-                .toList();
-        Chat chat = new Chat();
-        chat.setParticipants(participants);
-        chat.setChatName(chatName);
-        Chat savedChat = this.chatRepository.save(chat);
-        return modelMapper.map(savedChat,ChatDTO.class);
+    public ChatDTO createGroupChat(ChatDTO chatDTO) {
+       Chat chat = new Chat();
+       chat.setChatName(chatDTO.getChatName());
+       List<User> participants = chatDTO.getParticipants()
+               .stream()
+               .map(userId->this.userRepository.findById(userId)
+                       .orElseThrow(()-> new ResourceNotFoundException(userId+" not found")))
+               .toList();
+       chat.setParticipants(participants);
+       List<Message> messages = chatDTO.getMessages()
+               .stream()
+               .map(message->this.messageRepository.findById(message)
+                       .orElseThrow(()-> new ResourceNotFoundException(message+" not found.")))
+               .toList();
+       chat.setMessages(messages);
+       Chat savedChat = this.chatRepository.save(chat);
+       return new ChatDTO(
+               savedChat.getChatId(),
+               savedChat.getChatName(),
+               savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
+               savedChat.getMessages().stream().map(Message::getMessageId).toList()
+               );
     }
 
     @Override

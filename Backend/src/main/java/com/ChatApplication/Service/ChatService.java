@@ -11,8 +11,8 @@ public interface ChatService {
     // get all the chats of a user
     List<ChatDTO> fetchUserChats(int userId);
     //create a chat with two users
-    ChatDTO createChat(List<Integer> participantsId);
-    ChatDTO createGroupChat(List<Integer> participantsId,String chatName);
+    ChatDTO createChat(ChatDTO chatDTO);
+    ChatDTO createGroupChat(ChatDTO chatDTO);
     // add participants in the chat
     ChatDTO addParticipants(int chatId,int userId);
     // get all the participants in the chat
