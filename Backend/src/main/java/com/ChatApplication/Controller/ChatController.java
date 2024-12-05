@@ -1,14 +1,12 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,6 +24,17 @@ public class ChatController {
     public ResponseEntity<?> createGroupChat(@RequestBody ChatDTO chatDTO){
         ChatDTO savedGroupChat = this.chatService.createGroupChat(chatDTO);
         return ResponseEntity.ok(savedGroupChat);
+    }
+
+    @GetMapping("/{chatId}")
+    public ResponseEntity<?> fetchParticipantsInChat(@PathVariable("chatId") int chatId){
+        List<UserDTO> fetchedUser = this.chatService.fetchChatParticipants(chatId);
+        return ResponseEntity.ok(fetchedUser);
+    }
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> fetchUserInChat(@PathVariable("userId") int userId){
+        List<ChatDTO> fetchedChats = this.chatService.fetchUserChats(userId);
+        return ResponseEntity.ok(fetchedChats);
     }
 
 }

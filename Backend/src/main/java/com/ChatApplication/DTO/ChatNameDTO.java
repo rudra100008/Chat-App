@@ -12,5 +12,5 @@ public class ChatNameDTO {
     private int id;
     private String chatName;
 
-    private User user;
+    private int user;
 }

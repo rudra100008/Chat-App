@@ -2,6 +2,7 @@ package com.ChatApplication.DTO;
 
 import com.ChatApplication.Entity.ChatName;
 import com.ChatApplication.Entity.UserStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -40,5 +41,6 @@ public class UserDTO {
     private String phoneNumber;
     private UserStatus status;
     private LocalDateTime last_seen;
+    @JsonIgnore
     private List<ChatName> chatNames;
 }

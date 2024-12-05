@@ -39,7 +39,7 @@ public class ChatServiceImpl implements ChatService {
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found."));
         return this.chatRepository.findByParticipants(user)
                 .stream()
-                .map(participants->modelMapper.map(participants,ChatDTO.class)).toList();
+                .map(chat->modelMapper.map(chat,ChatDTO.class)).toList();
     }
 
     @Override

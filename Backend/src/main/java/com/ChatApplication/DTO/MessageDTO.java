@@ -1,7 +1,5 @@
 package com.ChatApplication.DTO;
 
-import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +14,6 @@ public class MessageDTO {
     private String content;
     private Timestamp timestamp;
 
-    private User sender;
-    private Chat chat;
+    private int senderId;
+    private int  chatId;
 }

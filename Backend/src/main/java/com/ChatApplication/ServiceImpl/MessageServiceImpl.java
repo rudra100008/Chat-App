@@ -12,13 +12,16 @@ import com.ChatApplication.Service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ModelMapper modelMapper;
@@ -64,7 +67,14 @@ public class MessageServiceImpl implements MessageService {
         message.setContent(content);
         message.setTimestamp(new Timestamp(System.currentTimeMillis()));
 
+
+
         Message savedMessage = this.messageRepository.save(message);
+
+        List<Message> messageList = new ArrayList<>();
+        messageList.add(savedMessage);
+        chat.setMessages(messageList);
+        this.chatRepository.save(chat);
         return modelMapper.map(savedMessage, MessageDTO.class);
     }
 
