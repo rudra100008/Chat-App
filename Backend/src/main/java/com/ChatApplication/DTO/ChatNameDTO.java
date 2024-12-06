@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatNameDTO {
-    private int id;
+    private String id;
     private String chatName;
 
-    private int user;
+    private String user;
 }

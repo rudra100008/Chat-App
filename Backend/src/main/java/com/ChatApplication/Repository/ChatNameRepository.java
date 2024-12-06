@@ -1,7 +1,9 @@
 package com.ChatApplication.Repository;
 
 import com.ChatApplication.Entity.ChatName;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
-public interface ChatNameRepository extends JpaRepository<ChatName,Integer> {
+@Repository
+public interface ChatNameRepository extends MongoRepository<ChatName,String> {
 }

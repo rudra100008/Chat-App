@@ -9,18 +9,18 @@ import java.util.List;
 @Service
 public interface ChatService {
     // get all the chats of a user
-    List<ChatDTO> fetchUserChats(int userId);
+    List<ChatDTO> fetchUserChats(String userId);
     //create a chat with two users
     ChatDTO createChat(ChatDTO chatDTO);
     ChatDTO createGroupChat(ChatDTO chatDTO);
     // add participants in the chat
-    ChatDTO addParticipants(int chatId,int userId);
+    ChatDTO addParticipants(String chatId,String userId);
     // get all the participants in the chat
-    List<UserDTO> fetchChatParticipants(int chatId);
+    List<UserDTO> fetchChatParticipants(String chatId);
     //check if the user is in chat or not
-    boolean isUserInChat(int chatId,int userId);
+    boolean isUserInChat(String chatId,String userId);
     //removes the participants from the chat
-    ChatDTO deleteParticipants(int chatId,int userId);
-    void deleteChat(int chatId);
+    ChatDTO deleteParticipants(String chatId,String userId);
+    void deleteChat(String chatId);
 
 }

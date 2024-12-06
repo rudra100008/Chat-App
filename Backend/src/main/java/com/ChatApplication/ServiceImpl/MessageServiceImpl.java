@@ -30,7 +30,7 @@ public class MessageServiceImpl implements MessageService {
 
 
     @Override
-    public List<MessageDTO> fetchMessagesBySenderId(int senderId) {
+    public List<MessageDTO> fetchMessagesBySenderId(String senderId) {
         Optional<User> user = this.userRepository.findById(senderId);
         if(user.isPresent()) {
             return this.messageRepository
@@ -43,7 +43,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public List<MessageDTO> fetchMessagesByChatId(int chatId) {
+    public List<MessageDTO> fetchMessagesByChatId(String chatId) {
        Optional<Chat> chat =  this.chatRepository.findById(chatId);
        if(chat.isPresent()){
            return this.messageRepository.findByChatOrderByTimestampAsc(chat.get()).stream()
@@ -54,7 +54,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public MessageDTO postMessage(int senderId, int chatId, String content) {
+    public MessageDTO postMessage(String senderId, String chatId, String content) {
         User sender = this.userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
 
@@ -79,7 +79,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public MessageDTO updateMessage(int messageId, String newContent) {
+    public MessageDTO updateMessage(String messageId, String newContent) {
         Optional<Message> existingMessage = this.messageRepository.findById(messageId);
         if(existingMessage.isPresent()){
             Message message = existingMessage.get();
@@ -95,7 +95,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void deleteMessage(int messageId) {
+    public void deleteMessage(String messageId) {
         Optional<Message> message = this.messageRepository.findById(messageId);
         if (message.isPresent()){
             this.messageRepository.delete(message.get());

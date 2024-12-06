@@ -13,8 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatDTO {
-    private int chatId;
+    private String chatId;
     private String chatName;
-    private List<Integer> participants =  new ArrayList<>();
-    private List<Integer> messages = new ArrayList<>();
+    private List<String> participants =  new ArrayList<>();
+    private List<String> messages = new ArrayList<>();
 }

@@ -8,9 +8,9 @@ import java.util.List;
 
 @Service
 public interface MessageService {
-    List<MessageDTO> fetchMessagesBySenderId(int  senderId);
-    List<MessageDTO> fetchMessagesByChatId(int chatId);
-    MessageDTO postMessage(int senderId,int chatId,String content);
-    MessageDTO updateMessage(int messageId,String newContent);
-    void deleteMessage(int messageId);
+    List<MessageDTO> fetchMessagesBySenderId(String senderId);
+    List<MessageDTO> fetchMessagesByChatId(String chatId);
+    MessageDTO postMessage(String senderId,String chatId,String content);
+    MessageDTO updateMessage(String messageId,String newContent);
+    void deleteMessage(String messageId);
 }

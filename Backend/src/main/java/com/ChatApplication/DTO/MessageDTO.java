@@ -10,10 +10,10 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageDTO {
-    private int messageId;
+    private String messageId;
     private String content;
     private Timestamp timestamp;
 
-    private int senderId;
-    private int  chatId;
+    private String senderId;
+    private String  chatId;
 }

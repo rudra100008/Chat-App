@@ -1,28 +1,28 @@
 package com.ChatApplication.Entity;
 
-import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.sql.Timestamp;
 
-@Entity
+@Document(collection = "Message")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Message {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int messageId;
+  @MongoId
+    private String messageId;
     private String content;
     private Timestamp timestamp;
-    @ManyToOne
-    @JoinColumn(name = "sender_id")
+  @DBRef
     private User sender;
 
-    @ManyToOne
-    @JoinColumn(name = "chat_id")
+    @DBRef
     private Chat chat;
 
 

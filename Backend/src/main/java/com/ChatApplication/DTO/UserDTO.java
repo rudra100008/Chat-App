@@ -1,6 +1,6 @@
 package com.ChatApplication.DTO;
 
-import com.ChatApplication.Entity.ChatName;
+
 import com.ChatApplication.Entity.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
-    private int userId;
+    private String userId;
     @NotBlank(message = "username cannot be blank")
     @Size(min = 3,max = 50,message = "username should be between 3 and 50 letters")
     @Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Username can only contain letters, numbers, underscores, and hyphens")
@@ -41,6 +41,5 @@ public class UserDTO {
     private String phoneNumber;
     private UserStatus status;
     private LocalDateTime last_seen;
-    @JsonIgnore
-    private List<ChatName> chatNames;
+    private List<String> chatIds;
 }

@@ -34,7 +34,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ChatDTO> fetchUserChats(int userId) {
+    public List<ChatDTO> fetchUserChats(String userId) {
         User user = this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found."));
         return this.chatRepository.findByParticipants(user)
@@ -52,7 +52,7 @@ public class ChatServiceImpl implements ChatService {
         chat.setMessages(new ArrayList<>());
 
         List<User> participants = new ArrayList<>();
-        for(int userId : chatDTO.getParticipants()){
+        for(String userId : chatDTO.getParticipants()){
             Optional<User> user = this.userRepository.findById(userId);
             user.ifPresent(participants::add);
         }
@@ -98,7 +98,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatDTO addParticipants(int chatId, int userId) {
+    public ChatDTO addParticipants(String chatId, String userId) {
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+" not found"));
         User user =  this.userRepository.findById(userId)
@@ -113,7 +113,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<UserDTO> fetchChatParticipants(int chatId) {
+    public List<UserDTO> fetchChatParticipants(String chatId) {
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+ " not found"));
         return chat.getParticipants().stream()
@@ -121,14 +121,20 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public boolean isUserInChat(int chatId, int userId) {
-        Chat chat = this.chatRepository.findById(chatId)
+    public boolean isUserInChat(String chatId, String userId) {
+        if(chatId == null || userId == null){
+            throw new IllegalArgumentException("ChatId and userId should not be null.");
+        }
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException(userId+" not found."));
+
+        this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+" not found"));
-        return chat.getParticipants().stream().anyMatch(user->user.getUser_Id() == userId);
+        return this.chatRepository.existsByChatIdAndParticipants(chatId,user);
     }
 
     @Override
-    public ChatDTO deleteParticipants(int chatId, int userId) {
+    public ChatDTO deleteParticipants(String chatId, String userId) {
         Chat chat =  this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+"not found."));
         User user = this.userRepository.findById(userId)
@@ -142,7 +148,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void deleteChat(int chatId) {
+    public void deleteChat(String chatId) {
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
         this.chatRepository.delete(chat);

@@ -1,30 +1,27 @@
 package com.ChatApplication.Entity;
 
-import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.util.List;
 
-@Entity
+@Document(collection = "Chat")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Chat {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int chatId;
+    @MongoId
+    private String chatId;
     private String chatName;
-    // this creates the chat_participant table with column chat_id and user_id
-    @ManyToMany
-    @JoinTable(
-            name = "chat_participant",
-            joinColumns = @JoinColumn(name = "chat_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+
+    @DBRef
     private List<User> participants;
 
-    @OneToMany(mappedBy = "chat",cascade = CascadeType.ALL)
+    @DBRef
     private List<Message> messages;
 }

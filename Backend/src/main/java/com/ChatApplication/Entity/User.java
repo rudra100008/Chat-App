@@ -1,22 +1,23 @@
 package com.ChatApplication.Entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Entity
+@Document(collection = "User")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int user_Id;
+  @MongoId
+    private String user_Id;
     private String userName;
     private String email;
     private String password;
@@ -26,11 +27,11 @@ public class User {
     private LocalDateTime last_seen;
 
     //this is owned by the field sender in the Message class
-    @OneToMany(mappedBy = "sender",cascade = CascadeType.ALL)
+   @DBRef
     private List<Message> message;
     //this is owned by the field participants in the Chat class
-    @ManyToMany(mappedBy = "participants",cascade = CascadeType.ALL)
+    @DBRef
     private List<Chat> chat;
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
+   @DBRef
     private List<ChatName> chatNames;
 }

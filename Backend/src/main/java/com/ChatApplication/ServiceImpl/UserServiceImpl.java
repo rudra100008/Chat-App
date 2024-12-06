@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDTO fetchUser(int user_Id) {
+    public UserDTO fetchUser(String user_Id) {
         return this.userRepository.findById(user_Id)
                 .map(user -> mapper.map(user,UserDTO.class))
                 .orElseThrow(()-> new ResourceNotFoundException(user_Id +"not found in the server"));
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO updateUser(int user_id, UserDTO userDTO) {
+    public UserDTO updateUser(String user_id, UserDTO userDTO) {
         User user = this.userRepository.findById(user_id).orElseThrow(()->
                 new ResourceNotFoundException(user_id + " not found."));
         if(this.userRepository.existsByUserName(userDTO.getUserName())){
@@ -93,7 +93,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(Integer user_id) {
+    public void deleteUser(String user_id) {
         User user = this.userRepository.findById(user_id).orElseThrow(()->
                 new ResourceNotFoundException(user_id + " not found."));
         this.userRepository.delete(user);

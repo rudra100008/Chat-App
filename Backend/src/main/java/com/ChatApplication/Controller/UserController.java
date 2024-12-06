@@ -31,21 +31,21 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserDTO> fetchByUserId(@PathVariable int userId) {
+    public ResponseEntity<UserDTO> fetchByUserId(@PathVariable String userId) {
         UserDTO userDTO = this.userService.fetchUser(userId);
         return ResponseEntity.ok(userDTO);
     }
 
     @PatchMapping("/{userId}")
     public ResponseEntity<UserDTO> updateUser(
-            @PathVariable int userId,
+            @PathVariable String userId,
             @Valid @RequestBody UserDTO userDTO) {
         UserDTO updatedUser = this.userService.updateUser(userId, userDTO);
         return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<UserDTO> deleteUser(@PathVariable int userId) {
+    public ResponseEntity<UserDTO> deleteUser(@PathVariable String userId) {
         UserDTO deletedUser = this.userService.fetchUser(userId);
         this.userService.deleteUser(userId);
         return ResponseEntity.ok(deletedUser);
