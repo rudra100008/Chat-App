@@ -67,5 +67,12 @@ public class ChatController {
         ChatDTO chatDTO = this.chatService.deleteParticipants(chatId,userId);
         return ResponseEntity.ok(chatDTO);
     }
+    @DeleteMapping("/delete/{chatId}")
+    public ResponseEntity<?> removeChat(
+            @PathVariable("chatId")String chatId
+    ){
+        this.chatService.deleteChat(chatId);
+        return  ResponseEntity.ok("Chat Deleted");
+    }
 
 }
