@@ -46,9 +46,11 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public ChatDTO createChat(ChatDTO chatDTO) {
         Chat chat = new Chat();
+        if(chatDTO.getParticipants().size() != 2){
+            throw new IllegalArgumentException("There must be two user in the chat.");
+        }
         chat.setChatName(chatDTO.getChatName());
 
-        // Initialize the messages list
         chat.setMessages(new ArrayList<>());
 
         List<User> participants = new ArrayList<>();
@@ -64,7 +66,6 @@ public class ChatServiceImpl implements ChatService {
                 savedChat.getChatId(),
                 savedChat.getChatName(),
                 savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
-                // Check if messages is null before streaming
                 savedChat.getMessages() != null
                         ? savedChat.getMessages().stream().map(Message::getMessageId).toList()
                         : Collections.emptyList()
@@ -151,6 +152,7 @@ public class ChatServiceImpl implements ChatService {
     public void deleteChat(String chatId) {
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
+        this.messageRepository.deleteByChat(chat);
         this.chatRepository.delete(chat);
     }
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -12,7 +13,7 @@ import java.sql.Timestamp;
 public class MessageDTO {
     private String messageId;
     private String content;
-    private Timestamp timestamp;
+    private LocalDateTime timestamp;
 
     private String senderId;
     private String  chatId;

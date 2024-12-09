@@ -14,8 +14,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,20 +60,20 @@ public class MessageServiceImpl implements MessageService {
 
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
-
+        if(!chat.getParticipants().contains(sender)){
+            throw new ResourceNotFoundException("User is not a participant of this chat");
+        }
         Message message = new Message();
         message.setSender(sender);
         message.setChat(chat);
         message.setContent(content);
-        message.setTimestamp(new Timestamp(System.currentTimeMillis()));
+        message.setTimestamp(LocalDateTime.now());
 
 
 
         Message savedMessage = this.messageRepository.save(message);
 
-        List<Message> messageList = new ArrayList<>();
-        messageList.add(savedMessage);
-        chat.setMessages(messageList);
+        chat.getMessages().add(savedMessage);
         this.chatRepository.save(chat);
         return modelMapper.map(savedMessage, MessageDTO.class);
     }
@@ -86,7 +86,7 @@ public class MessageServiceImpl implements MessageService {
             message.setChat(existingMessage.get().getChat());
             message.setSender(existingMessage.get().getSender());
             message.setContent(newContent);
-            message.setTimestamp(new Timestamp(System.currentTimeMillis()));
+            message.setTimestamp(LocalDateTime.now());
             Message updatedMessage = this.messageRepository.save(message);
             return  modelMapper.map(updatedMessage,MessageDTO.class);
         }else{
@@ -99,6 +99,7 @@ public class MessageServiceImpl implements MessageService {
         Optional<Message> message = this.messageRepository.findById(messageId);
         if (message.isPresent()){
             this.messageRepository.delete(message.get());
+            this.chatRepository.deleteByMessages(message.get());
         }else {
             throw new ResourceNotFoundException("Message not found");
         }

@@ -9,19 +9,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Document(collection = "Message")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class Message {
-  @MongoId
+    @MongoId
     private String messageId;
     private String content;
-    private Timestamp timestamp;
-  @DBRef
+    private LocalDateTime timestamp;
+    @DBRef
     private User sender;
-
     @DBRef
     private Chat chat;
 

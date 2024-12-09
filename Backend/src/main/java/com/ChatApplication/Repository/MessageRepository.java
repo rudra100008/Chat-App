@@ -12,4 +12,5 @@ import java.util.List;
 public interface MessageRepository extends MongoRepository<Message,String> {
     List<Message> findBySenderOrderByTimestampAsc(User sender);
     List<Message> findByChatOrderByTimestampAsc(Chat chat);
+    void deleteByChat(Chat chat);
 }

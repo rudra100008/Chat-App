@@ -52,4 +52,9 @@ public class GlobalExceptionHandler {
                 request
         );
     }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<?> handleIllegalStateException(IllegalStateException e,WebRequest request){
+        return createErrorResponse(HttpStatus.BAD_REQUEST,e.getMessage(),request);
+    }
 }
