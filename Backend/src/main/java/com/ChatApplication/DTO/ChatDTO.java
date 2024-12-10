@@ -1,7 +1,7 @@
 package com.ChatApplication.DTO;
 
-import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.User;
+
+import com.ChatApplication.Enum.ChatType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +15,7 @@ import java.util.List;
 public class ChatDTO {
     private String chatId;
     private String chatName;
-    private List<String> participants =  new ArrayList<>();
-    private List<String> messages = new ArrayList<>();
+    private ChatType chatType; // GROUP,SINGLE
+    private List<String> participantIds =  new ArrayList<>();
+    private List<String> messageIds = new ArrayList<>();
 }

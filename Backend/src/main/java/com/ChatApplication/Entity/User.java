@@ -1,6 +1,7 @@
 package com.ChatApplication.Entity;
 
 
+import com.ChatApplication.Enum.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,6 +33,4 @@ public class User {
     //this is owned by the field participants in the Chat class
     @DBRef
     private List<Chat> chat;
-   @DBRef
-    private List<ChatName> chatNames;
 }

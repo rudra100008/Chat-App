@@ -1,6 +1,7 @@
 package com.ChatApplication.Entity;
 
 
+import com.ChatApplication.Enum.ChatType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class Chat {
     @MongoId
     private String chatId;
     private String chatName;
+    private ChatType chatType; //SINGLE,GROUP
 
     @DBRef
     private List<User> participants;

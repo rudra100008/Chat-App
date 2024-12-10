@@ -1,4 +1,4 @@
-package com.ChatApplication.Entity;
+package com.ChatApplication.Enum;
 
 public enum UserStatus {
     Available,

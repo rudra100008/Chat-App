@@ -28,17 +28,21 @@ public class ChatController {
         return ResponseEntity.ok(savedGroupChat);
     }
 
+    //get all the participants in a chat
     @GetMapping("/{chatId}")
     public ResponseEntity<?> fetchParticipantsInChat(@PathVariable("chatId") String chatId){
         List<UserDTO> fetchedUser = this.chatService.fetchChatParticipants(chatId);
         return ResponseEntity.ok(fetchedUser);
     }
+
+    // get all the chat of the user
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> fetchUserInChat(@PathVariable("userId") String userId){
+    public ResponseEntity<?> fetchUserChat(@PathVariable("userId") String userId){
         List<ChatDTO> fetchedChats = this.chatService.fetchUserChats(userId);
         return ResponseEntity.ok(fetchedChats);
     }
 
+    //add Participants in the
     @PatchMapping("/{chatId}/user/{userId}")
     public ResponseEntity<?> addParticipants(
             @PathVariable("chatId")String chatId,

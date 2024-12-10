@@ -2,7 +2,7 @@ package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
-import com.ChatApplication.Entity.UserStatus;
+import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.UserRepository;

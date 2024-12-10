@@ -22,39 +22,25 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
     @Bean
     public ModelMapper mapper(){
         ModelMapper mapper = new ModelMapper();
-//        mapper.createTypeMap(Message.class, MessageDTO.class)
-//                .addMapping(src->src.getChat().getChatId(),MessageDTO::setChatId)
-//                .addMapping(Message::getContent,MessageDTO::setContent)
-//                .addMapping(src-> src.getSender().getUser_Id(),MessageDTO::setSenderId)
-//                .addMapping(Message::getTimestamp,MessageDTO::setTimestamp)
-//                .addMapping(Message::getMessageId,MessageDTO::setMessageId);
-//
-//
-//        mapper.typeMap(Chat.class, ChatDTO.class)
-//                .addMapping(Chat::getChatId,ChatDTO::setChatId)
-//                .addMapping(Chat::getChatName,ChatDTO::setChatName)
-//                .setPostConverter(context -> {
-//            Chat source = context.getSource();
-//            ChatDTO destination = context.getDestination();
-//
-//            if (source.getParticipants() != null) {
-//                destination.setParticipants(
-//                        source.getParticipants().stream()
-//                                .map(User::getUser_Id)
-//                                .collect(Collectors.toList())
-//                );
-//            }
-//
-//            if (source.getMessages() != null) {
-//                destination.setMessages(
-//                        source.getMessages().stream()
-//                                .map(Message::getMessageId)
-//                                .collect(Collectors.toList())
-//                );
-//            }
-//
-//            return destination;
-//        });
+        mapper.typeMap(Chat.class,ChatDTO.class).setPostConverter(context->{
+            Chat chat = context.getSource();
+            ChatDTO chatDTO = context.getDestination();
+
+            chatDTO.setChatName(chat.getChatName());
+            chatDTO.setChatId(chat.getChatId());
+            chatDTO.setChatType(chat.getChatType());
+            if(chat.getParticipants() != null){
+                chatDTO.setParticipantIds(chat.getParticipants()
+                        .stream()
+                        .map(User::getUser_Id)
+                        .collect(Collectors.toList()));
+            }
+            if(chat.getMessages() != null){
+                chatDTO.setMessageIds(chat.getMessages().stream()
+                        .map(Message::getMessageId).toList());
+            }
+            return chatDTO;
+        });
         mapper.getConfiguration()
                 .setMatchingStrategy(MatchingStrategies.STANDARD)
                 .setSkipNullEnabled(true)

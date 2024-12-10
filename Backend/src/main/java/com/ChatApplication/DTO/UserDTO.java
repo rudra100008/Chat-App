@@ -1,8 +1,7 @@
 package com.ChatApplication.DTO;
 
 
-import com.ChatApplication.Entity.UserStatus;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ChatApplication.Enum.UserStatus;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

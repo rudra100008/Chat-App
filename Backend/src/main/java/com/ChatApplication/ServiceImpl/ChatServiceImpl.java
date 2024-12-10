@@ -1,12 +1,11 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.ChatDTO;
-import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.ChatName;
 import com.ChatApplication.Entity.Message;
 import com.ChatApplication.Entity.User;
+import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.ChatNameRepository;
@@ -16,9 +15,11 @@ import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
 
 @Service
@@ -30,6 +31,7 @@ public class ChatServiceImpl implements ChatService {
     private final MessageRepository messageRepository;
     private final ModelMapper modelMapper;
     private final ChatNameRepository chatNameRepository;
+    private final MongoTemplate mongoTemplate;
 
 
     @Override
@@ -45,16 +47,32 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createChat(ChatDTO chatDTO) {
-        Chat chat = new Chat();
-        if(chatDTO.getParticipants().size() != 2){
+        if(chatDTO.getParticipantIds().size() != 2){
             throw new IllegalArgumentException("There must be two user in the chat.");
         }
+        Chat chat = new Chat();
+        List<User> findUser = chatDTO.getParticipantIds()
+                .stream()
+                .map(userId->this.userRepository.findById(userId)
+                        .orElseThrow(()-> new ResourceNotFoundException("user not found in the server.")))
+                .toList();
+        Query query = new Query(
+                Criteria.where("chatType").is("SINGLE")
+                        .andOperator(
+                                Criteria.where("participants").size(2),
+                                Criteria.where("participants").all(findUser)
+                        )
+        );
+        boolean existsChat = mongoTemplate.exists(query,Chat.class);
+        if(existsChat){
+            throw new AlreadyExistsException("Chat between these participants already exists.");
+        }
         chat.setChatName(chatDTO.getChatName());
-
+        chat.setChatType(ChatType.SINGLE);
         chat.setMessages(new ArrayList<>());
 
         List<User> participants = new ArrayList<>();
-        for(String userId : chatDTO.getParticipants()){
+        for(String userId : chatDTO.getParticipantIds()){
             Optional<User> user = this.userRepository.findById(userId);
             user.ifPresent(participants::add);
         }
@@ -65,6 +83,7 @@ public class ChatServiceImpl implements ChatService {
         return new ChatDTO(
                 savedChat.getChatId(),
                 savedChat.getChatName(),
+                savedChat.getChatType(),
                 savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
                 savedChat.getMessages() != null
                         ? savedChat.getMessages().stream().map(Message::getMessageId).toList()
@@ -75,15 +94,17 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createGroupChat(ChatDTO chatDTO) {
+
        Chat chat = new Chat();
        chat.setChatName(chatDTO.getChatName());
-       List<User> participants = chatDTO.getParticipants()
+       chat.setChatType(ChatType.GROUP);
+       List<User> participants = chatDTO.getParticipantIds()
                .stream()
                .map(userId->this.userRepository.findById(userId)
                        .orElseThrow(()-> new ResourceNotFoundException(userId+" not found")))
                .toList();
        chat.setParticipants(participants);
-       List<Message> messages = chatDTO.getMessages()
+       List<Message> messages = chatDTO.getMessageIds()
                .stream()
                .map(message->this.messageRepository.findById(message)
                        .orElseThrow(()-> new ResourceNotFoundException(message+" not found.")))
@@ -93,6 +114,7 @@ public class ChatServiceImpl implements ChatService {
        return new ChatDTO(
                savedChat.getChatId(),
                savedChat.getChatName(),
+               savedChat.getChatType(),
                savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
                savedChat.getMessages().stream().map(Message::getMessageId).toList()
                );
