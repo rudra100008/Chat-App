@@ -7,8 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Document(collection = "Message")

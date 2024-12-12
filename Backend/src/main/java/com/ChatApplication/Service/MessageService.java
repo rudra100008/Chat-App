@@ -1,8 +1,6 @@
 package com.ChatApplication.Service;
 
 import com.ChatApplication.DTO.MessageDTO;
-import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.User;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
