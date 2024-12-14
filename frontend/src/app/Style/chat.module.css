@@ -1,0 +1,28 @@
+.ChatContainer{
+    margin: auto;
+    background-color: grey;
+    color: lightblue;
+}
+.headers{
+    font-size: 1rem;
+    color: lightgray;
+    margin: auto;
+    padding: 10px 2px;
+}
+.FieldGroup{
+    padding: 5px 10px;
+}
+.FieldInput{
+    padding: 5px;
+    margin: 10px;
+    font-size: 0.8rem;
+    max-width: 200px;
+    width: 100%;
+    outline: none;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    transition: all 0.3ms ease-in;
+}
+.FieldInput:focus{
+    border-color: #00aaff;
+}
