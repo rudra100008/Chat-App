@@ -1,7 +1,19 @@
+.body{
+    display: flex;
+    justify-content: end;
+    align-items: end;
+}
 .ChatContainer{
-    margin: auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     background-color: grey;
     color: lightblue;
+    height: 100vh;
+    max-width: 70rem;
+    width: 100%;
+    overflow-y: auto;
+    position: relative;
 }
 .headers{
     font-size: 1rem;
@@ -10,13 +22,30 @@
     padding: 10px 2px;
 }
 .FieldGroup{
-    padding: 5px 10px;
+    position: absolute;
+    bottom: 0%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+}
+.ButtonGroup{
+    position: absolute;
+    bottom: 0%;
+    left: 81%;
+    transform: translateX(-50%);
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
 }
 .FieldInput{
-    padding: 5px;
-    margin: 10px;
+    padding: 15px;
+    color: black;
     font-size: 0.8rem;
-    max-width: 200px;
+    max-width: 600px;
     width: 100%;
     outline: none;
     border: 1px solid #ddd;
@@ -25,4 +54,15 @@
 }
 .FieldInput:focus{
     border-color: #00aaff;
+}
+.SendButton{
+    margin: 5px 0;
+    padding: 10px 15px;
+    background-color: lightblue;
+    color: white;
+    border-radius: 10px;
+    transition: all 0.3ms ease-in-out;
+}
+.SendButton:hover{
+    transform: scale(1.2);
 }
