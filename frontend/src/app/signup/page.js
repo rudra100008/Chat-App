@@ -19,6 +19,14 @@ export default function SignUp(){
                     placeholder="Enter email"
                     />
                 </div>
+                <div>
+                    <label htmlFor="phoneNumber">PhoneNumber</label>
+                    <input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    placeholder="Enter phoneNumber"
+                    />
+                </div>
                 <div className="">
                     <label htmlFor="password">Password</label>
                     <input

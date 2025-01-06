@@ -11,7 +11,8 @@ export default function Chat() {
         <div className={style.body}>
             <div className={style.ChatContainer}>
             <div>{inputValue}</div>
-                <div className={style.FieldGroup}>
+               <div className={style.inputWrapper}>
+               <div className={style.FieldGroup}>
                     <input
                         type="text"
                         name='content'
@@ -28,6 +29,7 @@ export default function Chat() {
                         Send
                     </button>
                 </div>
+               </div>
             </div>
         </div>
 
