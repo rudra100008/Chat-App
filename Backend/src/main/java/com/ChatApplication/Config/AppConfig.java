@@ -50,12 +50,13 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-      registry.addEndpoint("/server").setAllowedOrigins("*").withSockJS();
+      registry.addEndpoint("/server").setAllowedOrigins("http://localhost:3000").withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-       registry.enableSimpleBroker("/topic");
+       registry.enableSimpleBroker("/chatroom","/user","/private");
        registry.setApplicationDestinationPrefixes("/app");
+       registry.setUserDestinationPrefix("/user");
     }
 }

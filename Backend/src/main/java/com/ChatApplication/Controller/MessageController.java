@@ -32,7 +32,7 @@ public class MessageController {
                 messageDTO.getContent()
         );
 
-        messagingTemplate.convertAndSend("/topic/chat/"+savedMessage.getChatId(),savedMessage);
+        messagingTemplate.convertAndSend("/private/chat/"+savedMessage.getChatId(),savedMessage);
     }
 
     @PostMapping
