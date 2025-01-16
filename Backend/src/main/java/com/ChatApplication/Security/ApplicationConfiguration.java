@@ -19,7 +19,7 @@ public class ApplicationConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService(){
-        return username -> userRepository.findByPhoneNumber(username)
+        return username -> userRepository.findByUserName(username)
                 .orElseThrow(()-> new ResourceNotFoundException(username + " not found"));
     }
     @Bean
