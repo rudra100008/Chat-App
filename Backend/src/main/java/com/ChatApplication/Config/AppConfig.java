@@ -1,7 +1,6 @@
 package com.ChatApplication.Config;
 
 import com.ChatApplication.DTO.ChatDTO;
-import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.Message;
 import com.ChatApplication.Entity.User;

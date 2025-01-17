@@ -1,6 +1,7 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.Entity.AuthRequest;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Exception.AlreadyExistsException;
@@ -9,6 +10,9 @@ import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,8 @@ import java.util.Optional;
 @Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     private final ModelMapper mapper;
 
     @Override
@@ -41,7 +47,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO postUser(UserDTO userDTO) {
+    public UserDTO signup(UserDTO userDTO) {
         if(this.userRepository.existsByUserName(userDTO.getUserName())){
             throw new AlreadyExistsException(userDTO.getUserName()+" already exists");
         }
@@ -56,6 +62,7 @@ public class UserServiceImpl implements UserService {
         }
         userDTO.setLast_seen(LocalDateTime.now());
         userDTO.setStatus(UserStatus.Available);
+        userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User user = mapper.map(userDTO,User.class);
         User savedUser = this.userRepository.save(user);
         return mapper.map(savedUser,UserDTO.class);
@@ -75,8 +82,13 @@ public class UserServiceImpl implements UserService {
         if(this.userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
             throw new AlreadyExistsException(userDTO.getPhoneNumber()+"already exists");
         }
+        if(userDTO.getPassword() != null){
+            throw new IllegalArgumentException("The password cannot be updated.");
+        }
         if(userDTO.getProfile_picture() == null || userDTO.getProfile_picture().isEmpty()){
             user.setProfile_picture("default.jpg");
+        }else {
+            user.setProfile_picture(userDTO.getProfile_picture());
         }
 
         Optional.ofNullable(userDTO.getUserName()).ifPresent(user::setUserName);
@@ -85,8 +97,6 @@ public class UserServiceImpl implements UserService {
         Optional.ofNullable(userDTO.getStatus()).ifPresent(user::setStatus);
 
         userDTO.setLast_seen(LocalDateTime.now());
-        user.setPassword(user.getPassword());
-
         User updatedUser = this.userRepository.save(user);
         return mapper.map(updatedUser,UserDTO.class);
     }
@@ -98,4 +108,14 @@ public class UserServiceImpl implements UserService {
                 new ResourceNotFoundException(user_id + " not found."));
         this.userRepository.delete(user);
     }
+
+    @Override
+    public User authenticate(AuthRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUserName(),request.getPassword())
+        );
+        return this.userRepository.findByUserName(request.getUserName())
+                .orElseThrow(()-> new ResourceNotFoundException(request.getUserName()+" not found in server"));
+    }
+
 }

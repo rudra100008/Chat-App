@@ -16,13 +16,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<UserDTO> postUser(@Valid @RequestBody UserDTO userDTO) {
-        UserDTO postUser = this.userService.postUser(userDTO);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(postUser);
-    }
+
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> fetchAllUsers() {
