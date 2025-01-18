@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO fetchUser(String user_Id) {
         return this.userRepository.findById(user_Id)
                 .map(user -> mapper.map(user,UserDTO.class))
-                .orElseThrow(()-> new ResourceNotFoundException(user_Id +"not found in the server"));
+                .orElseThrow(()-> new ResourceNotFoundException(user_Id +" not found in the server"));
     }
 
     @Override
@@ -73,13 +73,16 @@ public class UserServiceImpl implements UserService {
     public UserDTO updateUser(String user_id, UserDTO userDTO) {
         User user = this.userRepository.findById(user_id).orElseThrow(()->
                 new ResourceNotFoundException(user_id + " not found."));
-        if(this.userRepository.existsByUserName(userDTO.getUserName())){
+        if(!user.getUsername().equals(userDTO.getUserName()) &&
+                this.userRepository.existsByUserName(userDTO.getUserName())){
             throw new AlreadyExistsException(userDTO.getUserName()+" already exists");
         }
-        if(this.userRepository.existsByEmail(userDTO.getEmail())){
+        if(!user.getEmail().equals(userDTO.getEmail())&&
+                this.userRepository.existsByEmail(userDTO.getEmail())){
             throw  new AlreadyExistsException(userDTO.getEmail()+" already exists");
         }
-        if(this.userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
+        if(!user.getPhoneNumber().equals(userDTO.getPhoneNumber()) &&
+                this.userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
             throw new AlreadyExistsException(userDTO.getPhoneNumber()+"already exists");
         }
         if(userDTO.getPassword() != null){
@@ -96,7 +99,7 @@ public class UserServiceImpl implements UserService {
         Optional.ofNullable(userDTO.getPhoneNumber()).ifPresent(user::setPhoneNumber);
         Optional.ofNullable(userDTO.getStatus()).ifPresent(user::setStatus);
 
-        userDTO.setLast_seen(LocalDateTime.now());
+        user.setLast_seen(LocalDateTime.now());
         User updatedUser = this.userRepository.save(user);
         return mapper.map(updatedUser,UserDTO.class);
     }
