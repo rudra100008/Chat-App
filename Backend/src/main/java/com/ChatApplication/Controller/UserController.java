@@ -1,10 +1,11 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.Entity.User;
+import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +16,13 @@ import java.util.List;
 @RequestMapping("/api/users") // Adjusted to follow REST conventions
 public class UserController {
     private final UserService userService;
+    private final AuthUtils authUtils;
 
-
-
+    @GetMapping("/current-user")
+    public ResponseEntity<User> getCurrentUser(){
+        User user = authUtils.getLoggedInUsername();
+        return ResponseEntity.ok(user);
+    }
     @GetMapping
     public ResponseEntity<List<UserDTO>> fetchAllUsers() {
         List<UserDTO> userDTOs = this.userService.fetchAllUser();
