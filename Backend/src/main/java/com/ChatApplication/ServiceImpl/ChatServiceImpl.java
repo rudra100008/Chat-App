@@ -12,6 +12,7 @@ import com.ChatApplication.Repository.ChatNameRepository;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
 import com.ChatApplication.Repository.UserRepository;
+import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -30,8 +31,8 @@ public class ChatServiceImpl implements ChatService {
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final ModelMapper modelMapper;
-    private final ChatNameRepository chatNameRepository;
     private final MongoTemplate mongoTemplate;
+    private final AuthUtils authUtils;
 
 
     @Override
@@ -50,6 +51,9 @@ public class ChatServiceImpl implements ChatService {
         if(chatDTO.getParticipantIds().size() != 2){
             throw new IllegalArgumentException("There must be two user in the chat.");
         }
+
+        User loggedInUsername = this.authUtils.getLoggedInUsername();
+
         Chat chat = new Chat();
         List<User> findUser = chatDTO.getParticipantIds()
                 .stream()
@@ -67,7 +71,13 @@ public class ChatServiceImpl implements ChatService {
         if(existsChat){
             throw new AlreadyExistsException("Chat between these participants already exists.");
         }
-        chat.setChatName(chatDTO.getChatName());
+
+      User otherUser = findUser.stream()
+              .filter(user->!user.getUser_Id().equals(loggedInUsername.getUser_Id()))
+              .findFirst()
+              .orElseThrow(()-> new ResourceNotFoundException("Other not found"));
+
+        chat.setChatName(otherUser.getUsername());
         chat.setChatType(ChatType.SINGLE);
         chat.setMessages(new ArrayList<>());
 
