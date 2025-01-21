@@ -21,6 +21,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.file.AccessDeniedException;
 import java.util.*;
 
 @Service
@@ -34,6 +36,12 @@ public class ChatServiceImpl implements ChatService {
     private final MongoTemplate mongoTemplate;
     private final AuthUtils authUtils;
 
+
+    private void validateChatAccess(String chatId,String userId) throws AccessDeniedException{
+        if(!isUserInChat(chatId,userId)){
+            throw new AccessDeniedException("User does not have access to this chat");
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -132,6 +140,12 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDTO addParticipants(String chatId, String userId) {
+        User loggedUser = this.authUtils.getLoggedInUsername();
+        try{
+            validateChatAccess(chatId,loggedUser.getUser_Id());
+        }catch(AccessDeniedException a){
+            throw new RuntimeException(a.getMessage());
+        }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+" not found"));
         User user =  this.userRepository.findById(userId)
@@ -146,7 +160,13 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<UserDTO> fetchChatParticipants(String chatId) {
+    public List<UserDTO> fetchChatParticipants(String chatId){
+        User loggedUser = this.authUtils.getLoggedInUsername();
+        try{
+            validateChatAccess(chatId,loggedUser.getUser_Id());
+        }catch(AccessDeniedException a){
+            throw new RuntimeException(a.getMessage());
+        }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+ " not found"));
         return chat.getParticipants().stream()
@@ -156,18 +176,24 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public boolean isUserInChat(String chatId, String userId) {
         if(chatId == null || userId == null){
-            throw new IllegalArgumentException("ChatId and userId should not be null.");
+            throw new IllegalArgumentException("Chat and user doesn't exists.");
         }
         User user = this.userRepository.findById(userId)
                 .orElseThrow(()-> new ResourceNotFoundException(userId+" not found."));
 
         this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+" not found"));
-        return this.chatRepository.existsByChatIdAndParticipants(chatId,user);
+        return this.chatRepository.existsByChatIdAndParticipantsContaining(chatId,user);
     }
 
     @Override
     public ChatDTO deleteParticipants(String chatId, String userId) {
+        User loggedUser = this.authUtils.getLoggedInUsername();
+        try{
+            validateChatAccess(chatId,loggedUser.getUser_Id());
+        }catch(AccessDeniedException a){
+            throw new RuntimeException(a.getMessage());
+        }
         Chat chat =  this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+"not found."));
         User user = this.userRepository.findById(userId)
@@ -182,6 +208,12 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void deleteChat(String chatId) {
+        User loggedUser = this.authUtils.getLoggedInUsername();
+        try{
+            validateChatAccess(chatId,loggedUser.getUser_Id());
+        }catch(AccessDeniedException a){
+            throw new RuntimeException(a.getMessage());
+        }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
         this.messageRepository.deleteByChat(chat);

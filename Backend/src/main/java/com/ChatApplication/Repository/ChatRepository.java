@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface ChatRepository extends MongoRepository<Chat,String> {
     List<Chat> findByParticipants(User user);
-    boolean existsByChatIdAndParticipants(String chatId,User user);
+    boolean existsByChatIdAndParticipantsContaining(String chatId,User user);
     boolean existsByParticipantsAndChatType(List<User> participants, ChatType chatType);
     void deleteByMessages(Message message);
 }

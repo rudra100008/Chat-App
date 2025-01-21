@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e, WebRequest request) {
-        return createErrorResponse(HttpStatus.NOT_ACCEPTABLE, e.getMessage(), request);
+        return createErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), request);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -75,5 +76,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleBadCredentialsException(BadCredentialsException e,WebRequest request){
         return createErrorResponse(HttpStatus.UNAUTHORIZED,e.getMessage(),request);
     }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException e,WebRequest request){
+        return createErrorResponse(HttpStatus.FORBIDDEN,e.getMessage(),request);
+    }
+
 
 }
