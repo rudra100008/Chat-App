@@ -8,7 +8,6 @@ import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
-import com.ChatApplication.Repository.ChatNameRepository;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
 import com.ChatApplication.Repository.UserRepository;
@@ -19,6 +18,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,18 +56,25 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createChat(ChatDTO chatDTO) {
-        if(chatDTO.getParticipantIds().size() != 2){
-            throw new IllegalArgumentException("There must be two user in the chat.");
+        // Validate participant count
+        if(chatDTO.getParticipantIds().size() != 2) {
+            throw new IllegalArgumentException("There must be two users in the chat.");
         }
 
+        // Validate logged in user is a participant
         User loggedInUsername = this.authUtils.getLoggedInUsername();
+        if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUser_Id())) {
+            throw new IllegalArgumentException("Logged in user must be a participant in the chat.");
+        }
 
-        Chat chat = new Chat();
+        // Find and validate all users exist
         List<User> findUser = chatDTO.getParticipantIds()
                 .stream()
-                .map(userId->this.userRepository.findById(userId)
-                        .orElseThrow(()-> new ResourceNotFoundException("user not found in the server.")))
+                .map(userId -> this.userRepository.findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found in the server.")))
                 .toList();
+
+        // Check if chat already exists
         Query query = new Query(
                 Criteria.where("chatType").is("SINGLE")
                         .andOperator(
@@ -75,29 +82,27 @@ public class ChatServiceImpl implements ChatService {
                                 Criteria.where("participants").all(findUser)
                         )
         );
-        boolean existsChat = mongoTemplate.exists(query,Chat.class);
-        if(existsChat){
-            throw new AlreadyExistsException("Chat between these participants already exists.");
+        boolean existsChat = mongoTemplate.exists(query, Chat.class);
+        if(existsChat) {
+            throw new AlreadyExistsException("Chat between these users already exists.");
         }
 
-      User otherUser = findUser.stream()
-              .filter(user->!user.getUser_Id().equals(loggedInUsername.getUser_Id()))
-              .findFirst()
-              .orElseThrow(()-> new ResourceNotFoundException("Other not found"));
+        // Find other user for chat naming
+        User otherUser = findUser.stream()
+                .filter(user -> !user.getUser_Id().equals(loggedInUsername.getUser_Id()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Other user not found"));
 
+        // Create and save chat
+        Chat chat = new Chat();
         chat.setChatName(otherUser.getUsername());
         chat.setChatType(ChatType.SINGLE);
         chat.setMessages(new ArrayList<>());
-
-        List<User> participants = new ArrayList<>();
-        for(String userId : chatDTO.getParticipantIds()){
-            Optional<User> user = this.userRepository.findById(userId);
-            user.ifPresent(participants::add);
-        }
-        chat.setParticipants(participants);
+        chat.setParticipants(findUser);
 
         Chat savedChat = this.chatRepository.save(chat);
 
+        // Convert to DTO and return
         return new ChatDTO(
                 savedChat.getChatId(),
                 savedChat.getChatName(),
@@ -112,23 +117,48 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createGroupChat(ChatDTO chatDTO) {
-
+        if (chatDTO.getParticipantIds().size() < 3){
+            throw new IllegalArgumentException("Group Chat must have at least 3 participants");
+        }
+        if(chatDTO.getChatName() == null || chatDTO.getChatName().trim().isEmpty()){
+            throw new IllegalArgumentException("Group Chat name cannot not be empty");
+        }
+        User loggedInUsername = authUtils.getLoggedInUsername();
+        if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUser_Id())){
+            throw new IllegalArgumentException("Logged in user must be participants of the chat");
+        }
        Chat chat = new Chat();
-       chat.setChatName(chatDTO.getChatName());
-       chat.setChatType(ChatType.GROUP);
        List<User> participants = chatDTO.getParticipantIds()
                .stream()
                .map(userId->this.userRepository.findById(userId)
                        .orElseThrow(()-> new ResourceNotFoundException(userId+" not found")))
                .toList();
-       chat.setParticipants(participants);
-       List<Message> messages = chatDTO.getMessageIds()
-               .stream()
-               .map(message->this.messageRepository.findById(message)
-                       .orElseThrow(()-> new ResourceNotFoundException(message+" not found.")))
-               .toList();
-       chat.setMessages(messages);
-       Chat savedChat = this.chatRepository.save(chat);
+       // query if the chat with same participants exits in the database
+       Query query = new Query(
+                Criteria.where("chatType").is("GROUP")
+                        .andOperator(
+                                Criteria.where("participants").size(chatDTO.getParticipantIds().size()),
+                                Criteria.where("participants").all(participants)
+                        )
+        );
+        boolean existsChat = mongoTemplate.exists(query,Chat.class);
+        if(existsChat){
+            throw new AlreadyExistsException("A group with these exact participants already exists.");
+        }
+        if(chatDTO.getMessageIds() != null && !chatDTO.getMessageIds().isEmpty()){
+            List<Message> messages = chatDTO.getMessageIds().stream()
+                    .map(message->this.messageRepository.findById(message)
+                            .orElseThrow(()->  new ResourceNotFoundException("Message not found")))
+                    .toList();
+            chat.setMessages(messages);
+        }else{
+            chat.setMessages(new ArrayList<>());
+        }
+        // saving the chat details in the database
+        chat.setChatType(ChatType.GROUP);
+        chat.setChatName(chatDTO.getChatName());
+        chat.setParticipants(participants);
+        Chat savedChat = this.chatRepository.save(chat);
        return new ChatDTO(
                savedChat.getChatId(),
                savedChat.getChatName(),
@@ -140,22 +170,35 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDTO addParticipants(String chatId, String userId) {
+        if(chatId == null || chatId.trim().isEmpty() || userId == null || userId.trim().isEmpty()){
+            throw new IllegalArgumentException("Chat Id and User Id must not be null or empty");
+        }
         User loggedUser = this.authUtils.getLoggedInUsername();
+        Chat chat = this.chatRepository.findById(chatId)
+                .orElseThrow(()->new ResourceNotFoundException(chatId+" not found"));
+        //Cannot add participants in the single chat
+        if(chat.getChatType() != ChatType.GROUP){
+            throw new IllegalArgumentException("Cannot add participants to a single chat");
+        }
+
+        // Check if the loggedIn user has permission to access the chat
         try{
             validateChatAccess(chatId,loggedUser.getUser_Id());
         }catch(AccessDeniedException a){
             throw new RuntimeException(a.getMessage());
         }
-        Chat chat = this.chatRepository.findById(chatId)
-                .orElseThrow(()->new ResourceNotFoundException(chatId+" not found"));
-        User user =  this.userRepository.findById(userId)
+
+        User newuser =  this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found"));
-        if(!chat.getParticipants().contains(user)){
-            chat.getParticipants().add(user);
-            Chat updatedChat = this.chatRepository.save(chat);
+        if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(newuser.getUser_Id()))){
+            Query query = new Query(Criteria.where("_id").is(chatId));
+            Update update =new Update().addToSet("participants",newuser);
+            this.mongoTemplate.updateFirst(query,update,Chat.class);
+            Chat updatedChat = this.chatRepository.findById(chatId).orElseThrow(() ->
+                    new ResourceNotFoundException(chatId + " not found"));
             return modelMapper.map(updatedChat,ChatDTO.class);
         }else {
-            throw new AlreadyExistsException("This user already exists in the chat");
+            throw new AlreadyExistsException("User "+newuser.getUsername()+" is already in the chat group");
         }
     }
 
