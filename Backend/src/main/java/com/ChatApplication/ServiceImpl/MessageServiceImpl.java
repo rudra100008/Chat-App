@@ -8,6 +8,7 @@ import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
 import com.ChatApplication.Repository.UserRepository;
+import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,49 +29,56 @@ public class MessageServiceImpl implements MessageService {
     private final ModelMapper modelMapper;
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
+    private final AuthUtils authUtils;
 
-
+    //this method fetch all messages send by the user
     @Override
+    @Transactional(readOnly = true)
     public List<MessageDTO> fetchMessagesBySenderId(String senderId) {
-        Optional<User> user = this.userRepository.findById(senderId);
-        if(user.isPresent()) {
-            return this.messageRepository
-                    .findBySenderOrderByTimestampAsc(user.get())
-                    .stream()
-                    .map(message -> modelMapper.map(message, MessageDTO.class)).toList();
-        }else{
-            throw  new ResourceNotFoundException("Sender not found.");
+        if(senderId == null || senderId.trim().isEmpty()){
+            throw new IllegalArgumentException("SenderId should not be null or empty.");
         }
+        User user = this.userRepository.findById(senderId).orElseThrow(()->new ResourceNotFoundException(senderId + " not found."));
+        return this.messageRepository.findBySenderOrderByTimestampAsc(user)
+                .stream()
+                .map(sender->modelMapper.map(sender,MessageDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MessageDTO> fetchMessagesByChatId(String chatId) {
-       Optional<Chat> chat =  this.chatRepository.findById(chatId);
-       if(chat.isPresent()){
-           return this.messageRepository.findByChatOrderByTimestampAsc(chat.get()).stream()
-                   .map(message-> modelMapper.map(message,MessageDTO.class)).toList();
-       }else{
-           throw new ResourceNotFoundException("Chat not found");
-       }
+        if(chatId == null || chatId.trim().isEmpty()) {
+            throw new IllegalArgumentException("ChatId should not be null or empty.");
+        }
+       Chat chat =  this.chatRepository.findById(chatId)
+               .orElseThrow(()->new ResourceNotFoundException("Chat not found."));
+
+        return this.messageRepository.findByChatOrderByTimestampAsc(chat)
+                .stream()
+                .map(message-> modelMapper.map(message,MessageDTO.class))
+                .toList();
     }
 
     @Override
+    @Transactional
     public MessageDTO postMessage(String senderId, String chatId, String content) {
+        if(senderId == null || senderId.trim().isEmpty() || chatId == null || chatId.trim().isEmpty()){
+            throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
+        }
         User sender = this.userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
 
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
-        if(!chat.getParticipants().contains(sender)){
-            throw new ResourceNotFoundException("User is not a participant of this chat");
+        if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(sender.getUser_Id()))){
+            throw new IllegalArgumentException(sender.getUsername() + " is not a participant of "+chat.getChatName());
         }
         Message message = new Message();
         message.setSender(sender);
         message.setChat(chat);
         message.setContent(content);
         message.setTimestamp(LocalDateTime.now());
-
-
 
         Message savedMessage = this.messageRepository.save(message);
 
@@ -79,6 +88,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
     public MessageDTO updateMessage(String messageId, String newContent) {
         Optional<Message> existingMessage = this.messageRepository.findById(messageId);
         if(existingMessage.isPresent()){
@@ -94,14 +104,16 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    // delete the message of chat
     @Override
+    @Transactional
     public void deleteMessage(String messageId) {
-        Optional<Message> message = this.messageRepository.findById(messageId);
-        if (message.isPresent()){
-            this.messageRepository.delete(message.get());
-            this.chatRepository.deleteByMessages(message.get());
-        }else {
-            throw new ResourceNotFoundException("Message not found");
-        }
+        Message message = this.messageRepository.findById(messageId)
+                .orElseThrow(()-> new ResourceNotFoundException("message not found in the server"));
+        Chat chat = message.getChat();
+        chat.getMessages().remove(message);
+        this.chatRepository.save(chat);
+
+        this.messageRepository.delete(message);
     }
 }

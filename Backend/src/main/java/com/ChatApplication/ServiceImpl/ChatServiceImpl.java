@@ -46,6 +46,9 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<ChatDTO> fetchUserChats(String userId) {
+        if(userId == null || userId.trim().isEmpty()){
+            throw new IllegalArgumentException("userID cannot be null or empty");
+        }
         User user = this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found."));
         return this.chatRepository.findByParticipants(user)
@@ -169,6 +172,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
     public ChatDTO addParticipants(String chatId, String userId) {
         if(chatId == null || chatId.trim().isEmpty() || userId == null || userId.trim().isEmpty()){
             throw new IllegalArgumentException("Chat Id and User Id must not be null or empty");
@@ -203,7 +207,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDTO> fetchChatParticipants(String chatId){
+        if(chatId == null || chatId.trim().isEmpty() ){
+            throw new IllegalArgumentException("chatId  cannot be null or empty");
+        }
         User loggedUser = this.authUtils.getLoggedInUsername();
         try{
             validateChatAccess(chatId,loggedUser.getUser_Id());
@@ -218,8 +226,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public boolean isUserInChat(String chatId, String userId) {
-        if(chatId == null || userId == null){
-            throw new IllegalArgumentException("Chat and user doesn't exists.");
+        if(chatId == null || chatId.trim().isEmpty()  || userId == null || userId.trim().isEmpty()){
+            throw new IllegalArgumentException("ChatId and userId cannot be null or empty");
         }
         User user = this.userRepository.findById(userId)
                 .orElseThrow(()-> new ResourceNotFoundException(userId+" not found."));
@@ -230,7 +238,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
     public ChatDTO deleteParticipants(String chatId, String userId) {
+        if(chatId == null || chatId.trim().isEmpty() || userId == null || userId.trim().isEmpty()){
+            throw new IllegalArgumentException("chatId and userId cannot be null or empty");
+        }
         User loggedUser = this.authUtils.getLoggedInUsername();
         try{
             validateChatAccess(chatId,loggedUser.getUser_Id());
@@ -250,7 +262,11 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
     public void deleteChat(String chatId) {
+        if(chatId == null || chatId.trim().isEmpty() ){
+            throw new IllegalArgumentException("chatId  cannot be null or empty");
+        }
         User loggedUser = this.authUtils.getLoggedInUsername();
         try{
             validateChatAccess(chatId,loggedUser.getUser_Id());

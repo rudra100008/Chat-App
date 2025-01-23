@@ -18,33 +18,33 @@ import java.util.Map;
 public class ChatController {
     private final ChatService chatService;
     @PostMapping
-    public ResponseEntity<?> createChat(@RequestBody ChatDTO chatDTO){
+    public ResponseEntity<ChatDTO> createChat(@RequestBody ChatDTO chatDTO){
         ChatDTO savedChat = this.chatService.createChat(chatDTO);
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
     @PostMapping("/groupChat")
-    public ResponseEntity<?> createGroupChat(@RequestBody ChatDTO chatDTO){
+    public ResponseEntity<ChatDTO> createGroupChat(@RequestBody ChatDTO chatDTO){
         ChatDTO savedGroupChat = this.chatService.createGroupChat(chatDTO);
         return ResponseEntity.ok(savedGroupChat);
     }
 
     //get all the participants in a chat
     @GetMapping("/{chatId}")
-    public ResponseEntity<?> fetchParticipantsInChat(@PathVariable("chatId") String chatId){
+    public ResponseEntity<List<UserDTO>> fetchParticipantsInChat(@PathVariable("chatId") String chatId){
         List<UserDTO> fetchedUser = this.chatService.fetchChatParticipants(chatId);
         return ResponseEntity.ok(fetchedUser);
     }
 
     // get all the chat of the user
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> fetchUserChat(@PathVariable("userId") String userId){
+    public ResponseEntity<List<ChatDTO>> fetchUserChat(@PathVariable("userId") String userId){
         List<ChatDTO> fetchedChats = this.chatService.fetchUserChats(userId);
         return ResponseEntity.ok(fetchedChats);
     }
 
     //add Participants in the
     @PatchMapping("/{chatId}/user/{userId}")
-    public ResponseEntity<?> addParticipants(
+    public ResponseEntity<ChatDTO> addParticipants(
             @PathVariable("chatId")String chatId,
             @PathVariable("userId") String userId
     ){
@@ -53,18 +53,18 @@ public class ChatController {
     }
 
     @GetMapping("/checkParticipants/{chatId}/user/{userId}")
-    public ResponseEntity<?> checkParticipants(
+    public ResponseEntity<Map<String,Boolean>> checkParticipants(
             @PathVariable("chatId")String chatId,
             @PathVariable("userId")String userId
     ){
-        Map<String,Object> response = new HashMap<>();
+        Map<String,Boolean> response = new HashMap<>();
         Boolean isInChat = this.chatService.isUserInChat(chatId,userId);
         response.put("isInChat",isInChat);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/deleteParticipants/{chatId}/user/{userId}")
-    public ResponseEntity<?> removeParticipants(
+    public ResponseEntity<ChatDTO> removeParticipants(
             @PathVariable("chatId")String chatId,
             @PathVariable("userId")String userId
     ){
@@ -72,7 +72,7 @@ public class ChatController {
         return ResponseEntity.ok(chatDTO);
     }
     @DeleteMapping("/delete/{chatId}")
-    public ResponseEntity<?> removeChat(
+    public ResponseEntity<String> removeChat(
             @PathVariable("chatId")String chatId
     ){
         this.chatService.deleteChat(chatId);
