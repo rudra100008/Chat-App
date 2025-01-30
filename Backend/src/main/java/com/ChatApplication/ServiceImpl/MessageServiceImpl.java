@@ -12,14 +12,11 @@ import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +28,12 @@ public class MessageServiceImpl implements MessageService {
     private final ChatRepository chatRepository;
     private final AuthUtils authUtils;
 
+
+    private void validateChatAccess(String chatId,User user){
+        if(!this.chatRepository.existsByChatIdAndParticipantsContaining(chatId,user)){
+            throw new AccessDeniedException("User does not have access to this chat");
+        }
+    }
     //this method fetch all messages send by the user
     @Override
     @Transactional(readOnly = true)
@@ -51,6 +54,9 @@ public class MessageServiceImpl implements MessageService {
         if(chatId == null || chatId.trim().isEmpty()) {
             throw new IllegalArgumentException("ChatId should not be null or empty.");
         }
+        User loggedInUsername = this.authUtils.getLoggedInUsername();
+        validateChatAccess(chatId,loggedInUsername);
+
        Chat chat =  this.chatRepository.findById(chatId)
                .orElseThrow(()->new ResourceNotFoundException("Chat not found."));
 
@@ -66,9 +72,13 @@ public class MessageServiceImpl implements MessageService {
         if(senderId == null || senderId.trim().isEmpty() || chatId == null || chatId.trim().isEmpty()){
             throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
         }
+        User loggedInUsername = this.authUtils.getLoggedInUsername();
+        validateChatAccess(chatId,loggedInUsername);
         User sender = this.userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
-
+        if (!senderId.equals(loggedInUsername.getUser_Id())){
+            throw new IllegalArgumentException("Sender cannot access message in this chat");
+        }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
         if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(sender.getUser_Id()))){
@@ -90,18 +100,20 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageDTO updateMessage(String messageId, String newContent) {
-        Optional<Message> existingMessage = this.messageRepository.findById(messageId);
-        if(existingMessage.isPresent()){
-            Message message = existingMessage.get();
-            message.setChat(existingMessage.get().getChat());
-            message.setSender(existingMessage.get().getSender());
-            message.setContent(newContent);
-            message.setTimestamp(LocalDateTime.now());
-            Message updatedMessage = this.messageRepository.save(message);
-            return  modelMapper.map(updatedMessage,MessageDTO.class);
-        }else{
-            throw new ResourceNotFoundException("Chat or Sender not found");
+        Message existingMessage = this.messageRepository
+                .findById(messageId).orElseThrow(()-> new ResourceNotFoundException("Message not found."));
+
+        User loggedInUsername = this.authUtils.getLoggedInUsername();
+        validateChatAccess(existingMessage.getChat().getChatId(),loggedInUsername);
+
+        if(!existingMessage.getSender().getUser_Id().equals(loggedInUsername.getUser_Id())){
+            throw new IllegalArgumentException("You can edit only your messages.");
         }
+        existingMessage.setContent(newContent);
+        existingMessage.setTimestamp(LocalDateTime.now());
+        Message updatedMessages = this.messageRepository.save(existingMessage);
+        return modelMapper.map(updatedMessages,MessageDTO.class);
+
     }
 
     // delete the message of chat
@@ -110,6 +122,13 @@ public class MessageServiceImpl implements MessageService {
     public void deleteMessage(String messageId) {
         Message message = this.messageRepository.findById(messageId)
                 .orElseThrow(()-> new ResourceNotFoundException("message not found in the server"));
+        User loggedInUsername = this.authUtils.getLoggedInUsername();
+
+        validateChatAccess(message.getChat().getChatId(),loggedInUsername);
+
+        if(!message.getSender().getUser_Id().equals(loggedInUsername.getUser_Id())){
+            throw new IllegalArgumentException("You can delete your own messages.");
+        }
         Chat chat = message.getChat();
         chat.getMessages().remove(message);
         this.chatRepository.save(chat);

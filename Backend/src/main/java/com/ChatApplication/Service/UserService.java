@@ -9,10 +9,13 @@ import java.util.List;
 
 @Service
 public interface UserService {
-    public List<UserDTO> fetchAllUser();
-    public UserDTO fetchUser(String user_Id);
-    public UserDTO signup(UserDTO userDTO);
-    public UserDTO updateUser(String user_id, UserDTO userDTO);
-    public void deleteUser(String user_id);
-    public User authenticate(AuthRequest request);
+    List<UserDTO> fetchAllUser();
+    UserDTO fetchUser(String user_Id);
+    UserDTO signup(UserDTO userDTO);
+    UserDTO updateUser(String user_id, UserDTO userDTO);
+    void deleteUser(String user_id);
+    User authenticate(AuthRequest request);
+    boolean existsByPhoneNumber(String phoneNumber);
+    User findByPhoneNumber(String phoneNumber);
+
 }

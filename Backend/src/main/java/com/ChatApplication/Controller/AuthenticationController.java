@@ -1,19 +1,23 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
-import com.ChatApplication.Entity.AuthRequest;
-import com.ChatApplication.Entity.AuthResponse;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.Entity.*;
 import com.ChatApplication.Security.JwtService;
 import com.ChatApplication.Service.UserService;
+import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,9 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final UserService userService;
     private final JwtService jwtService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     @PostMapping("/signup")
-    public ResponseEntity<UserDTO> signup(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
         UserDTO postUser = this.userService.signup(userDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -37,7 +42,44 @@ public class AuthenticationController {
 
             AuthResponse response = new AuthResponse(authenticatedUser,jwtToken);
             return ResponseEntity.ok(response);
+    }
+    @PostMapping("/send")
+    public ResponseEntity<?> send(
+            @Valid @RequestBody TwoFactorRequest request,
+            BindingResult result
+    )
+    {
+        if(result.hasErrors()){
+            Map<String,Object> error = new HashMap<>();
+            result.getFieldErrors().forEach(f-> error.put(f.getField(),f.getDefaultMessage()));
+            return ResponseEntity.badRequest().body(error);
+        }
+        boolean initiated = this.twoFactorAuthService.initiateVerification(request.getPhoneNumber());
 
+        TwoFactorResponse response = new TwoFactorResponse();
+        response.setPhoneNumber(request.getPhoneNumber());
+        response.setMessage(initiated ? "Verification code sent successfully":"Failed to send verification code");
+        response.setPhoneVerified(false);
+        response.setTwoFactorEnabled(false);
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/verify")
+    public ResponseEntity<?> verify(
+            @Valid @RequestBody TwoFactorVerification info
+            ,BindingResult result)
+    {
+        boolean verified = this.twoFactorAuthService
+                .verifyCode(info.getPhoneNumber(),info.getVerificationCode());
 
+        TwoFactorResponse response  = new TwoFactorResponse();
+
+        response.setPhoneNumber(info.getPhoneNumber());
+        response.setPhoneVerified(verified);
+        response.setTwoFactorEnabled(verified);
+        response.setPhoneVerifiedAt(verified? LocalDateTime.now():null);
+        response.setMessage(verified ?
+                "Phone number verified":
+                "Failed to verify number");
+        return ResponseEntity.ok(response);
     }
 }

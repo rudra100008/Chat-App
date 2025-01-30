@@ -21,8 +21,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.file.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import java.util.*;
 
 @Service
@@ -37,7 +36,7 @@ public class ChatServiceImpl implements ChatService {
     private final AuthUtils authUtils;
 
 
-    private void validateChatAccess(String chatId,String userId) throws AccessDeniedException{
+    private void validateChatAccess(String chatId,String userId){
         if(!isUserInChat(chatId,userId)){
             throw new AccessDeniedException("User does not have access to this chat");
         }
@@ -186,11 +185,7 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // Check if the loggedIn user has permission to access the chat
-        try{
-            validateChatAccess(chatId,loggedUser.getUser_Id());
-        }catch(AccessDeniedException a){
-            throw new RuntimeException(a.getMessage());
-        }
+        validateChatAccess(chatId,loggedUser.getUser_Id());
 
         User newuser =  this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found"));
@@ -213,11 +208,9 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("chatId  cannot be null or empty");
         }
         User loggedUser = this.authUtils.getLoggedInUsername();
-        try{
-            validateChatAccess(chatId,loggedUser.getUser_Id());
-        }catch(AccessDeniedException a){
-            throw new RuntimeException(a.getMessage());
-        }
+        // Check if the loggedIn user has permission to access the chat
+        validateChatAccess(chatId,loggedUser.getUser_Id());
+
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+ " not found"));
         return chat.getParticipants().stream()
@@ -244,11 +237,9 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("chatId and userId cannot be null or empty");
         }
         User loggedUser = this.authUtils.getLoggedInUsername();
-        try{
-            validateChatAccess(chatId,loggedUser.getUser_Id());
-        }catch(AccessDeniedException a){
-            throw new RuntimeException(a.getMessage());
-        }
+        // Check if the loggedIn user has permission to access the chat
+        validateChatAccess(chatId,loggedUser.getUser_Id());
+
         Chat chat =  this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+"not found."));
         User user = this.userRepository.findById(userId)
@@ -268,11 +259,9 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("chatId  cannot be null or empty");
         }
         User loggedUser = this.authUtils.getLoggedInUsername();
-        try{
-            validateChatAccess(chatId,loggedUser.getUser_Id());
-        }catch(AccessDeniedException a){
-            throw new RuntimeException(a.getMessage());
-        }
+        // Check if the loggedIn user has permission to access the chat
+        validateChatAccess(chatId,loggedUser.getUser_Id());
+
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
         this.messageRepository.deleteByChat(chat);

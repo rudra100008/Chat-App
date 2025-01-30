@@ -1,17 +1,15 @@
 package com.ChatApplication.Exception;
 
 import jakarta.validation.ConstraintViolationException;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authorization.AuthorizationDeniedException;
+
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,6 +77,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException e,WebRequest request){
         return createErrorResponse(HttpStatus.FORBIDDEN,e.getMessage(),request);
+    }
+
+    @ExceptionHandler(TwoFactorAuthException.class)
+    public ResponseEntity<?> handleAccessDeniedException(TwoFactorAuthException e,WebRequest request){
+        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage(),request);
     }
 
 

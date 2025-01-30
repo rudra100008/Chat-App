@@ -121,4 +121,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(()-> new ResourceNotFoundException(request.getUserName()+" not found in server"));
     }
 
+    @Override
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return this.userRepository.existsByPhoneNumber(phoneNumber);
+    }
+
+    @Override
+    public User findByPhoneNumber(String phoneNumber) {
+        return this.userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(()->
+                        new ResourceNotFoundException("User not found with this mobileNumber: "+phoneNumber));
+    }
+
 }

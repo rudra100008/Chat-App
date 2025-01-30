@@ -11,3 +11,11 @@ security:
     security-key: 4bbf5ef641e95aa5474f6f9e000b80e83e7c2e441cff743658aafd16a08234c6
     expiration-date: 3600000
 
+twilio:
+  account:
+    sid: AC0623df3b07df1cfa0faef9ca1f373784
+  auth:
+    token: 11abd997f9955b9cac5ed8be42ea0473
+  verify:
+    service:
+      sid: VAfecdde761bf37fc26e69e8cd5d677879
