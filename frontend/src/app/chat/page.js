@@ -12,7 +12,7 @@ export default function Chat() {
     const [stompClient,setStompClient] = useState(null);
     const messagesEndRef = useRef(null);
 
-    const userId='67528bee9d7a5c15c2188391';
+    const userId='6756b718c318852de08f46ed';
     const chatId ='675823ef5ed46322912aad24';
     const handleValueChange=(e)=>{
         setInputValue(e.target.value)
@@ -23,7 +23,7 @@ export default function Chat() {
     }
 
     const fetchMessageFromChat=async()=>{
-        await axios.get(`${baseUrl}/api/v1/messages/chat/${chatId}`)
+        await axios.get(`${baseUrl}/api/messages/chat/${chatId}`)
         .then((response)=>{
             const data = response.data;
             setMessage(data);
