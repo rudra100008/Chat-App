@@ -13,6 +13,7 @@ public class WebConfigurer implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowedMethods("GET","POST","PUT","DELETE","PATCH")
                 .allowedOrigins("http://localhost:3000")
+                .exposedHeaders("*")
                 .allowCredentials(true);
     }
 }

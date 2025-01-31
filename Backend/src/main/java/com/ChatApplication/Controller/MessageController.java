@@ -1,6 +1,7 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.MessageDTO;
+import com.ChatApplication.Entity.PageInfo;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Service.MessageService;
 import jakarta.validation.Valid;
@@ -24,6 +25,9 @@ public class MessageController {
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
 
+    private static final String PAGE_NUMBER = "0";
+    private static final String PAGE_SIZE =   "10";
+
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload MessageDTO messageDTO)throws ResourceNotFoundException {
         MessageDTO savedMessage = messageService.postMessage(
@@ -46,14 +50,24 @@ public class MessageController {
     }
 
     @GetMapping("/sender/{senderId}")
-    public ResponseEntity<List<MessageDTO>> fetchMessageBySenderId(@PathVariable("senderId")String senderId){
-        List<MessageDTO> messageDTO = this.messageService.fetchMessagesBySenderId(senderId);
+    public ResponseEntity<PageInfo<MessageDTO>> fetchMessageBySenderId(
+            @PathVariable("senderId")String senderId,
+            @RequestParam(required = false, defaultValue = PAGE_NUMBER,name = "pageNumber")Integer pageNumber,
+            @RequestParam(required = false,defaultValue = PAGE_SIZE,name = "pageSize")Integer pageSize
+    )
+    {
+        PageInfo<MessageDTO> messageDTO = this.messageService.fetchMessagesBySenderId(senderId,pageNumber,pageSize);
         return ResponseEntity.ok(messageDTO);
     }
 
     @GetMapping("/chat/{chatId}")
-    public ResponseEntity<List<MessageDTO>> fetchMessageByChatId(@PathVariable("chatId")String chatId){
-        List<MessageDTO> messageDTO = this.messageService.fetchMessagesByChatId(chatId);
+    public ResponseEntity<PageInfo<MessageDTO>> fetchMessageByChatId(
+            @PathVariable("chatId")String chatId,
+            @RequestParam(required = false, defaultValue = PAGE_NUMBER,name = "pageNumber")Integer pageNumber,
+            @RequestParam(required = false,defaultValue = PAGE_SIZE,name = "pageSize")Integer pageSize
+    )
+    {
+        PageInfo<MessageDTO> messageDTO = this.messageService.fetchMessagesByChatId(chatId,pageNumber,pageSize);
         return ResponseEntity.ok(messageDTO);
     }
 
@@ -62,7 +76,8 @@ public class MessageController {
             @PathVariable("messageId")String messageId,
             @Valid @RequestBody MessageDTO messageDTO,
             BindingResult result
-    ){
+    )
+    {
         if (result.hasErrors()){
             Map<String,Object> error = new HashMap<>();
             result.getFieldErrors().stream().map(fieldError -> error.put(fieldError.getField(),fieldError.getDefaultMessage()));
@@ -76,7 +91,8 @@ public class MessageController {
     }
 
     @DeleteMapping("/delete/{messageId}")
-    public ResponseEntity<String> deleteMessage(@PathVariable("messageId")String messageId){
+    public ResponseEntity<String> deleteMessage(@PathVariable("messageId")String messageId)
+    {
         this.messageService.deleteMessage(messageId);
         return ResponseEntity.ok("Message Deleted.");
     }

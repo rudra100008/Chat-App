@@ -20,8 +20,11 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception{
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors->cors.configure(http))
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/server/**", "/app/**", "/private/**", "/user/**", "/chatroom/**").permitAll()
+                        .requestMatchers("/api/messages/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session->session
