@@ -28,7 +28,12 @@ public class AuthenticationController {
     private final TwoFactorAuthService twoFactorAuthService;
 
     @PostMapping("/signup")
-    public ResponseEntity<UserDTO> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
+    public ResponseEntity<?> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
+        if(result.hasErrors()){
+            Map<String,Object> errors = new HashMap<>();
+            result.getFieldErrors().forEach(f-> errors.put(f.getField(),f.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
         UserDTO postUser = this.userService.signup(userDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -68,6 +73,11 @@ public class AuthenticationController {
             @Valid @RequestBody TwoFactorVerification info
             ,BindingResult result)
     {
+        if(result.hasErrors()){
+            Map<String,Object> error = new HashMap<>();
+            result.getFieldErrors().forEach(f-> error.put(f.getField(),f.getDefaultMessage()));
+            return ResponseEntity.badRequest().body(error);
+        }
         boolean verified = this.twoFactorAuthService
                 .verifyCode(info.getPhoneNumber(),info.getVerificationCode());
 

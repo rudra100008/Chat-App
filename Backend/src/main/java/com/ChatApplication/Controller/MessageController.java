@@ -13,9 +13,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,7 +27,7 @@ public class MessageController {
     private static final String PAGE_SIZE =   "10";
 
     @MessageMapping("/chat.sendMessage")
-    public void sendMessage(@Payload MessageDTO messageDTO)throws ResourceNotFoundException {
+    public void sendMessage(@Valid @Payload MessageDTO messageDTO)throws ResourceNotFoundException {
         MessageDTO savedMessage = messageService.postMessage(
                 messageDTO.getSenderId(),
                 messageDTO.getChatId(),
@@ -40,7 +38,16 @@ public class MessageController {
     }
 
     @PostMapping
-    public ResponseEntity<MessageDTO> postMessage(@Valid @RequestBody MessageDTO messageDTO){
+    public ResponseEntity<?> postMessage(
+            @Valid @RequestBody MessageDTO messageDTO,
+            BindingResult result
+    )
+    {
+        if(result.hasErrors()){
+            Map<String, Object> error = new HashMap<>();
+            result.getFieldErrors().forEach(f-> error.put(f.getField(),f.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        }
         MessageDTO savedMessage = this.messageService.postMessage(
                 messageDTO.getSenderId(),
                 messageDTO.getChatId(),
@@ -80,7 +87,7 @@ public class MessageController {
     {
         if (result.hasErrors()){
             Map<String,Object> error = new HashMap<>();
-            result.getFieldErrors().stream().map(fieldError -> error.put(fieldError.getField(),fieldError.getDefaultMessage()));
+            result.getFieldErrors().forEach(fieldError -> error.put(fieldError.getField(),fieldError.getDefaultMessage()));
             return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         }
         MessageDTO updateMessages = this.messageService.updateMessage(

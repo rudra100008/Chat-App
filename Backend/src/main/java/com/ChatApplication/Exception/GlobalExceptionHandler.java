@@ -1,8 +1,12 @@
 package com.ChatApplication.Exception;
 
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 
@@ -10,12 +14,17 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     private ResponseEntity<?> createErrorResponse(HttpStatus status, String message, WebRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -82,6 +91,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TwoFactorAuthException.class)
     public ResponseEntity<?> handleAccessDeniedException(TwoFactorAuthException e,WebRequest request){
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage(),request);
+    }
+
+    @MessageExceptionHandler(MethodArgumentNotValidException.class)
+    public void handleValidationException(MethodArgumentNotValidException e, Principal principal){
+        List<String> errors = e.getBindingResult().getFieldErrors()
+                .stream()
+                .map(err-> err.getField()+": "+err.getDefaultMessage())
+                .toList();
+        this.messagingTemplate.convertAndSendToUser(
+                principal.getName(),
+                "/queue/errors",
+               new WebSocketErrorMessage("Validation failed",errors));
+
     }
 
 
