@@ -24,7 +24,6 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/server/**", "/app/**", "/private/**", "/user/**", "/chatroom/**").permitAll()
-                        .requestMatchers("/api/messages/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session->session
