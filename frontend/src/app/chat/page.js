@@ -12,8 +12,9 @@ export default function Chat() {
     const [stompClient,setStompClient] = useState(null);
     const messagesEndRef = useRef(null);
 
-    const userId='6756b718c318852de08f46ed';
-    const chatId ='675823ef5ed46322912aad24';
+    const userId='678a087eef7a7c18eae29694';
+    const chatId ='678cbc2c1f1b524403d7432a';
+    const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBc2h1bV9CaHVqdSIsImlhdCI6MTczODU3OTc2NywiZXhwIjoxNzM4NTgzMzY3fQ._l2CsGN4BhsTDV6eML1oF5vlRNy00Z3jcIgB-N3mCjM";
     const handleValueChange=(e)=>{
         setInputValue(e.target.value)
     }
@@ -23,9 +24,15 @@ export default function Chat() {
     }
 
     const fetchMessageFromChat=async()=>{
-        await axios.get(`${baseUrl}/api/messages/chat/${chatId}`)
+        await axios.get(`${baseUrl}/api/messages/chat/${chatId}`,{
+            headers:{
+                Authorization: `Bearer ${token}`
+            }
+        })
         .then((response)=>{
-            const data = response.data;
+            console.log("Backend is available")
+            const {data} = response.data;
+            console.log("data fetched from fetchMessageFromChat: ",data)
             setMessage(data);
         }).catch((error)=>{
             console.error("failed to fetch message from the chat: ",error.response.data)
