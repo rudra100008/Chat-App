@@ -1,0 +1,64 @@
+.Container {
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Form {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    max-width: 90%;
+}
+
+.Header {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.FormGroup {
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.Label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+.InputForm[type="text"],
+.InputForm[type="password"] {
+    width: 100%;
+    padding: 0.50rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.InputForm[type="text"]:focus,
+.InputForm[type="password"]:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(71, 147, 209, 0.1);
+}
+
+.InputForm[type="text"]::placeholder,
+.InputForm[type="password"]::placeholder {
+    color: #a0aec0;
+}
+
+.Radio{
+    
+}
