@@ -12,9 +12,9 @@ export default function Chat() {
     const [stompClient,setStompClient] = useState(null);
     const messagesEndRef = useRef(null);
 
-    const userId='678a087eef7a7c18eae29694';
+    const userId=localStorage.getItem("userId");
     const chatId ='678cbc2c1f1b524403d7432a';
-    const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJBc2h1bV9CaHVqdSIsImlhdCI6MTczODU3OTc2NywiZXhwIjoxNzM4NTgzMzY3fQ._l2CsGN4BhsTDV6eML1oF5vlRNy00Z3jcIgB-N3mCjM";
+    const token = localStorage.getItem("token");
     const handleValueChange=(e)=>{
         setInputValue(e.target.value)
     }

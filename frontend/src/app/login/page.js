@@ -1,27 +1,65 @@
 import { useState } from 'react'
 import Style from '../Style/form.module.css'
+import axios from 'axios'
+import baseUrl from '../baseUrl'
+import { useRouter } from 'next/navigation'
 export default function LogInPage(){
+    const router = useRouter();
     const [user,setUser] = useState({
-        username: "",
+        userName: "",
         password :""
     })
 
     const newUser=(e)=>{
         setUser({...user,[e.target.name]:e.target.value})
     }
+    const handleLoginForm=async()=>{
+        console.log("User data:",user)
+        await axios.post(`${baseUrl}/auth/login`,user,{
+            headers:{"Content-Type":"application/json"}
+        })
+        .then((response)=>{
+            if(response && response.data){
+                const { token, user: { user_Id } } = response.data;
+                localStorage.setItem("token", token);
+                localStorage.setItem("userId", user_Id);
+                
+                setUser({ userName: "", password: "" });
+                console.log("Login Successfully");
+                console.log(response.data);
+                router.push("/chat")
+            }else{
+                console.log("No data received from the server")
+            }
+        }).catch((error)=>{
+            const message = error.response.data.message || "Unknown Error";
+            if(error.response.status === 401){
+                console.log("Invalid username or password");
+            }else if(error.response.status === 500){
+                console.log(message);
+            }else{
+                console.log("Something went wrong")
+            }
+            console.log(error?.response?.data|| "Unknown Error" )
+        })
+    }
+    const handleForm=(e)=>{
+        e.preventDefault();
+        handleLoginForm();
+    }
     return(
         <div className={Style.Container}>
-            <div className={Style.Form}>
-                <header className={Style.Header}>Login here</header>
+            <form onSubmit={handleForm} className={Style.Form}>
+                <header className={Style.Header}>Login to your account</header>
                 <div className={Style.FormGroup}>
-                    <label htmlFor="username" className={Style.Label}>Username</label>
+                    <label htmlFor="userName" className={Style.Label}>Username</label>
                     <input 
                     type="text"
-                    name='username'
-                    id='username'
+                    name='userName'
+                    id='userName'
                     placeholder='Enter username..'
                     className={Style.InputForm}
-                    value={user.username}
+                    value={user.userName}
                     onChange={newUser}
                      />
                 </div>
@@ -46,10 +84,10 @@ export default function LogInPage(){
                     />
                     <label htmlFor="Rememberme" className={Style.Label}>Remember me</label>
                 </div>
-                <div className={Style.Submit}>
-                    <button>Login</button>
+                <div className={Style.Button}>
+                    <button type='submit'>Login</button>
                 </div>
-            </div>
+            </form>
         </div>
     )
 }

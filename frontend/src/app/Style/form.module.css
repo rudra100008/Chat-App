@@ -58,7 +58,24 @@
 .InputForm[type="password"]::placeholder {
     color: #a0aec0;
 }
-
+/* for radio */
 .Radio{
     
+}
+/* login button */
+.Button{
+    width: 20%;
+    background-color: skyblue;
+    color: white;
+    text-align: center;
+    font-size: 1rem;
+    padding: 5px 10px;
+    margin: 10px 0;
+    box-shadow: 0 0 0 3px rgba(71, 147, 209, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+}
+.Button:hover{
+    background-color: #4299e1;
+    transform: scale(1.1);
 }
