@@ -23,7 +23,6 @@ public class SecurityConfiguration {
                 .cors(cors->cors.configure(http))
                 .authorizeHttpRequests(auth->auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/server/**", "/app/**", "/private/**", "/user/**", "/chatroom/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session->session

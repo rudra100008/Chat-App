@@ -4,11 +4,23 @@ import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.Message;
 import com.ChatApplication.Entity.User;
+import com.ChatApplication.Security.JwtService;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -17,7 +29,10 @@ import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class AppConfig implements WebSocketMessageBrokerConfigurer {
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
     @Bean
     public ModelMapper mapper(){
         ModelMapper mapper = new ModelMapper();
@@ -59,5 +74,10 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
        registry.enableSimpleBroker("/chatroom","/user","/private");
        registry.setApplicationDestinationPrefixes("/app");
        registry.setUserDestinationPrefix("/user");
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        WebSocketMessageBrokerConfigurer.super.configureClientInboundChannel(registration);
     }
 }
