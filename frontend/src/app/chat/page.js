@@ -5,129 +5,154 @@ import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import axios from 'axios';
 import baseUrl from '../baseUrl';
+
 export default function Chat() {
     const [message, setMessage] = useState([])
-    const [inputValue,setInputValue] = useState('');
+    const [inputValue, setInputValue] = useState('');
     const [connected, setConnected] = useState(false);
-    const [stompClient,setStompClient] = useState(null);
+    const [stompClient, setStompClient] = useState(null);
+    const [error, setError] = useState(null);
     const messagesEndRef = useRef(null);
 
-    const userId=localStorage.getItem("userId");
-    const chatId ='678cbc2c1f1b524403d7432a';
+    const userId = localStorage.getItem("userId");
+    const chatId = '678cbc2c1f1b524403d7432a';
     const token = localStorage.getItem("token");
-    const handleValueChange=(e)=>{
+
+    const handleValueChange = (e) => {
         setInputValue(e.target.value)
     }
 
-    const scrollToBottom=()=>{
-        messagesEndRef.current?.scrollIntoView({behavior:'smooth'})
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
 
-    const fetchMessageFromChat=async()=>{
-        await axios.get(`${baseUrl}/api/messages/chat/${chatId}`,{
-            headers:{
-                Authorization: `Bearer ${token}`
-            }
-        })
-        .then((response)=>{
-            console.log("Backend is available")
-            const {data} = response.data;
-            console.log("data fetched from fetchMessageFromChat: ",data)
-            setMessage(data);
-        }).catch((error)=>{
-            console.error("failed to fetch message from the chat: ",error.response.data)
-        })
+    const fetchMessageFromChat = async () => {
+        try {
+            // Then fetch messages
+            const response = await axios.get(`${baseUrl}/api/messages/chat/${chatId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            console.log("Response from server:", response);
+            const { data } = response.data;
+            setMessage(data || []);
+        } catch (error) {
+            console.error("Error fetching messages:", error);
+            setError(error.response?.data?.message || error.message);
+        }
     }
-    const handleSendMessage=()=>{
-        if(!inputValue.trim() || !connected) return
+
+    const handleSendMessage = () => {
+        if (!inputValue.trim() || !connected) return;
 
         const messageDTO = {
             senderId: userId,
-            chatId : chatId,
-            content : inputValue.trim()
+            chatId: chatId,
+            content: inputValue.trim()
         }
-        stompClient.send("/app/chat.sendMessage",{},JSON.stringify(messageDTO));
-        setInputValue('');
+
+        try {
+            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(messageDTO));
+            setInputValue('');
+        } catch (error) {
+            console.error("Error sending message:", error);
+            setError("Failed to send message");
+        }
     }
 
-    useEffect(()=>{
+    useEffect(() => {
+        if (!userId || !chatId || !token) {
+            setError("Missing required authentication information");
+            return;
+        }
+
         fetchMessageFromChat();
-        const connectWebSocket = ()=>{
-            const client = Stomp.over(() => new SockJS('http://localhost:8080/server'));
+        
+        const connectWebSocket = () => {
+            const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
+            
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            }
 
-
-            client.connect({},()=>{
+            client.connect(headers, () => {
                 setConnected(true);
                 setStompClient(client);
-                client.subscribe(`/private/chat/${chatId}`,(message)=>{
-                    console.log("Recieved Message:",message.body)
-                    const receivedMessage = JSON.parse(message.body)
-                    setMessage((prevMessage)=>[...prevMessage,receivedMessage]);
-                })
-            },(error)=>{
-                console.error('WebSocket connection error:',error);
-                setConnected(false)
-            })
+                client.subscribe(`/private/chat/${chatId}`, (message) => {
+                    const receivedMessage = JSON.parse(message.body);
+                    setMessage((prevMessages) => [...prevMessages, receivedMessage]);
+                });
+            }, (error) => {
+                console.error('WebSocket connection error:', error);
+                setConnected(false);
+                setError("Failed to connect to chat server");
+            });
+
             return client;
         }
-        const client  = connectWebSocket();
-        return ()=>{
-            if(client && client.connected){
+
+        const client = connectWebSocket();
+
+        return () => {
+            if (client && client.connected) {
                 client.disconnect();
             }
         }
-    },[])
-    useEffect(()=>{
+    }, [userId, chatId, token]);
+
+    useEffect(() => {
         scrollToBottom()
-    },[message])
+    }, [message])
+
+    if (error) {
+        return <div className={style.error}>{error}</div>
+    }
+
     return (
         <div className={style.body}>
             <div className={style.ChatContainer}>
-            {/*Message Display area */}
-            <div className={style.MessageContainer}>
-            {message.map((msg,index)=>(
-                <div 
-                key={index}
-                className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
-                >
-                    <div className={style.MessageContent}>
-                        {msg.content}
+                <div className={style.MessageContainer}>
+                    {message.map((msg, index) => (
+                        <div 
+                            key={index}
+                            className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
+                        >
+                            <div className={style.MessageContent}>
+                                {msg.content}
+                            </div>
+                            <div>
+                                {new Date(msg.timestamp).toLocaleDateString()}
+                            </div>
+                        </div>
+                    ))}
+                    <div ref={messagesEndRef}/>
+                </div>
+                <div className={style.inputWrapper}>
+                    <div className={style.FieldGroup}>
+                        <input
+                            type="text"
+                            name='content'
+                            id='content'
+                            placeholder='Type a message'
+                            className={style.FieldInput}
+                            value={inputValue}
+                            onChange={handleValueChange}
+                            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                        />
                     </div>
-                    <div>
-                        {new Date(msg.timestamp).toLocaleDateString()}
+                    <div className={style.ButtonGroup}>
+                        <button 
+                            className={style.SendButton}
+                            onClick={handleSendMessage}
+                            disabled={!connected}
+                        >
+                            Send
+                        </button>
                     </div>
                 </div>
-            ))
-            }
-            <div ref={messagesEndRef}/>
-            </div>
-            {/*Input Area */}
-               <div className={style.inputWrapper}>
-               <div className={style.FieldGroup}>
-                    <input
-                        type="text"
-                        name='content'
-                        id='content'
-                        placeholder='Type a message'
-                        className={style.FieldInput}
-                        value={inputValue}
-                        onChange={handleValueChange}
-                        onKeyPress={(e)=> e.key === "Enter" && handleSendMessage()}
-                    />
-                </div>
-                <div className={style.ButtonGroup}>
-                    <button 
-                    className={style.SendButton}
-                    onClick={handleSendMessage}
-                    disabled ={!connected}
-                    >
-                        Send
-                    </button>
-                </div>
-               </div>
             </div>
         </div>
-
-
     )
 }
