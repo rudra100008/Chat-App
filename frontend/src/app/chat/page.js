@@ -54,7 +54,12 @@ export default function Chat() {
         }
 
         try {
-            stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(messageDTO));
+            stompClient.send("/app/chat.sendMessage", 
+                {
+                    Authorization: `Bearer ${token}`
+                }, 
+                JSON.stringify(messageDTO)
+            );
             setInputValue('');
         } catch (error) {
             console.error("Error sending message:", error);
