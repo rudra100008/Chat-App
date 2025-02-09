@@ -64,20 +64,49 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-      registry.addEndpoint("/server")
-              .setAllowedOrigins("http://localhost:3000")
-              .withSockJS();
+        registry.addEndpoint("/server")
+                .setAllowedOrigins("http://localhost:3000")
+                .withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-       registry.enableSimpleBroker("/chatroom","/user","/private");
-       registry.setApplicationDestinationPrefixes("/app");
-       registry.setUserDestinationPrefix("/user");
+        registry.enableSimpleBroker("/chatroom", "/user", "/private");
+        registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user");
     }
-
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        WebSocketMessageBrokerConfigurer.super.configureClientInboundChannel(registration);
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public org.springframework.messaging.Message<?> preSend(org.springframework.messaging.Message<?> message, MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+                if (accessor != null && (StompCommand.CONNECT.equals(accessor.getCommand())
+                        || StompCommand.SEND.equals(accessor.getCommand()))) {
+
+                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+
+                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                        String token = authHeader.substring(7);
+                        String username = jwtService.extractUsername(token);
+
+                        if (username != null) {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                            if (jwtService.isTokenValid(token, userDetails)) {
+                                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
+                                SecurityContextHolder.getContext().setAuthentication(authToken);
+                                accessor.setUser(authToken);
+
+                                // Set native headers to maintain authentication across messages
+                                accessor.setLeaveMutable(true);
+                            }
+                        }
+                    }
+                }
+                return message;
+            }
+        });
     }
 }

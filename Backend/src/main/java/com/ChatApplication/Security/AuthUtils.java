@@ -12,11 +12,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AuthUtils {
     private final UserRepository userRepository;
-    public   User getLoggedInUsername(){
+
+    public User getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()){
-            return  userRepository.findByUserName(authentication.getName())
-                    .orElseThrow(()-> new ResourceNotFoundException(authentication.getName()+" not found in server."));
+
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())) {
+
+            return userRepository.findByUserName(authentication.getName())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            authentication.getName() + " not found in server."));
         }
         throw new IllegalArgumentException("No authenticated user found");
     }

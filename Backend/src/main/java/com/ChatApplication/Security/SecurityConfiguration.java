@@ -22,7 +22,7 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors->cors.configure(http))
                 .authorizeHttpRequests(auth->auth
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers( "/auth/**","/server/**", "/app/**", "/topic/**", "/user/**", "/chatroom/**", "/private/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session->session
