@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails.getAuthorities()
                     );
                     // add additional information about the authentication request
-                    // It includes information like : session Id , Ip address and others
+                    // It includes information like : sessionId , Ip address and others
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
@@ -57,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }catch(Exception e){
             handlerExceptionResolver.resolveException(request,response,null,e);
         }
-        
+
     }
 }
 // Example of what I might see in the Authentication object

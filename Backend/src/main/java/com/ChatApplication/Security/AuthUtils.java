@@ -18,8 +18,11 @@ public class AuthUtils {
     public User getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || !"anonymousUser".equals(authentication.getPrincipal())) {
-            throw new IllegalArgumentException("No authenticated user found.");
+//        if (authentication == null || !"anonymousUser".equals(authentication.getPrincipal())) {
+//            throw new IllegalArgumentException("No authenticated user found.");
+//        }
+        if(!authentication.isAuthenticated()){
+            throw new IllegalArgumentException("No authenticated user found");
         }
 
         return userRepository.findByUserName(authentication.getName())

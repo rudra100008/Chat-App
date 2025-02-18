@@ -12,7 +12,6 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -71,6 +70,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                         );
 
                         stompHeaderAccessor.setUser(auth); // Attach authentication to the WebSocket session
+                        SecurityContextHolder.getContext().setAuthentication(auth);
                         logger.info("WebSocket authentication successful for user: {}", username);
                     } else {
                         logger.warn("Invalid JWT token for user: {}", username);

@@ -100,13 +100,13 @@ public class MessageServiceImpl implements MessageService {
         if(senderId == null || senderId.trim().isEmpty() || chatId == null || chatId.trim().isEmpty()){
             throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
         }
-        User loggedInUsername = this.authUtils.getLoggedInUsername();
-        validateChatAccess(chatId,loggedInUsername);
+//        User loggedInUsername = this.authUtils.getLoggedInUsername();
+//        validateChatAccess(chatId,loggedInUsername);
         User sender = this.userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
-        if (!senderId.equals(loggedInUsername.getUser_Id())){
-            throw new IllegalArgumentException("Sender cannot access message in this chat");
-        }
+//        if (!senderId.equals(loggedInUsername.getUser_Id())){
+//            throw new IllegalArgumentException("Sender cannot access message in this chat");
+//        }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
         if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(sender.getUser_Id()))){
