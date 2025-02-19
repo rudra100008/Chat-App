@@ -44,20 +44,21 @@ public class MessageController {
                             StompHeaderAccessor headerAccessor) throws ResourceNotFoundException {
         logger.debug("Message received from the client.");
 
-        // Retrieve the authenticated user using AuthUtils
-        User sender = authUtils.getLoggedInUserFromWebSocket(headerAccessor);
-
-        // Ensure the sender ID in the message matches the authenticated user's ID
-        if (!messageDTO.getSenderId().equals(sender.getUser_Id())) {
-            logger.error("Sender ID mismatch");
-            throw new AccessDeniedException("Sender ID does not match authenticated user");
-        }
+//        // Retrieve the authenticated user using AuthUtils
+//        User sender = authUtils.getLoggedInUserFromWebSocket(headerAccessor);
+//
+//        // Ensure the sender ID in the message matches the authenticated user's ID
+//        if (!messageDTO.getSenderId().equals(sender.getUser_Id())) {
+//            logger.error("Sender ID mismatch");
+//            throw new AccessDeniedException("Sender ID does not match authenticated user");
+//        }
 
         // Proceed with posting the message
         MessageDTO savedMessage = messageService.postMessage(
                 messageDTO.getSenderId(),
                 messageDTO.getChatId(),
-                messageDTO.getContent()
+                messageDTO.getContent(),
+                headerAccessor
         );
 
         // Send the message to the appropriate chat
@@ -68,7 +69,8 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<?> postMessage(
             @Valid @RequestBody MessageDTO messageDTO,
-            BindingResult result
+            BindingResult result,
+            StompHeaderAccessor headerAccessor
     )
     {
         if(result.hasErrors()){
@@ -79,7 +81,8 @@ public class MessageController {
         MessageDTO savedMessage = this.messageService.postMessage(
                 messageDTO.getSenderId(),
                 messageDTO.getChatId(),
-                messageDTO.getContent()
+                messageDTO.getContent(),
+                headerAccessor
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMessage);
     }

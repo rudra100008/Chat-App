@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -96,17 +97,17 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     @Transactional
-    public MessageDTO postMessage(String senderId, String chatId, String content) {
+    public MessageDTO postMessage(String senderId, String chatId, String content, StompHeaderAccessor headerAccessor) {
         if(senderId == null || senderId.trim().isEmpty() || chatId == null || chatId.trim().isEmpty()){
             throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
         }
-//        User loggedInUsername = this.authUtils.getLoggedInUsername();
-//        validateChatAccess(chatId,loggedInUsername);
+        User loggedInUsername = this.authUtils.getLoggedInUserFromWebSocket(headerAccessor);
+        validateChatAccess(chatId,loggedInUsername);
         User sender = this.userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
-//        if (!senderId.equals(loggedInUsername.getUser_Id())){
-//            throw new IllegalArgumentException("Sender cannot access message in this chat");
-//        }
+        if (!senderId.equals(loggedInUsername.getUser_Id())){
+            throw new IllegalArgumentException("Sender cannot access message in this chat");
+        }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
         if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(sender.getUser_Id()))){
