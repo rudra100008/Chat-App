@@ -3,6 +3,7 @@ import Style from '../Style/form.module.css'
 import axios from 'axios'
 import baseUrl from '../baseUrl'
 import { useRouter } from 'next/navigation'
+import axiosInterceptor from '../Component/Interceptor'
 export default function LogInPage(){
     const router = useRouter();
     const [user,setUser] = useState({
@@ -15,20 +16,21 @@ export default function LogInPage(){
     }
     const handleLoginForm=async()=>{
         console.log("User data:",user)
-        await axios.post(`${baseUrl}/auth/login`,user,{
+        await axiosInterceptor.post(`${baseUrl}/auth/login`,user,{
             headers:{"Content-Type":"application/json"}
         })
         .then((response)=>{
             if(response && response.data){
-                const { token, user: { user_Id } } = response.data;
+                const { token, user: { user_Id },isTokenValid } = response.data;
                 localStorage.setItem("token", token);
                 localStorage.setItem("userId", user_Id);
-                
+                localStorage.setItem("isTokenValid",isTokenValid);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
                 console.log(response.data);
                 router.push("/chat")
             }else{
+                localStorage.clear();
                 console.log("No data received from the server")
             }
         }).catch((error)=>{
