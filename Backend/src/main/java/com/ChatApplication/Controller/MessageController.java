@@ -2,11 +2,8 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.PageInfo;
-import com.ChatApplication.Entity.User;
 import com.ChatApplication.Exception.ResourceNotFoundException;
-import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.AuthUtils;
-import com.ChatApplication.Security.JwtService;
 import com.ChatApplication.Service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,15 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 

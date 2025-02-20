@@ -1,3 +1,4 @@
+
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
@@ -9,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +29,7 @@ public class AuthenticationController {
     private final UserService userService;
     private final JwtService jwtService;
     private final TwoFactorAuthService twoFactorAuthService;
+    private final UserDetailsService userDetailsService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
@@ -44,8 +48,9 @@ public class AuthenticationController {
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
             User authenticatedUser = this.userService.authenticate(request);
             String jwtToken = this.jwtService.generateToken(authenticatedUser);
-
-            AuthResponse response = new AuthResponse(authenticatedUser,jwtToken);
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(authenticatedUser.getUsername());
+            Boolean isTokenValid = this.jwtService.isTokenValid(jwtToken,userDetails);
+            AuthResponse response = new AuthResponse(authenticatedUser,jwtToken, isTokenValid);
             return ResponseEntity.ok(response);
     }
     @PostMapping("/send")
