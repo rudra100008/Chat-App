@@ -15,7 +15,6 @@ export default function LogInPage(){
         setUser({...user,[e.target.name]:e.target.value})
     }
     const handleLoginForm=async()=>{
-        console.log("User data:",user)
         await axiosInterceptor.post(`${baseUrl}/auth/login`,user,{
             headers:{"Content-Type":"application/json"}
         })
@@ -28,9 +27,12 @@ export default function LogInPage(){
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
                 console.log(response.data);
-                router.push("/chat")
+                console.log("token: ",token);
+                console.log("userId: ",user_Id)
+                setTimeout(() => {
+                    router.push("/chat")
+                }, 2000);
             }else{
-                localStorage.clear();
                 console.log("No data received from the server")
             }
         }).catch((error)=>{
@@ -42,6 +44,7 @@ export default function LogInPage(){
             }else{
                 console.log("Something went wrong")
             }
+            localStorage.clear();
             console.log(error?.response?.data|| "Unknown Error" )
         })
     }

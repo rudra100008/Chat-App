@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import style from '../Style/chat.module.css'
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
-import axios from 'axios';
 import baseUrl from '../baseUrl';
+import axiosInterceptor from '../Component/Interceptor';
+import Message from '../Component/Message';
 
 export default function Chat() {
     const [message, setMessage] = useState([])
@@ -13,10 +14,9 @@ export default function Chat() {
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
     const messagesEndRef = useRef(null);
-
-    const userId = localStorage.getItem("userId");
+    const [token, setToken] = useState(() => localStorage.getItem('token') || '');
+    const [userId, setUserId] = useState(() => localStorage.getItem('userId') || '');
     const chatId = '678cbc2c1f1b524403d7432a';
-    const token = localStorage.getItem("token");
 
     const handleValueChange = (e) => {
         setInputValue(e.target.value)
@@ -29,7 +29,7 @@ export default function Chat() {
     const fetchMessageFromChat = async () => {
         try {
             // Then fetch messages
-            const response = await axios.get(`${baseUrl}/api/messages/chat/${chatId}`, {
+            const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -69,6 +69,8 @@ export default function Chat() {
 
     useEffect(() => {
         if (!userId || !chatId || !token) {
+            console.log("userId: ",userId);
+            console.log("token: ",token)
             setError("Missing required authentication information");
             return;
         }
@@ -118,22 +120,7 @@ export default function Chat() {
     return (
         <div className={style.body}>
             <div className={style.ChatContainer}>
-                <div className={style.MessageContainer}>
-                    {message.map((msg, index) => (
-                        <div 
-                            key={index}
-                            className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
-                        >
-                            <div className={style.MessageContent}>
-                                {msg.content}
-                            </div>
-                            <div>
-                                {new Date(msg.timestamp).toLocaleDateString()}
-                            </div>
-                        </div>
-                    ))}
-                    <div ref={messagesEndRef}/>
-                </div>
+                <Message message={message} userId={userId} />
                 <div className={style.inputWrapper}>
                     <div className={style.FieldGroup}>
                         <input
