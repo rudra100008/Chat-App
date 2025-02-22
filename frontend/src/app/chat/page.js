@@ -6,8 +6,10 @@ import { Stomp } from '@stomp/stompjs';
 import baseUrl from '../baseUrl';
 import axiosInterceptor from '../Component/Interceptor';
 import Message from '../Component/Message';
+import { useRouter } from 'next/navigation';
 
 export default function Chat() {
+    const route = useRouter();
     const [message, setMessage] = useState([])
     const [inputValue, setInputValue] = useState('');
     const [connected, setConnected] = useState(false);
@@ -40,6 +42,12 @@ export default function Chat() {
             setMessage(data || []);
         } catch (error) {
             console.error("Error fetching messages:", error);
+            if( error.response && error.response.status === 401){
+                setError("Login again");
+                setTimeout(()=>{
+                    route.push("/");
+                })
+            }
             setError(error.response?.data?.message || error.message);
         }
     }
@@ -69,8 +77,6 @@ export default function Chat() {
 
     useEffect(() => {
         if (!userId || !chatId || !token) {
-            console.log("userId: ",userId);
-            console.log("token: ",token)
             setError("Missing required authentication information");
             return;
         }

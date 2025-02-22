@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Style from '../Style/form.module.css'
 import axios from 'axios'
 import baseUrl from '../baseUrl'
@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import axiosInterceptor from '../Component/Interceptor'
 export default function LogInPage(){
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(true);
     const [user,setUser] = useState({
         userName: "",
         password :""
@@ -14,6 +15,38 @@ export default function LogInPage(){
     const newUser=(e)=>{
         setUser({...user,[e.target.name]:e.target.value})
     }
+    const verifyToken= async()=>{
+        const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("userId")
+        if(!token && !userId){
+            setIsLoading(false)
+            return;
+        }
+
+        try{
+            const response = await axiosInterceptor.post(`${baseUrl}/auth/verify-token?userId=${userId}`,userId,{
+                headers:{Authorization:`Bearer ${token}`}
+            })
+            
+            const {isTokenValid} = response.data;
+            console.log("IstokenValid: ",isTokenValid)
+            if(isTokenValid){
+                router.push("/chat");
+            }else {
+                // Clear storage if token is invalid
+                localStorage.clear();
+                setIsLoading(false);
+            }
+        }catch(error){
+            console.log("Token verification failed:", error.response?.data || error);
+            localStorage.clear();
+            setIsLoading(false)
+        }
+    }
+    useEffect(()=>{
+        verifyToken();
+    },[router])
+
     const handleLoginForm=async()=>{
         await axiosInterceptor.post(`${baseUrl}/auth/login`,user,{
             headers:{"Content-Type":"application/json"}
@@ -26,15 +59,12 @@ export default function LogInPage(){
                 localStorage.setItem("isTokenValid",isTokenValid);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
-                console.log(response.data);
-                console.log("token: ",token);
-                console.log("userId: ",user_Id)
-                setTimeout(() => {
-                    router.push("/chat")
-                }, 2000);
             }else{
                 console.log("No data received from the server")
             }
+            setTimeout(() => {
+                router.push("/chat")
+            }, 2000);
         }).catch((error)=>{
             const message = error.response.data.message || "Unknown Error";
             if(error.response.status === 401){
@@ -51,6 +81,9 @@ export default function LogInPage(){
     const handleForm=(e)=>{
         e.preventDefault();
         handleLoginForm();
+    }
+    if(isLoading){
+        return(<div className={Style.Container}>Loading.....</div>)
     }
     return(
         <div className={Style.Container}>
