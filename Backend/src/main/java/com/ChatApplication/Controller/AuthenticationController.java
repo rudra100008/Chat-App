@@ -3,6 +3,8 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.*;
+import com.ChatApplication.Exception.ResourceNotFoundException;
+import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.JwtService;
 import com.ChatApplication.Service.UserService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
@@ -13,10 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import java.util.Map;
 public class AuthenticationController {
     private final UserService userService;
     private final JwtService jwtService;
+    private final UserRepository userRepository;
     private final TwoFactorAuthService twoFactorAuthService;
     private final UserDetailsService userDetailsService;
 
@@ -97,4 +97,26 @@ public class AuthenticationController {
                 "Failed to verify number");
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/verify-token")
+    public ResponseEntity<?> verifyToken(
+            @RequestParam("userId") String userId,
+            @RequestHeader("Authorization")String authorization
+    )
+    {
+        if(authorization == null || !authorization.startsWith("Bearer ")){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing or invalid Authorization Header");
+        }
+        String token = authorization.substring(7);
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException("User not found in the server"));
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(user.getUsername());
+        Boolean isTokenValid = this.jwtService.isTokenValid(token,userDetails);
+        return ResponseEntity.ok(Map.of(
+                "userId",userId,
+                "userName",user.getUsername(),
+                "isTokenValid",isTokenValid
+        ));
+    }
+
 }
