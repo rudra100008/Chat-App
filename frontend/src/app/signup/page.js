@@ -1,8 +1,25 @@
+import { useRouter } from "next/navigation";
+import axiosInterceptor from "../Component/Interceptor";
+import baseUrl from "../baseUrl";
+
 export default function SignUp(){
+    const router = useRouter();
+    
+    const handleSignUpForm= async()=>{
+        try{
+            const response = await axiosInterceptor.post(`${baseUrl}/auth/`)
+        }catch(error){
+
+        }
+    }
+    const handleForm=(e)=>{
+        e.preventDefault();
+
+    }
     return(
         <div>
-            <form action="post">
-                <h1>Sign Up</h1>
+            <form onSubmit={handleForm} action="post">
+                <h1>Sign Up here</h1>
                 <div className="">
                     <label htmlFor="username">Username</label>
                     <input
