@@ -37,7 +37,8 @@
 }
 
 .InputForm[type="text"],
-.InputForm[type="password"] {
+.InputForm[type="password"],
+.InputForm[type="email"] {
     width: 100%;
     padding: 0.50rem;
     border: 1px solid #e2e8f0;
@@ -48,14 +49,16 @@
 }
 
 .InputForm[type="text"]:focus,
-.InputForm[type="password"]:focus {
+.InputForm[type="password"]:focus,
+.InputForm[type="email"]:focus{
     outline: none;
     border-color: #4299e1;
     box-shadow: 0 0 0 3px rgba(71, 147, 209, 0.1);
 }
 
 .InputForm[type="text"]::placeholder,
-.InputForm[type="password"]::placeholder {
+.InputForm[type="password"]::placeholder,
+.InputForm[type = "email"]::placeholder{
     color: #a0aec0;
 }
 /* for radio */
@@ -63,7 +66,7 @@
     
 }
 /* login button */
-.Button{
+.ButtonGroup{
     width: 20%;
     background-color: skyblue;
     color: white;
@@ -75,7 +78,22 @@
     border-radius: 10px;
     transition: all 0.3s ease-in-out;
 }
-.Button:hover{
+.ButtonGroup:hover{
     background-color: #4299e1;
     transform: scale(1.1);
+}
+.SignUpDesign{
+    color: rgb(189, 21, 189);
+    text-decoration: underline;
+    text-underline-offset: 5px;
+}
+.paragraph{
+    margin-top: 5px;
+    text-align: center;
+    font-size: small;
+}
+.FieldError {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
 }

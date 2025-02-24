@@ -4,6 +4,7 @@ import axios from 'axios'
 import baseUrl from '../baseUrl'
 import { useRouter } from 'next/navigation'
 import axiosInterceptor from '../Component/Interceptor'
+import Link from 'next/link'
 export default function LogInPage(){
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
@@ -122,8 +123,11 @@ export default function LogInPage(){
                     />
                     <label htmlFor="Rememberme" className={Style.Label}>Remember me</label>
                 </div>
-                <div className={Style.Button}>
+                <div className={Style.ButtonGroup}>
                     <button type='submit'>Login</button>
+                </div>
+                <div className={Style.paragraph}>
+                    <p>Dont have an account? <Link href="/signup" className={Style.SignUpDesign}>SignUp</Link></p>
                 </div>
             </form>
         </div>

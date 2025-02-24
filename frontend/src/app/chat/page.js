@@ -125,6 +125,9 @@ export default function Chat() {
 
     return (
         <div className={style.body}>
+            <div>
+            <p>hello</p>
+            </div>
             <div className={style.ChatContainer}>
                 <Message message={message} userId={userId} />
                 <div className={style.inputWrapper}>

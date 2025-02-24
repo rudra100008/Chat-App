@@ -1,56 +1,143 @@
+"use client"
 import { useRouter } from "next/navigation";
 import axiosInterceptor from "../Component/Interceptor";
 import baseUrl from "../baseUrl";
+import Style from "../Style/form.module.css"
+import { useState } from "react";
+import Link from "next/link";
 
 export default function SignUp(){
     const router = useRouter();
+    const [validationError,setValidationError] = useState({
+        userName: "",
+        email : "",
+        password :"",
+        phoneNumber :"",
+        message:""
+    });
+    const [userInfo,setUserInfo] = useState({
+        userName:"",
+        email : "",
+        password : "",
+        phoneNumber : ""
+    });
     
+    const newUser = (e)=>{
+        const {name,value} = e.target;
+        setUserInfo(prev=> ({...prev,[name]:value}))
+        // setValidationError((prev)=>({...prev,[name]:"",[message]:""}))
+    }
     const handleSignUpForm= async()=>{
         try{
-            const response = await axiosInterceptor.post(`${baseUrl}/auth/`)
+            const response = await axiosInterceptor.post(`${baseUrl}/auth/signup`,userInfo);
+            console.log("UserInfo: ",userInfo)
+            console.log(response.data);
+            router.push("/")
         }catch(error){
-
+            if (error.response?.status === 400) {
+                // Handle validation errors from backend
+                const errorData = error.response.data;
+                setValidationError(prev => ({
+                    ...prev,
+                    ...errorData,
+                }));
+            } else if (error.response?.status === 409) {
+                // Handle conflict error (e.g., email already exists)
+                setValidationError(prev => ({
+                    ...prev,
+                    message: error.response.data.message
+                }));
+            } else if (error.response?.status === 500) {
+                setValidationError(prev => ({
+                    ...prev,
+                    message: "Server error. Please try again later."
+                }));
+            } else {
+                setValidationError(prev => ({
+                    ...prev,
+                    message: "An unexpected error occurred. Please try again."
+                }));
+            }
         }
     }
     const handleForm=(e)=>{
         e.preventDefault();
-
+        handleSignUpForm();
     }
+if(validationError.message){
+    return(<div>{validationError.message}</div>)
+}
     return(
-        <div>
-            <form onSubmit={handleForm} action="post">
-                <h1>Sign Up here</h1>
-                <div className="">
-                    <label htmlFor="username">Username</label>
+        <div className={Style.Container}>
+            <form onSubmit={handleForm} className={Style.Form} action="post">
+                <header className={Style.Header}>Sign Up here</header>
+                <div className={Style.FormGroup}>
+                    <label htmlFor="userName" className={Style.Label}>Username</label>
                     <input
-                    id="username"
-                    name="username"
+                    type="text"
+                    id="userName"
+                    name="userName"
+                    value={userInfo.userName}
+                    onChange={newUser}
                     placeholder="Enter user name"
+                    className={Style.InputForm}
                     />
+                    {validationError.userName && (
+                        <p className={Style.FieldError}>{validationError.userName}</p>
+                    )}
                 </div>
-                <div className="">
-                    <label htmlFor="email">Email</label>
+                <div className={Style.FormGroup}>
+                    <label htmlFor="email" className={Style.Label}>Email</label>
                     <input
+                    type="email"
                     id="email"
                     name="email"
+                    value={userInfo.email}
+                    onChange={newUser}
                     placeholder="Enter email"
+                    className={Style.InputForm}
                     />
+                    {validationError.email &&(
+                        <p className={Style.FieldError}>{validationError.email}</p>
+                    )}
                 </div>
-                <div>
-                    <label htmlFor="phoneNumber">PhoneNumber</label>
+                <div className={Style.FormGroup}>
+                    <label htmlFor="phoneNumber" className={Style.Label}>PhoneNumber</label>
                     <input
+                    type="text"
                     id="phoneNumber"
                     name="phoneNumber"
+                    value={userInfo.phoneNumber}
+                    onChange={newUser}
                     placeholder="Enter phoneNumber"
+                    className={Style.InputForm}
                     />
+                    {validationError.phoneNumber && (
+                        <p className={Style.FieldError}>{validationError.phoneNumber}</p>
+                    )} 
                 </div>
-                <div className="">
-                    <label htmlFor="password">Password</label>
+                <div className={Style.FormGroup}>
+                    <label htmlFor="password" className={Style.Label}>Password</label>
                     <input
+                    type="password"
                     id="password"
                     name="password"
+                    value={userInfo.password}
+                    onChange={newUser}
                     placeholder="Enter password"
+                    className={Style.InputForm}
                     />
+                    {validationError.password && (
+                        <p className={Style.FieldError}>{validationError.password}</p>
+                    )} 
+                </div>
+                <div className={Style.ButtonGroup}>
+                    <div>
+                        <button type="submit">SignUp</button>
+                    </div>
+                </div>
+                <div className={Style.paragraph}>
+                    <p>Have an account? <Link href="/" className={Style.SignUpDesign}>Login</Link></p>
                 </div>
             </form>
         </div>
