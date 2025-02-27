@@ -7,6 +7,7 @@ import baseUrl from '../baseUrl';
 import axiosInterceptor from '../Component/Interceptor';
 import Message from '../Component/Message';
 import { useRouter } from 'next/navigation';
+import UserChats from '../Component/UserChats';
 
 export default function Chat() {
     const route = useRouter();
@@ -125,8 +126,9 @@ export default function Chat() {
 
     return (
         <div className={style.body}>
-            <div>
-            <p>hello</p>
+            <div className={style.UserChat}>
+                 {/* display chat  */}
+                 <UserChats />
             </div>
             <div className={style.ChatContainer}>
                 <Message message={message} userId={userId} />
