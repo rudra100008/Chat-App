@@ -19,6 +19,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
@@ -266,5 +267,15 @@ public class ChatServiceImpl implements ChatService {
                 .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
         this.messageRepository.deleteByChat(chat);
         this.chatRepository.delete(chat);
+    }
+
+    @Override
+    public ChatDTO fetchUserChat(String chatId, StompHeaderAccessor headerAccessor) {
+        User loggedInUser = this.authUtils.getLoggedInUsername();
+        validateChatAccess(chatId,loggedInUser.getUser_Id());
+        Chat chat = this.chatRepository.findById(chatId)
+                .orElseThrow(()-> new ResourceNotFoundException("chat not found: "+chatId));
+
+        return modelMapper.map(chat,ChatDTO.class);
     }
 }

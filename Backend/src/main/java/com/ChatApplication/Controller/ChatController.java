@@ -6,6 +6,7 @@ import com.ChatApplication.Service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -77,6 +78,16 @@ public class ChatController {
     ){
         this.chatService.deleteChat(chatId);
         return  ResponseEntity.ok("Chat Deleted");
+    }
+
+    @GetMapping("/chatDetails/{chatId}")
+    public ResponseEntity<?> getUserChat(
+            @PathVariable("chatId")String chatId,
+            StompHeaderAccessor headerAccessor
+    )
+    {
+        ChatDTO chatDTO = this.chatService.fetchUserChat(chatId,headerAccessor);
+        return ResponseEntity.ok(chatDTO);
     }
 
 }

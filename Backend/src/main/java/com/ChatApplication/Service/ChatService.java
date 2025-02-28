@@ -2,6 +2,7 @@ package com.ChatApplication.Service;
 
 import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.UserDTO;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,5 +23,7 @@ public interface ChatService {
     //removes the participants from the chat
     ChatDTO deleteParticipants(String chatId,String userId);
     void deleteChat(String chatId);
+    //get single chat of the user
+    ChatDTO fetchUserChat(String chatId, StompHeaderAccessor headerAccessor);
 
 }

@@ -58,6 +58,7 @@ public class MessageController {
     }
 
 
+    // this post message in the chat
     @PostMapping
     public ResponseEntity<?> postMessage(
             @Valid @RequestBody MessageDTO messageDTO,
@@ -79,6 +80,7 @@ public class MessageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedMessage);
     }
 
+    // this fetch  message of the particular senderID
     @GetMapping("/sender/{senderId}")
     public ResponseEntity<PageInfo<MessageDTO>> fetchMessageBySenderId(
             @PathVariable("senderId")String senderId,
