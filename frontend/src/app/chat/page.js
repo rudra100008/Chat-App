@@ -16,9 +16,17 @@ export default function Chat() {
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
+    const [chatName,setChatName] = useState('')
     const messagesEndRef = useRef(null);
     const [token, setToken] = useState(() => localStorage.getItem('token') || '');
     const [userId, setUserId] = useState(() => localStorage.getItem('userId') || '');
+    const [userChat,setUserChat]= useState({
+        chatId:"",
+        chatName:"",
+        chatType:"",
+        participantIds:[],
+        messageIds:[]
+    })
     const chatId = '678cbc2c1f1b524403d7432a';
 
     const handleValueChange = (e) => {
@@ -32,7 +40,7 @@ export default function Chat() {
     const fetchMessageFromChat = async () => {
         try {
             // Then fetch messages
-            const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}`, {
+            const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=1`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -50,6 +58,20 @@ export default function Chat() {
                 })
             }
             setError(error.response?.data?.message || error.message);
+        }
+    }
+
+
+    const fetchUserChatDetails=async()=>{
+        try{
+            const response = await axiosInterceptor.get(`${baseUrl}/api/chats/chatDetails/${chatId}`,{
+                headers:{Authorization:`Bearer ${token}`}
+            })
+            console.log("Data: ",response.data);
+            const chatDetails = response.data
+            setUserChat(chatDetails);
+        }catch(error){
+            console.log("Error: ",error.response?.data)
         }
     }
 
@@ -76,6 +98,14 @@ export default function Chat() {
         }
     }
 
+    useEffect(()=>{
+        if(!chatId || !token){
+            setError("Missing required authentication information");
+            return;
+        }
+        fetchUserChatDetails();
+        fetchUserDetails();
+    },[chatId])
     useEffect(() => {
         if (!userId || !chatId || !token) {
             setError("Missing required authentication information");
@@ -96,7 +126,10 @@ export default function Chat() {
                 setStompClient(client);
                 client.subscribe(`/private/chat/${chatId}`, (message) => {
                     const receivedMessage = JSON.parse(message.body);
-                    setMessage((prevMessages) => [...prevMessages, receivedMessage]);
+                    console.log("ReceivedMessage",receivedMessage);
+                    setMessage((prevMessages) => prevMessages.filter(msg=> msg.messageId !== receivedMessage.messageId)
+                        .concat(receivedMessage)
+                    );
                 });
             }, (error) => {
                 console.error('WebSocket connection error:', error);
@@ -120,6 +153,23 @@ export default function Chat() {
         scrollToBottom()
     }, [message])
 
+    const getOtherUser = () => {
+        return userChat.participantIds.filter(pIds => pIds !== userId)[0]; // Get the first item
+    }
+    const fetchUserDetails=async()=>{
+        console.log("Chat participants:",userChat.participantIds)
+        const otherUser = getOtherUser();
+        console.log(otherUser);
+        try{
+            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUser}`,{
+                headers:{Authorization:`Bearer ${token}`}
+            })
+            console.log("Response: ",response.data)
+            setChatName()
+        }catch(error){
+            console.log("Error: ",error.response.data)
+        }
+    }
     if (error) {
         return <div className={style.error}>{error}</div>
     }
@@ -131,6 +181,13 @@ export default function Chat() {
                  <UserChats />
             </div>
             <div className={style.ChatContainer}>
+                <div className={style.ChatHeader}>
+                    <div className={style.ChatHeaderName}>
+                        {
+                            
+                        }
+                    </div>
+                </div>
                 <Message message={message} userId={userId} />
                 <div className={style.inputWrapper}>
                     <div className={style.FieldGroup}>

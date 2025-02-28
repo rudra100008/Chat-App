@@ -37,12 +37,13 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
+    background-color: #fff;
+    border-top: 1px solid #e1e4e8;
 }
 .FieldGroup{
    flex: 1;
-   max-width: 600px;
 }
-.ButtonGroup{
+.ButtonGroup {
     position: static;
     transform: none;
     width: auto;
@@ -50,28 +51,41 @@
 }
 .FieldInput{
     padding: 15px;
-    color: black;
-    font-size: 0.8rem;
-    max-width: 600px;
+    color: #333;
+    font-size: 0.95rem;
     width: 100%;
     outline: none;
     border: 1px solid #ddd;
-    border-radius: 10px;
+    border-radius: 25px;
+    background-color: #f5f7fb;
     transition: all 0.3ms ease-in;
 }
 .FieldInput:focus{
     border-color: #00aaff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
-.SendButton{
-    margin: 5px 0;
-    padding: 10px 15px;
-    background-color: lightblue;
+
+.SendButton {
+    margin: 0;
+    padding: 12px 20px;
+    background-color: #1890ff;
     color: white;
-    border-radius: 10px;
-    transition: all 0.3ms ease-in-out;
+    border: none;
+    border-radius: 24px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
-.SendButton:hover{
-    transform: scale(1.2);
+
+.SendButton:hover {
+    background-color: #40a9ff;
+    transform: translateY(-2px);
+}
+
+.SendButton:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
 }
 /* Message area design*/
 .MessageContainer {
@@ -118,4 +132,24 @@
     color: #333;
     align-self: flex-start;
     border-bottom-right-radius: 16px;
+}
+.error{
+    text-align: center;
+    font-size: medium;
+    font-weight: bold;
+    background-color: #333;
+    color: #fff;
+}
+
+.ChatHeader{
+    display: flex;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e4e8;
+    align-items: center;
+    background-color: #fff;
+}
+.ChatHeaderName {
+    font-weight: 400;
+    font-family: cursive;
+    font-size: 1.1rem;
 }
