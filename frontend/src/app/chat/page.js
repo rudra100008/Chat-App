@@ -16,7 +16,7 @@ export default function Chat() {
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
-    const [chatName,setChatName] = useState('')
+    const [chatName,setChatName] = useState('chat')
     const messagesEndRef = useRef(null);
     const [token, setToken] = useState(() => localStorage.getItem('token') || '');
     const [userId, setUserId] = useState(() => localStorage.getItem('userId') || '');
@@ -73,8 +73,7 @@ export default function Chat() {
         }catch(error){
             console.log("Error: ",error.response?.data)
         }
-    }
-
+    }    
     const handleSendMessage = () => {
         if (!inputValue.trim() || !connected) return;
 
@@ -97,15 +96,6 @@ export default function Chat() {
             setError("Failed to send message");
         }
     }
-
-    useEffect(()=>{
-        if(!chatId || !token){
-            setError("Missing required authentication information");
-            return;
-        }
-        fetchUserChatDetails();
-        fetchUserDetails();
-    },[chatId])
     useEffect(() => {
         if (!userId || !chatId || !token) {
             setError("Missing required authentication information");
@@ -154,22 +144,45 @@ export default function Chat() {
     }, [message])
 
     const getOtherUser = () => {
-        return userChat.participantIds.filter(pIds => pIds !== userId)[0]; // Get the first item
+        if(!userChat.participantIds || userChat.participantIds.length === 0){
+            console.log("No participants availble");
+            return [];
+        }
+        const otherUser = userChat.participantIds.filter(pIds => pIds !== userId)[0];
+        console.log("Other users after filtering:", otherUser);
+        return otherUser;
     }
+
     const fetchUserDetails=async()=>{
-        console.log("Chat participants:",userChat.participantIds)
+        userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
         const otherUser = getOtherUser();
-        console.log(otherUser);
+        console.log("OtherUsers: ",otherUser);
         try{
             const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUser}`,{
                 headers:{Authorization:`Bearer ${token}`}
             })
             console.log("Response: ",response.data)
-            setChatName()
+            setChatName(response.data.userName)
         }catch(error){
             console.log("Error: ",error.response.data)
         }
     }
+
+    useEffect(()=>{
+        if(!chatId || !token){
+            setError("Missing required authentication information");
+            return;
+        }
+        fetchUserChatDetails();
+    },[chatId])
+
+    useEffect(() => {
+        if(userChat.chatId){
+            console.log("Updated ChatDetails: ", userChat);
+        fetchUserDetails();
+        }
+    }, [userChat]);
+
     if (error) {
         return <div className={style.error}>{error}</div>
     }
@@ -184,7 +197,7 @@ export default function Chat() {
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
                         {
-                            
+                            chatName
                         }
                     </div>
                 </div>
