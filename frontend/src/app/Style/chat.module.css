@@ -134,11 +134,17 @@
     border-bottom-right-radius: 16px;
 }
 .error{
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    font-size: medium;
+    font-size: larger;
     font-weight: bold;
-    background-color: #333;
-    color: #fff;
+    background-color: rgba(233, 227, 227, 0.507);
+    color: rgb(207, 33, 33);
 }
 
 .ChatHeader{
