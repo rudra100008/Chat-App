@@ -1,6 +1,6 @@
+"use client"
 import { useEffect, useState } from 'react'
 import Style from '../Style/form.module.css'
-import axios from 'axios'
 import baseUrl from '../baseUrl'
 import { useRouter } from 'next/navigation'
 import axiosInterceptor from '../Component/Interceptor'
@@ -45,7 +45,7 @@ export default function LogInPage(){
         }
     }
     useEffect(()=>{
-        verifyToken();
+        setIsLoading(false)
     },[router])
 
     const handleLoginForm=async()=>{
@@ -67,7 +67,8 @@ export default function LogInPage(){
                 router.push("/chat")
             }, 2000);
         }).catch((error)=>{
-            const message = error.response.data.message || "Unknown Error";
+            console.log("Error: ",error.response.data)
+            const message = error.response.data || "Unknown Error";
             if(error.response.status === 401){
                 console.log("Invalid username or password");
             }else if(error.response.status === 500){
