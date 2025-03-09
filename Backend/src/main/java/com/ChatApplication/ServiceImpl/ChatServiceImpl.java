@@ -98,7 +98,7 @@ public class ChatServiceImpl implements ChatService {
 
         // Create and save chat
         Chat chat = new Chat();
-        chat.setChatName(otherUser.getUsername());
+        chat.setChatName(otherUser.getUsername()+" & "+loggedInUsername.getUsername());
         chat.setChatType(ChatType.SINGLE);
         chat.setMessages(new ArrayList<>());
         chat.setParticipants(findUser);
