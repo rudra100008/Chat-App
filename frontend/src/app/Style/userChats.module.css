@@ -1,0 +1,12 @@
+.ChatContainer{
+    cursor: pointer;
+    margin: 10px 10px;
+    padding: 10px 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    transition: all ease-in;
+}
+.ChatContainer:hover{
+    background-color: lightgray;
+
+}

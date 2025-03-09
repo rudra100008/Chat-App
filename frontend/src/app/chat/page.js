@@ -116,7 +116,6 @@ export default function Chat() {
                 setStompClient(client);
                 client.subscribe(`/private/chat/${chatId}`, (message) => {
                     const receivedMessage = JSON.parse(message.body);
-                    console.log("ReceivedMessage",receivedMessage);
                     setMessage((prevMessages) => prevMessages.filter(msg=> msg.messageId !== receivedMessage.messageId)
                         .concat(receivedMessage)
                     );
@@ -149,19 +148,18 @@ export default function Chat() {
             return [];
         }
         const otherUser = userChat.participantIds.filter(pIds => pIds !== userId)[0];
-        console.log("Other users after filtering:", otherUser);
+        // console.log("Other users after filtering:", otherUser);
         return otherUser;
     }
 
     const fetchUserDetails=async()=>{
-        userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
+        // userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
         const otherUser = getOtherUser();
         console.log("OtherUsers: ",otherUser);
         try{
             const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUser}`,{
                 headers:{Authorization:`Bearer ${token}`}
             })
-            console.log("Response: ",response.data)
             setChatName(response.data.userName)
         }catch(error){
             console.log("Error: ",error.response.data)
@@ -178,7 +176,6 @@ export default function Chat() {
 
     useEffect(() => {
         if(userChat.chatId){
-            console.log("Updated ChatDetails: ", userChat);
         fetchUserDetails();
         }
     }, [userChat]);
@@ -191,7 +188,7 @@ export default function Chat() {
         <div className={style.body}>
             <div className={style.UserChat}>
                  {/* display chat  */}
-                 <UserChats />
+                 <UserChats userId={userId} token={token} />
             </div>
             <div className={style.ChatContainer}>
                 <div className={style.ChatHeader}>
