@@ -167,12 +167,12 @@ export default function Chat() {
     }
 
     useEffect(()=>{
-        if(!chatId || !token){
+        if( !token || !userId){
             setError("Missing required authentication information");
             return;
         }
         fetchUserChatDetails();
-    },[chatId])
+    },[token,userId])
 
     useEffect(() => {
         if(userChat.chatId){
@@ -180,6 +180,10 @@ export default function Chat() {
         }
     }, [userChat]);
 
+    const logout=()=>{
+        localStorage.clear();
+        route.push("/")
+    }
     if (error) {
         return <div className={style.error}>{error}</div>
     }
@@ -196,6 +200,9 @@ export default function Chat() {
                         {
                             chatName
                         }
+                    </div>
+                    <div className={style.logoutButton}>
+                        <button onClick={logout}>Logout</button>
                     </div>
                 </div>
                 <Message message={message} userId={userId} />

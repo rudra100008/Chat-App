@@ -45,7 +45,7 @@ export default function LogInPage(){
         }
     }
     useEffect(()=>{
-        setIsLoading(false)
+        verifyToken();
     },[router])
 
     const handleLoginForm=async()=>{

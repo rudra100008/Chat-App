@@ -12,6 +12,7 @@ export default function UserChats({userId,token}){
     //     const otherUser = chatInfo.
     // }
     const fetchUserChats=async()=>{
+        console.log("UseChat-> userID: ",userId)
         try{
             const response = await axiosInterceptor.get(`${baseUrl}/api/chats/user/${userId}`,{
                 headers:{Authorization:`Bearer ${token}`}
