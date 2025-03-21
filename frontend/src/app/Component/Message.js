@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import style from '../Style/chat.module.css'
 import PropTypes from 'prop-types'
 
-export default function Message({ message, userId }) {
+export default function Message({ message, userId , lastPostElementRef}) {
     const messageEndRef = useRef(null);
    
     // Format timestamp function to avoid repetition
@@ -21,8 +21,9 @@ export default function Message({ message, userId }) {
             {message.length === 0 ? (
                 <div className={style.EmptyState}>No messages yet</div>
             ) : (
-                message.map((msg) => (
+                message.map((msg,index) => (
                     <div 
+                        ref={index === 0 ? lastPostElementRef : null}
                         key={msg.messageId}
                         className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
                     >

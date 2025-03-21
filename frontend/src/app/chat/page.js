@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import style from '../Style/chat.module.css'
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
@@ -11,13 +11,19 @@ import UserChats from '../Component/UserChats';
 
 export default function Chat() {
     const route = useRouter();
-    const [message, setMessage] = useState([])
+    const [message, setMessage] = useState([]);
+    const [page,setPage] = useState(0);
+    const [totalPages,setTotalPages] = useState(null);
+    const [initialLoad,setInitialLoad] = useState(true);
+    const [hasMore,setHasMore] = useState(true);
+    const [loading ,setLoading] = useState(true);
     const [inputValue, setInputValue] = useState('');
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
     const [chatName,setChatName] = useState('chat')
     const messagesEndRef = useRef(null);
+    const observer = useRef(IntersectionObserver | null);
     const [token, setToken] = useState(() => localStorage.getItem('token') || '');
     const [userId, setUserId] = useState(() => localStorage.getItem('userId') || '');
     const [userChat,setUserChat]= useState({
@@ -37,31 +43,96 @@ export default function Chat() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth'})
     }
 
-    const fetchMessageFromChat = async () => {
-        try {
-            // Then fetch messages
-            const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=1`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            
-            console.log("Response from server:", response);
-            const { data } = response.data;
-            setMessage(data || []);
-        } catch (error) {
-            console.error("Error fetching messages:", error);
-            if( error.response && error.response.status === 401){
-                setError("Login again");
-                setTimeout(()=>{
-                    route.push("/");
-                })
-            }
-            setError(error.response?.data?.message || error.message);
+   // Initial fetch to get the latest messages
+const initialFetch = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?latest=true`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
+      });
+      
+      const { data, totalPage } = response.data;
+      setMessage(data || []);
+      setTotalPages(totalPage);
+      
+      // Start from the second-to-last page for next fetch (since we already have the last page)
+      setPage(totalPage > 1 ? totalPage - 2 : 0);
+      
+      // If only one page exists, disable loading more
+      if (totalPage <= 1) {
+        setHasMore(false);
+      }
+      
+      setInitialLoad(false);
+    } catch (error) {
+      console.error("Error fetching initial messages:", error);
+      // Error handling
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  // Fetch older messages as user scrolls up
+  const fetchOlderMessages = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=${page}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      const { data } = response.data;
+      
+      // Prepend older messages to the top of our message list
+      setMessage(prev => [...data, ...prev]);
+      
+      // If we've reached page 0, there are no more messages to load
+      if (page === 0) {
+        setHasMore(false);
+      } else {
+        // Otherwise, decrease page number for next fetch
+        setPage(prev => prev - 1);
+      }
+    } catch (error) {
+      console.error("Error fetching older messages:", error);
+      // Error handling
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // In your useEffect
+  useEffect(() => {
+    if (initialLoad) {
+      initialFetch();
+    } else if (hasMore && !loading && page >= 0) {
+      fetchOlderMessages();
+    }
+  }, [initialLoad, page]);
 
-
+  const firstMessageElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !loading) {
+            // No need to call setPage here, as it will trigger the effect above
+            // Just set a flag to indicate we should fetch more
+            if (page > 0) {
+              setPage(prev => prev);  // This will re-trigger the useEffect without changing the value
+            }
+          }
+        },
+        { threshold: 0.5 }
+      );
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, page]
+  );
     const fetchUserChatDetails=async()=>{
         try{
             const response = await axiosInterceptor.get(`${baseUrl}/api/chats/chatDetails/${chatId}`,{
@@ -96,14 +167,13 @@ export default function Chat() {
             setError("Failed to send message");
         }
     }
+   
+
     useEffect(() => {
         if (!userId || !chatId || !token) {
             setError("Missing required authentication information");
             return;
         }
-
-        fetchMessageFromChat();
-        
         const connectWebSocket = () => {
             const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
             
@@ -136,7 +206,7 @@ export default function Chat() {
                 client.disconnect();
             }
         }
-    }, [userId, chatId, token]);
+    }, [userId, chatId, token,page]);
 
     useEffect(() => {
         scrollToBottom()
@@ -205,7 +275,7 @@ export default function Chat() {
                         <button onClick={logout}>Logout</button>
                     </div>
                 </div>
-                <Message message={message} userId={userId} />
+                <Message message={message} userId={userId} lastPostElementRef ={firstMessageElementRef} />
                 <div className={style.inputWrapper}>
                     <div className={style.FieldGroup}>
                         <input
