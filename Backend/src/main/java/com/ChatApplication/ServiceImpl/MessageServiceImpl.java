@@ -164,4 +164,10 @@ public class MessageServiceImpl implements MessageService {
 
         this.messageRepository.delete(message);
     }
+
+    @Override
+    public int countMessageByChatId(String chatId) {
+        Chat chat = this.chatRepository.findById(chatId).orElseThrow(()-> new ResourceNotFoundException("chat not found."));
+        return this.messageRepository.countByChat(chat);
+    }
 }

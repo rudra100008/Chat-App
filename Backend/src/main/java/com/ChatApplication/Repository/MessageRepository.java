@@ -14,4 +14,5 @@ public interface MessageRepository extends MongoRepository<Message,String> {
     Page<Message> findBySenderOrderByTimestampAsc(User sender, Pageable pageable);
     Page<Message> findByChatOrderByTimestampAsc(Chat chat,Pageable pageable);
     void deleteByChat(Chat chat);
+    int countByChat(Chat chat);
 }

@@ -94,12 +94,23 @@ public class MessageController {
 
     @GetMapping("/chat/{chatId}")
     public ResponseEntity<PageInfo<MessageDTO>> fetchMessageByChatId(
-            @PathVariable("chatId")String chatId,
-            @RequestParam(required = false, defaultValue = PAGE_NUMBER,name = "pageNumber")Integer pageNumber,
-            @RequestParam(required = false,defaultValue = PAGE_SIZE,name = "pageSize")Integer pageSize
-    )
-    {
-        PageInfo<MessageDTO> messageDTO = this.messageService.fetchMessagesByChatId(chatId,pageNumber,pageSize);
+            @PathVariable("chatId") String chatId,
+            @RequestParam(required = false, defaultValue = "0", name = "pageNumber") Integer pageNumber,
+            @RequestParam(required = false, defaultValue = PAGE_SIZE, name = "pageSize") Integer pageSize,
+            @RequestParam(required = false, defaultValue = "false", name = "latest") Boolean latest
+    ) {
+        PageInfo<MessageDTO> messageDTO;
+
+        if (latest) {
+            // Get the most recent messages for initial load
+            int totalMessages = this.messageService.countMessageByChatId(chatId);
+            int lastPageNumber = totalMessages > 0 ? (totalMessages - 1) / pageSize : 0;
+            messageDTO = this.messageService.fetchMessagesByChatId(chatId, lastPageNumber, pageSize);
+        } else {
+            // Get messages for the requested page
+            messageDTO = this.messageService.fetchMessagesByChatId(chatId, pageNumber, pageSize);
+        }
+
         return ResponseEntity.ok(messageDTO);
     }
 
