@@ -19,3 +19,8 @@ twilio:
   verify:
     service:
       sid: VAfecdde761bf37fc26e69e8cd5d677879
+
+file:
+  upload:
+    dir:D:\Chat-App\Backend\Images
+
