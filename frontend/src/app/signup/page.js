@@ -19,7 +19,8 @@ export default function SignUp(){
         userName:"",
         email : "",
         password : "",
-        phoneNumber : ""
+        phoneNumber : "",
+        image : null
     });
     
     const newUser = (e)=>{
@@ -28,8 +29,17 @@ export default function SignUp(){
         // setValidationError((prev)=>({...prev,[name]:"",[message]:""}))
     }
     const handleSignUpForm= async()=>{
+        const formData = new FormData();
+        formData.append("user",new Blob([JSON.stringify({
+            userName:userInfo.userName,
+            email:userInfo.email,
+            password:userInfo.password,
+            phoneNumber:userInfo.phoneNumber
+        })],{type:"application/json"}))
+
+        formData.append("image",userInfo.image)
         try{
-            const response = await axiosInterceptor.post(`${baseUrl}/auth/signup`,userInfo);
+            const response = await axiosInterceptor.post(`${baseUrl}/auth/signup`,formData);
             console.log("UserInfo: ",userInfo)
             console.log(response.data);
             router.push("/")
@@ -60,6 +70,12 @@ export default function SignUp(){
             }
         }
     }
+
+    const handleFileChange=(e)=>{
+        setUserInfo({...userInfo, image: e.target.files[0]})
+    }
+    
+
     const handleForm=(e)=>{
         e.preventDefault();
         handleSignUpForm();
@@ -131,11 +147,20 @@ if(validationError.message){
                         <p className={Style.FieldError}>{validationError.password}</p>
                     )} 
                 </div>
+                <div className={Style.FormGroup}>
+                    <input 
+                    type="file"
+                    name="image"
+                    id="image"
+                    onChange={handleFileChange}
+                    className={Style.InputForm} />
+                </div>
                 <div className={Style.ButtonGroup}>
                     <div>
                         <button type="submit">SignUp</button>
                     </div>
                 </div>
+                
                 <div className={Style.paragraph}>
                     <p>Have an account? <Link href="/" className={Style.SignUpDesign}>Login</Link></p>
                 </div>
