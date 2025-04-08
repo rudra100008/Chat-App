@@ -2,6 +2,7 @@ package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Service.ImageService;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
+@Service
 public class ImageServiceImpl implements ImageService {
     @Override
     public String uploadImage(String uploadDir, MultipartFile file) throws IOException {

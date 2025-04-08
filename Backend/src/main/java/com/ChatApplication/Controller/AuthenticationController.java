@@ -5,7 +5,9 @@ import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.*;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.UserRepository;
+import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Security.JwtService;
+import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
 import jakarta.validation.Valid;
@@ -16,7 +18,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,19 +34,38 @@ public class AuthenticationController {
     private final UserRepository userRepository;
     private final TwoFactorAuthService twoFactorAuthService;
     private final UserDetailsService userDetailsService;
+    private final ImageService imageService;
+    private final AuthUtils authUtils;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
+    public ResponseEntity<?> signup(
+            @Valid @RequestPart(value = "user") UserDTO userDTO,
+            BindingResult result,
+            @RequestPart(value = "image",required = false) MultipartFile imageFile
+    )
+    {
+        String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
         if(result.hasErrors()){
             Map<String,Object> errors = new HashMap<>();
             result.getFieldErrors().forEach(f-> errors.put(f.getField(),f.getDefaultMessage()));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
+        String imageName = "";
+        try{
+            imageName = this.imageService.uploadImage(uploadDir,imageFile);
+        }catch (IOException e){
+            return ResponseEntity.internalServerError().body("Image upload Failed:\n "+e.getMessage());
+        }
+        if(imageFile == null || imageFile.isEmpty()){
+            imageName = "";
+        }
+        userDTO.setProfile_picture(imageName);
         UserDTO postUser = this.userService.signup(userDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(postUser);
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {

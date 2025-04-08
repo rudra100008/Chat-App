@@ -38,6 +38,7 @@ public class UserController {
         UserDTO userDTO = this.userService.fetchUser(userId);
         return ResponseEntity.ok(userDTO);
     }
+    
     @PostMapping("/userImages")
     public ResponseEntity<?> uploadImages(@RequestParam() MultipartFile imageFile){
         String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
