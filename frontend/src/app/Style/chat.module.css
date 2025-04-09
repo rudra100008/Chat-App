@@ -164,3 +164,16 @@
 .logoutButton{
     margin-left: 100px;
 }
+.selected {
+    background-color: #e0e0e0;
+    font-weight: bold;
+}
+
+.selectChatPrompt {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #888;
+    font-size: 16px;
+}

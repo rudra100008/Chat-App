@@ -33,7 +33,20 @@ export default function Chat() {
         participantIds:[],
         messageIds:[]
     })
-    const chatId = '678cbc2c1f1b524403d7432a';
+    const [chatId,setChatId] =useState('');
+
+    const handlleChatSelect=(selectedChat)=>{
+        if(stompClient && stompClient.connected){
+            stompClient.disconnect();
+            setStompClient(null);
+            setConnected(false);
+        }
+        setPage(0);
+        setMessage([]);
+        setInitialLoad(true);
+        setHasMore(true);
+        setChatId(selectedChat);
+    }
 
     const handleValueChange = (e) => {
         setInputValue(e.target.value)
@@ -104,14 +117,6 @@ const initialFetch = async () => {
     }
   };
   
-  // In your useEffect
-  useEffect(() => {
-    if (initialLoad) {
-      initialFetch();
-    } else if (hasMore && !loading && page >= 0) {
-      fetchOlderMessages();
-    }
-  }, [initialLoad, page]);
 
   const firstMessageElementRef = useCallback(
     (node) => {
@@ -134,6 +139,7 @@ const initialFetch = async () => {
     [loading, hasMore, page]
   );
     const fetchUserChatDetails=async()=>{
+        if(!chatId && !token) return;
         try{
             const response = await axiosInterceptor.get(`${baseUrl}/api/chats/chatDetails/${chatId}`,{
                 headers:{Authorization:`Bearer ${token}`}
@@ -171,9 +177,14 @@ const initialFetch = async () => {
 
     useEffect(() => {
         if (!userId || !chatId || !token) {
+            if(!chatId){
+                return;
+            }
             setError("Missing required authentication information");
             return;
         }
+        setMessage([]);
+        setInitialLoad(true);
         const connectWebSocket = () => {
             const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
             
@@ -208,6 +219,21 @@ const initialFetch = async () => {
         }
     }, [userId, chatId, token,page]);
 
+    // useEffect(() => {
+    //     if (chatId && initialLoad) {
+    //         initialFetch();
+    //     }
+    // }, [chatId, initialLoad]);
+
+      // In your useEffect
+  useEffect(() => {
+    if (chatId && initialLoad) {
+      initialFetch();
+    } else if (chatId && hasMore && !loading && page >= 0) {
+      fetchOlderMessages();
+    }
+  }, [initialLoad, page,chatId]);
+
     useEffect(() => {
         scrollToBottom()
     }, [message])
@@ -241,8 +267,9 @@ const initialFetch = async () => {
             setError("Missing required authentication information");
             return;
         }
+        if(!chatId) return;
         fetchUserChatDetails();
-    },[token,userId])
+    },[token,userId,chatId])
 
     useEffect(() => {
         if(userChat.chatId){
@@ -262,9 +289,11 @@ const initialFetch = async () => {
         <div className={style.body}>
             <div className={style.UserChat}>
                  {/* display chat  */}
-                 <UserChats userId={userId} token={token} />
+                 <UserChats userId={userId} token={token} onChatSelect={handlleChatSelect} />
             </div>
             <div className={style.ChatContainer}>
+                {chatId ? (
+                    <>
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
                         {
@@ -299,6 +328,14 @@ const initialFetch = async () => {
                         </button>
                     </div>
                 </div>
+                </>
+                ):(
+                    <>
+                     <div className={style.selectChatPrompt}>
+                        Select a chat to start messaging
+                     </div>
+                    </>
+                )}
             </div>
         </div>
     )
