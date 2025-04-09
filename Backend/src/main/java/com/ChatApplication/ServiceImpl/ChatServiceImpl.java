@@ -49,11 +49,26 @@ public class ChatServiceImpl implements ChatService {
         if(userId == null || userId.trim().isEmpty()){
             throw new IllegalArgumentException("userID cannot be null or empty");
         }
-        User user = this.userRepository.findById(userId)
+        User currentUser = this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found."));
-        return this.chatRepository.findByParticipants(user)
-                .stream()
-                .map(chat->modelMapper.map(chat,ChatDTO.class)).toList();
+        List<Chat>  currentUserChat  = this.chatRepository.findByParticipants(currentUser);
+        List<ChatDTO> chatDTOS = new ArrayList<>();
+        for(Chat chat: currentUserChat){
+            ChatDTO chatDTO = modelMapper.map(chat,ChatDTO.class);
+
+            if(chatDTO.getChatType()== ChatType.SINGLE){
+                User otherUser = chat.getParticipants().stream()
+                        .filter(user->!user.getUser_Id().equals(currentUser.getUser_Id()))
+                        .findFirst()
+                        .orElse(null);
+                if(otherUser != null){
+                    chatDTO.setChatName(otherUser.getUsername());
+                }
+            }
+            chatDTOS.add(chatDTO);
+
+        }
+        return  chatDTOS;
     }
 
     @Override
