@@ -292,18 +292,18 @@ const initialFetch = async () => {
                  <UserChats userId={userId} token={token} onChatSelect={handlleChatSelect} />
             </div>
             <div className={style.ChatContainer}>
-                {chatId ? (
-                    <>
+                
+                    
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
-                        {
-                            chatName
-                        }
+                        {chatName}
                     </div>
                     <div className={style.logoutButton}>
                         <button onClick={logout}>Logout</button>
                     </div>
                 </div>
+                {chatId ? (
+                    <>
                 <Message message={message} userId={userId} lastPostElementRef ={firstMessageElementRef} />
                 <div className={style.inputWrapper}>
                     <div className={style.FieldGroup}>

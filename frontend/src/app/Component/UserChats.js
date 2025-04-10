@@ -3,10 +3,13 @@ import { useEffect, useState } from "react"
 import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 import style from "../Style/userChats.module.css"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
 
 export default function UserChats({userId,token,onChatSelect}){
     const [chatInfo,setChatInfo] = useState([]);
     const [selectedChat,setSelectedChat] = useState(null);
+    const [showbox,setShowBox] = useState(false);
 
     // const getOtherUser =()=>{
     //     const otherUser = chatInfo.
@@ -28,12 +31,29 @@ export default function UserChats({userId,token,onChatSelect}){
         setSelectedChat(chatId);
         onChatSelect(chatId);
     }
+    const handleEllipseVClick=()=>{
+        setShowBox(!showbox);
+    }
     useEffect(()=>{
         fetchUserChats();
     },[userId,token])
     return(
         <div>
             <div className={style.Container}>
+                <div className={style.Section}>
+                    <div className={style.faEllipsisV}>
+                    <FontAwesomeIcon  icon={faEllipsisV} onClick={handleEllipseVClick} />
+
+                    </div>
+                    {showbox && 
+                       <>
+                       <div className={style.ShowBox}>
+                          <p>Create chat</p>
+                       </div>
+                       </>
+                    }
+                    
+                </div>
                 {chatInfo.length === 0 ? "No chats available":(
                     <div>
                         {chatInfo.map((chat)=>(

@@ -14,3 +14,49 @@
     background-color: #e0e0e0;
     font-weight: bold;
 }
+
+.Section {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    padding: 6px 0;
+    border-bottom: 1px solid lightgrey;
+    margin-bottom: 10px;
+}
+
+.faEllipsisV {
+    color: black;
+    padding: 10px;
+    margin: 0px 10px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.faEllipsisV:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.ShowBox {
+    position: absolute;
+    top: 100%; /* Position below the icon */
+    right: 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 8px 0;
+    min-width: 150px;
+    z-index: 10;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ShowBox p {
+    padding: 10px 16px;
+    margin: 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.ShowBox p:hover {
+    background-color: #f5f5f5;
+}

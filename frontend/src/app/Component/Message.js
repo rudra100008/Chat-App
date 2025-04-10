@@ -19,7 +19,7 @@ export default function Message({ message, userId , lastPostElementRef}) {
     return (
         <div className={style.MessageContainer}>
             {message.length === 0 ? (
-                <div className={style.EmptyState}>No messages yet</div>
+                <div className={style.EmptyState}>Start messaging </div>
             ) : (
                 message.map((msg,index) => (
                     <div 
