@@ -7,6 +7,6 @@ import java.io.IOException;
 @Service
 public interface ImageService {
     public String uploadImage(String uploadDir, MultipartFile file)throws IOException;
-    public byte[] getImage (String uploadDir, String username)throws IOException;
-    public String deleteImage(String uploadDir,String username)throws IOException;
+    public byte[] getImage (String uploadDir, String userImage)throws IOException;
+    public String deleteImage(String uploadDir,String userImage)throws IOException;
 }

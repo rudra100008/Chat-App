@@ -7,6 +7,8 @@ import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,17 +41,28 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
     
-    @PostMapping("/userImages")
-    public ResponseEntity<?> uploadImages(@RequestParam() MultipartFile imageFile){
-        String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
-        String uniqueName;
-        try {
-             uniqueName = this.imageService.uploadImage(uploadDir, imageFile);
+//    @PostMapping("/userImages")
+//    public ResponseEntity<?> uploadImages(@RequestParam() MultipartFile imageFile){
+//        String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
+//        String uniqueName;
+//        try {
+//             uniqueName = this.imageService.uploadImage(uploadDir, imageFile);
+//
+//        }catch (IOException io){
+//            return ResponseEntity.badRequest().body("Error in handling image:\n "+io.getMessage());
+//        }
+//        return  ResponseEntity.ok("Image upload successful:"+ uniqueName );
+//    }
 
-        }catch (IOException io){
-            return ResponseEntity.badRequest().body("Error in handling image:\n "+io.getMessage());
+    @GetMapping(value = "/getUserImage/${image}",produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<?> getImages(@PathVariable("image")String image)throws IOException{
+        try{
+            String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
+            byte[] b = this.imageService.getImage(uploadDir,image);
+            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
+        }catch (IOException e){
+            throw new IOException("Image get error:\n"+e.getMessage());
         }
-        return  ResponseEntity.ok("Image upload successful:"+ uniqueName );
     }
 
     @PatchMapping("/{userId}")

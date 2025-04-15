@@ -35,7 +35,6 @@ public class AuthenticationController {
     private final TwoFactorAuthService twoFactorAuthService;
     private final UserDetailsService userDetailsService;
     private final ImageService imageService;
-    private final AuthUtils authUtils;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(

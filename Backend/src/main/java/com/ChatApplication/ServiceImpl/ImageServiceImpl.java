@@ -26,12 +26,12 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public byte[] getImage(String uploadDir, String username) throws IOException {
-        Path path =  Path.of(uploadDir,username);
+    public byte[] getImage(String uploadDir, String userImage) throws IOException {
+        Path path =  Path.of(uploadDir,userImage);
         if (Files.exists(path)){
             return Files.readAllBytes(path);
         }else {
-            throw new ResourceNotFoundException("Image not found: " + username);
+            throw new ResourceNotFoundException("Image not found: " + userImage);
         }
     }
 
