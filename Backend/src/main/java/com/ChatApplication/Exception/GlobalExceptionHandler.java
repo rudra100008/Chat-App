@@ -92,6 +92,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleAccessDeniedException(TwoFactorAuthException e,WebRequest request){
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage(),request);
     }
+    @ExceptionHandler(ImageProcessingException.class)
+    public  ResponseEntity<?> handleImageProcessingException(ImageProcessingException e,WebRequest request){
+        return  createErrorResponse((HttpStatus.BAD_REQUEST),e.getMessage(),request);
+    }
+
+    @ExceptionHandler(ImageInvalidException.class)
+    public  ResponseEntity<?> handleImageInvalidException(ImageInvalidException e,WebRequest request){
+        return  createErrorResponse((HttpStatus.BAD_REQUEST),e.getMessage(),request);
+    }
 
     @MessageExceptionHandler(MethodArgumentNotValidException.class)
     public void handleValidationException(MethodArgumentNotValidException e, Principal principal){
