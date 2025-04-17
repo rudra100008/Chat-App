@@ -5,6 +5,7 @@ import baseUrl from "../baseUrl";
 import style from "../Style/userChats.module.css"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 
 export default function UserChats({userId,token,onChatSelect}){
     const [chatInfo,setChatInfo] = useState([]);
@@ -32,7 +33,7 @@ export default function UserChats({userId,token,onChatSelect}){
         onChatSelect(chatId);
     }
     const handleEllipseVClick=()=>{
-        setShowBox(!showbox);
+      setShowBox((prevState)=>!prevState);
     }
     useEffect(()=>{
         fetchUserChats();
@@ -41,14 +42,16 @@ export default function UserChats({userId,token,onChatSelect}){
         <div>
             <div className={style.Container}>
                 <div className={style.Section}>
-                    <div className={style.faEllipsisV}>
-                    <FontAwesomeIcon  icon={faEllipsisV} onClick={handleEllipseVClick} />
+                    <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
+                    <FontAwesomeIcon  icon={faEllipsisV}  />
 
                     </div>
                     {showbox && 
                        <>
                        <div className={style.ShowBox}>
-                          <p>Create chat</p>
+                          <p><Link href="/createChat">Create chat</Link></p> 
+                          <p><Link href="/setting">Setting</Link></p>
+                          <p><Link href="/profile">Profile</Link></p>
                        </div>
                        </>
                     }

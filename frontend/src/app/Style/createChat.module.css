@@ -1,0 +1,14 @@
+.Container{
+    background-color: white;  
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.Form{
+    background-color: rgb(155, 147, 147);
+    width: 500px;
+    padding: 4rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
