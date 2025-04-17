@@ -54,7 +54,7 @@ public class UserController {
 //        return  ResponseEntity.ok("Image upload successful:"+ uniqueName );
 //    }
 
-    @GetMapping(value = "/getUserImage/${image}",produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = "/getUserImage/{image}",produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<?> getImages(@PathVariable("image")String image)throws IOException{
         try{
             String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
