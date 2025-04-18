@@ -20,6 +20,25 @@ export default function CreateChat(){
                     id='chatname'
                     value={chat.chatName} />
                 </div>
+                <div className={style.FormGroup}>
+                    <label htmlFor="chatname">Chatname</label>
+                    <input 
+                    type="text"
+                    name='chatname'
+                    id='chatname'
+                    value={chat.chatName} />
+                </div>
+                <div className={style.FormGroup}>
+                    <label htmlFor="chatname">Chatname</label>
+                    <input 
+                    type="text"
+                    name='chatname'
+                    id='chatname'
+                    value={chat.chatName} />
+                </div>
+                <div className={style.FormGroup}>
+                    <button type='submit'>Create Chat</button>
+                </div>
             </div>
 
         </div>

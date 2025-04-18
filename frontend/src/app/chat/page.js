@@ -21,7 +21,7 @@ export default function Chat() {
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
-    const [chatName,setChatName] = useState('chat')
+    const [chatName,setChatName] = useState('')
     const messagesEndRef = useRef(null);
     const observer = useRef(IntersectionObserver | null);
     const [token, setToken] = useState(() => localStorage.getItem('token') || '');
@@ -41,12 +41,30 @@ export default function Chat() {
             setStompClient(null);
             setConnected(false);
         }
-        setPage(0);
         setMessage([]);
+        setPage(0);
+        setTotalPages(null)
         setInitialLoad(true);
         setHasMore(true);
-        setChatId(selectedChat);
+        setTimeout(() => {
+            setChatId(selectedChat);
+        }, 0);
     }
+
+    useEffect(() => {
+        // This effect runs when chatId changes
+        if (chatId) {
+            // Clear messages immediately when chat changes
+            setMessage([]);
+            setInitialLoad(true);
+            setPage(0);
+            setTotalPages(null);
+            setHasMore(true);
+            
+            // Then load new chat data
+            initialFetch();
+        }
+    }, [chatId]);
 
     const handleValueChange = (e) => {
         setInputValue(e.target.value)
@@ -77,45 +95,48 @@ const initialFetch = async () => {
       if (totalPage <= 1) {
         setHasMore(false);
       }
-      
-      setInitialLoad(false);
     } catch (error) {
       console.error("Error fetching initial messages:", error);
       // Error handling
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
   
   // Fetch older messages as user scrolls up
-  const fetchOlderMessages = async () => {
+  const fetchOlderMessages = useCallback(async () => {
+    if (loading || page < 0) return;
+    
     setLoading(true);
+    console.log("Fetching older messages for page:", page);
+    
     try {
-      const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=${page}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
+        const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=${page}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        
+        const { data } = response.data;
+        
+        if (data && data.length > 0) {
+            // Prepend older messages to the top of our message list
+            setMessage(prev => [...data, ...prev]);
+            
+            // Decrease page number for next fetch
+            setPage(prev => prev - 1);
+        } else {
+            // No more messages to load
+            setHasMore(false);
         }
-      });
-      
-      const { data } = response.data;
-      
-      // Prepend older messages to the top of our message list
-      setMessage(prev => [...data, ...prev]);
-      
-      // If we've reached page 0, there are no more messages to load
-      if (page === 0) {
-        setHasMore(false);
-      } else {
-        // Otherwise, decrease page number for next fetch
-        setPage(prev => prev - 1);
-      }
     } catch (error) {
-      console.error("Error fetching older messages:", error);
-      // Error handling
+        console.error("Error fetching older messages:", error);
+        // Error handling
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+},[loading, page, chatId, token, setMessage, setPage, setHasMore, setLoading]);
   
 
   const firstMessageElementRef = useCallback(
@@ -128,7 +149,7 @@ const initialFetch = async () => {
             // No need to call setPage here, as it will trigger the effect above
             // Just set a flag to indicate we should fetch more
             if (page > 0) {
-              setPage(prev => prev);  // This will re-trigger the useEffect without changing the value
+              fetchOlderMessages()  // This will re-trigger the useEffect without changing the value
             }
           }
         },
@@ -136,7 +157,7 @@ const initialFetch = async () => {
       );
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore, page]
+    [loading, hasMore, page,fetchOlderMessages]
   );
     const fetchUserChatDetails=async()=>{
         if(!chatId && !token) return;
@@ -217,7 +238,7 @@ const initialFetch = async () => {
                 client.disconnect();
             }
         }
-    }, [userId, chatId, token,page]);
+    }, [userId, chatId, token]);
 
     // useEffect(() => {
     //     if (chatId && initialLoad) {
@@ -229,10 +250,10 @@ const initialFetch = async () => {
   useEffect(() => {
     if (chatId && initialLoad) {
       initialFetch();
-    } else if (chatId && hasMore && !loading && page >= 0) {
+    } else if (chatId && hasMore && !loading && page >= 0 && !initialLoad) {
       fetchOlderMessages();
     }
-  }, [initialLoad, page,chatId]);
+  }, [initialLoad, page,chatId,hasMore,loading,fetchOlderMessages]);
 
     useEffect(() => {
         scrollToBottom()
