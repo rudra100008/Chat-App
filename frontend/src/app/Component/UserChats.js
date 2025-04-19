@@ -29,6 +29,7 @@ export default function UserChats({userId,token,onChatSelect}){
     }
 
     const handleChatClick=(chatId)=>{
+        console.log("handleChatClick",chatId)
         setSelectedChat(chatId);
         onChatSelect(chatId);
     }

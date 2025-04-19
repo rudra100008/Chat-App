@@ -35,7 +35,7 @@ export default function Chat() {
     })
     const [chatId,setChatId] =useState('');
 
-    const handlleChatSelect=(selectedChat)=>{
+    const handleChatSelect=(selectedChat)=>{
         if(stompClient && stompClient.connected){
             stompClient.disconnect();
             setStompClient(null);
@@ -46,25 +46,23 @@ export default function Chat() {
         setTotalPages(null)
         setInitialLoad(true);
         setHasMore(true);
-        setTimeout(() => {
-            setChatId(selectedChat);
-        }, 0);
+        setChatId(selectedChat);
     }
 
-    useEffect(() => {
-        // This effect runs when chatId changes
-        if (chatId) {
-            // Clear messages immediately when chat changes
-            setMessage([]);
-            setInitialLoad(true);
-            setPage(0);
-            setTotalPages(null);
-            setHasMore(true);
+    // useEffect(() => {
+    //     // This effect runs when chatId changes
+    //     if (chatId) {
+    //         // Clear messages immediately when chat changes
+    //         setMessage([]);
+    //         setInitialLoad(true);
+    //         setPage(0);
+    //         setTotalPages(null);
+    //         setHasMore(true);
             
-            // Then load new chat data
-            initialFetch();
-        }
-    }, [chatId]);
+    //         // Then load new chat data
+    //         initialFetch();
+    //     }
+    // }, [chatId]);
 
     const handleValueChange = (e) => {
         setInputValue(e.target.value)
@@ -76,6 +74,7 @@ export default function Chat() {
 
    // Initial fetch to get the latest messages
 const initialFetch = async () => {
+    console.log("initialFetch")
     setLoading(true);
     try {
       const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?latest=true`, {
@@ -89,44 +88,50 @@ const initialFetch = async () => {
       setTotalPages(totalPage);
       
       // Start from the second-to-last page for next fetch (since we already have the last page)
-      setPage(totalPage > 1 ? totalPage - 2 : 0);
+      setPage(totalPage > 1 ? totalPage - 2 : -1);
+      console.log("totalPage",totalPage)
+      console.log("Page in initialFetch",page)
       
       // If only one page exists, disable loading more
       if (totalPage <= 1) {
         setHasMore(false);
       }
+      setInitialLoad(false);
     } catch (error) {
       console.error("Error fetching initial messages:", error);
       // Error handling
     } finally {
       setLoading(false);
-      setInitialLoad(false);
     }
   };
   
   // Fetch older messages as user scrolls up
   const fetchOlderMessages = useCallback(async () => {
+    console.log("fetchOlderMessages")
     if (loading || page < 0) return;
     
     setLoading(true);
     console.log("Fetching older messages for page:", page);
+    console.log("initialLoad",initialLoad)
     
     try {
-        const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=${page}`, {
+        const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?pageNumber=${page}&latest=false`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
         
-        const { data } = response.data;
+        const { data ,totalPage} = response.data;
         
-        if (data && data.length > 0) {
+        
+        if (data && page >=0) {
             // Prepend older messages to the top of our message list
             setMessage(prev => [...data, ...prev]);
             
             // Decrease page number for next fetch
             setPage(prev => prev - 1);
-        } else {
+        } 
+        if(page < 0)  {
             // No more messages to load
             setHasMore(false);
         }
@@ -145,12 +150,12 @@ const initialFetch = async () => {
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting && hasMore && !loading) {
+          if (entries[0].isIntersecting && hasMore && !loading && page >= 0) {
             // No need to call setPage here, as it will trigger the effect above
             // Just set a flag to indicate we should fetch more
-            if (page > 0) {
+            
               fetchOlderMessages()  // This will re-trigger the useEffect without changing the value
-            }
+            
           }
         },
         { threshold: 0.5 }
@@ -205,7 +210,6 @@ const initialFetch = async () => {
             return;
         }
         setMessage([]);
-        setInitialLoad(true);
         const connectWebSocket = () => {
             const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
             
@@ -247,13 +251,18 @@ const initialFetch = async () => {
     // }, [chatId, initialLoad]);
 
       // In your useEffect
-  useEffect(() => {
-    if (chatId && initialLoad) {
-      initialFetch();
-    } else if (chatId && hasMore && !loading && page >= 0 && !initialLoad) {
-      fetchOlderMessages();
-    }
-  }, [initialLoad, page,chatId,hasMore,loading,fetchOlderMessages]);
+      useEffect(() => {
+        if (chatId && initialLoad) {
+          initialFetch();
+        }
+      }, [chatId, initialLoad]);
+      
+      useEffect(() => {
+        if (chatId && !initialLoad && hasMore && !loading && page >= 0) {
+          fetchOlderMessages();
+        }
+      }, [chatId, initialLoad, page, hasMore, loading, fetchOlderMessages]);
+      
 
     useEffect(() => {
         scrollToBottom()
@@ -310,7 +319,7 @@ const initialFetch = async () => {
         <div className={style.body}>
             <div className={style.UserChat}>
                  {/* display chat  */}
-                 <UserChats userId={userId} token={token} onChatSelect={handlleChatSelect} />
+                 <UserChats userId={userId} token={token} onChatSelect={handleChatSelect} />
             </div>
             <div className={style.ChatContainer}>
                 
