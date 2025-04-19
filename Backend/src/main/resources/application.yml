@@ -9,7 +9,7 @@ spring:
 security:
   jwt:
     security-key: 4bbf5ef641e95aa5474f6f9e000b80e83e7c2e441cff743658aafd16a08234c6
-    expiration-date: 3600000
+    expiration-date: 21600000
 
 twilio:
   account:
