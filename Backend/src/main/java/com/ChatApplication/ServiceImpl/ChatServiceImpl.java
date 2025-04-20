@@ -287,10 +287,22 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatDTO fetchUserChat(String chatId, StompHeaderAccessor headerAccessor) {
         User loggedInUser = this.authUtils.getLoggedInUsername();
-        validateChatAccess(chatId,loggedInUser.getUser_Id());
-        Chat chat = this.chatRepository.findById(chatId)
-                .orElseThrow(()-> new ResourceNotFoundException("chat not found: "+chatId));
+        validateChatAccess(chatId, loggedInUser.getUser_Id());
 
-        return modelMapper.map(chat,ChatDTO.class);
+        Chat chat = this.chatRepository.findById(chatId)
+                .orElseThrow(() -> new ResourceNotFoundException("chat not found: " + chatId));
+        if (chat.getChatType() == ChatType.SINGLE) {
+            User user = chat.getParticipants().stream()
+                    .filter(p -> !p.getUser_Id().equals(loggedInUser.getUser_Id()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (user != null) {
+                chat.setChatName(user.getUsername());
+            }
+        }
+
+        return modelMapper.map(chat, ChatDTO.class);
     }
+
 }

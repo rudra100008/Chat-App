@@ -2,11 +2,14 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
+import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,8 @@ public class UserController {
     private final UserService userService;
     private final AuthUtils authUtils;
     private final ImageService imageService;
+
+    Logger logger  = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping("/current-user")
     public ResponseEntity<User> getCurrentUser(){
@@ -54,16 +59,22 @@ public class UserController {
 //        return  ResponseEntity.ok("Image upload successful:"+ uniqueName );
 //    }
 
-    @GetMapping(value = "/getUserImage/{image}",produces = MediaType.IMAGE_JPEG_VALUE)
-    public ResponseEntity<?> getImages(@PathVariable("image")String image)throws IOException{
-        try{
+    @GetMapping(value = "/getUserImage/user/{userId}", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<?> getImages(@PathVariable("userId") String userId) {
+        try {
+            UserDTO userDTO = this.userService.fetchUser(userId);
+            logger.debug("Profile_Picture:{}",userDTO.getProfile_picture());
+
             String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
-            byte[] b = this.imageService.getImage(uploadDir,image);
+            byte[] b = this.imageService.getImage(uploadDir, userDTO.getProfile_picture());
             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
-        }catch (IOException e){
-            throw new IOException("Image get error:\n"+e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found: " + e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading image: " + e.getMessage());
         }
     }
+
 
     @PatchMapping("/{userId}")
     public ResponseEntity<UserDTO> updateUser(

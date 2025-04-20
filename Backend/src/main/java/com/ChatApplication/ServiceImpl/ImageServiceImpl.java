@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Service
 public class ImageServiceImpl implements ImageService {
-    private final List<String> extensions = List.of("jpg","jpeg","png","gif");
+    private final List<String> extensions = List.of("jpg","jpeg","png","gif","jfif");
     private final  int MAX_SIZE = 20* 1024 *1024; //20MB from 20971520 bytes
 
     @Override
