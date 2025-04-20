@@ -8,6 +8,7 @@ import axiosInterceptor from '../Component/Interceptor';
 import Message from '../Component/Message';
 import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
+import GetUserImage from '../Component/GetUserImage';
 
 export default function Chat() {
     const route = useRouter();
@@ -21,7 +22,16 @@ export default function Chat() {
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
-    const [chatName,setChatName] = useState('')
+    const [chatName,setChatName] = useState('');
+    const [otherUserDetails,setOtherUserDetails] = useState({
+        profile_picture:"",
+        status:'',
+        userId:'',
+        last_seen:'',
+        email:'',
+        userName:'',
+        phoneNumber:'',
+    })
     const messagesEndRef = useRef(null);
     const observer = useRef(IntersectionObserver | null);
     const [token, setToken] = useState(() => localStorage.getItem('token') || '');
@@ -268,9 +278,13 @@ const initialFetch = async () => {
         scrollToBottom()
     }, [message])
 
-    const getOtherUser = () => {
+    const getOtherUserId = () => {
         if(!userChat.participantIds || userChat.participantIds.length === 0){
             console.log("No participants availble");
+            return [];
+        }
+        if(!userChat.chatType === 'GROUP'){
+            console.log("Chat is group type");
             return [];
         }
         const otherUser = userChat.participantIds.filter(pIds => pIds !== userId)[0];
@@ -280,13 +294,15 @@ const initialFetch = async () => {
 
     const fetchUserDetails=async()=>{
         // userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
-        const otherUser = getOtherUser();
-        console.log("OtherUsers: ",otherUser);
+        const otherUserId = getOtherUserId();
+        if (!otherUserId) return
+       
         try{
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUser}`,{
+            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserId}`,{
                 headers:{Authorization:`Bearer ${token}`}
             })
-            setChatName(response.data.userName)
+            console.log("OtherUser:\n",response.data)
+            setOtherUserDetails(response.data);
         }catch(error){
             console.log("Error: ",error.response.data)
         }
@@ -326,7 +342,8 @@ const initialFetch = async () => {
                     
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
-                        {chatName}
+                        <GetUserImage userId={otherUserDetails.userId}/>
+                        {userChat.chatName}
                     </div>
                     <div className={style.logoutButton}>
                         <button onClick={logout}>Logout</button>
