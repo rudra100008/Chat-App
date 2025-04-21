@@ -58,7 +58,7 @@ export default function UserChats({userId,token,onChatSelect}){
                     }
                     
                 </div>
-                {chatInfo.length === 0 ? "No chats available":(
+                {chatInfo.length === 0 ? <p className={style.errorMessage}>No chats available</p>:(
                     <div>
                         {chatInfo.map((chat)=>(
                             <div 

@@ -19,7 +19,7 @@
     display: flex;
     justify-content: flex-end;
     position: relative;
-    padding: 6px 0;
+    padding: 9px 0;
     border-bottom: 1px solid lightgrey;
     margin-bottom: 10px;
 }
@@ -38,6 +38,14 @@
 
 .faEllipsisV:hover {
     background-color: rgba(156, 151, 151, 0.1);
+}
+.errorMessage{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #888;
+    font-size: 16px;
 }
 
 .ShowBox {

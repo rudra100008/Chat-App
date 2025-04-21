@@ -33,7 +33,7 @@ export default function Chat() {
         phoneNumber:'',
     })
     const messagesEndRef = useRef(null);
-    const observer = useRef(IntersectionObserver | null);
+    const observer = useRef(null);
     const [token, setToken] = useState(() => localStorage.getItem('token') || '');
     const [userId, setUserId] = useState(() => localStorage.getItem('userId') || '');
     const [userChat,setUserChat]= useState({
@@ -59,20 +59,8 @@ export default function Chat() {
         setChatId(selectedChat);
     }
 
-    // useEffect(() => {
-    //     // This effect runs when chatId changes
-    //     if (chatId) {
-    //         // Clear messages immediately when chat changes
-    //         setMessage([]);
-    //         setInitialLoad(true);
-    //         setPage(0);
-    //         setTotalPages(null);
-    //         setHasMore(true);
-            
-    //         // Then load new chat data
-    //         initialFetch();
-    //     }
-    // }, [chatId]);
+
+   
 
     const handleValueChange = (e) => {
         setInputValue(e.target.value)
@@ -154,26 +142,40 @@ const initialFetch = async () => {
 },[loading, page, chatId, token, setMessage, setPage, setHasMore, setLoading]);
   
 
-  const firstMessageElementRef = useCallback(
+const firstMessageElementRef = useCallback(
     (node) => {
+      // Don't do anything if we're loading
       if (loading) return;
+      
+      // Disconnect any existing observer before creating a new one
       if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting && hasMore && !loading && page >= 0) {
-            // No need to call setPage here, as it will trigger the effect above
-            // Just set a flag to indicate we should fetch more
-            
-              fetchOlderMessages()  // This will re-trigger the useEffect without changing the value
-            
-          }
-        },
-        { threshold: 0.5 }
-      );
-      if (node) observer.current.observe(node);
+      
+      // Create a new observer only on the client side
+      if (typeof window !== 'undefined') {
+        observer.current = new IntersectionObserver(
+          (entries) => {
+            // When the element is visible and we have more data to load
+            if (entries[0].isIntersecting && hasMore && !loading && page >= 0) {
+              fetchOlderMessages();
+            }
+          },
+          { threshold: 0.5 } // This determines how much of the element needs to be visible
+        );
+        
+        // Observe the node if it exists
+        if (node) observer.current.observe(node);
+      }
     },
-    [loading, hasMore, page,fetchOlderMessages]
+    [loading, hasMore, page, fetchOlderMessages]
   );
+
+  useEffect(()=>{
+    return ()=>{
+        if(observer.current){
+            observer.current.disconnect();
+        }
+    }
+  },[])
     const fetchUserChatDetails=async()=>{
         if(!chatId && !token) return;
         try{
@@ -345,8 +347,8 @@ const initialFetch = async () => {
                         <GetUserImage userId={otherUserDetails.userId}/>
                         {userChat.chatName}
                     </div>
-                    <div className={style.logoutButton}>
-                        <button onClick={logout}>Logout</button>
+                    <div className={style.Button}>
+                        <button onClick={logout} className={style.logoutButton}>Logout</button>
                     </div>
                 </div>
                 {chatId ? (

@@ -153,16 +153,34 @@
     border-bottom: 1px solid #e1e4e8;
     align-items: center;
     background-color: #fff;
+    justify-content: space-between;
+    align-items: center;
+   position: relative;
+    
 }
 .ChatHeaderName {
+    display: flex;
     font-weight: 400;
     font-family: cursive;
     font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: hidden;
+    max-width: 70%;
 }
 
-
+.Button{
+    display: flex;
+    align-items: center;
+    
+}
 .logoutButton{
-    margin-left: 100px;
+    cursor: pointer;
+    background-color: rgb(233, 22, 22);
+    color: white;
+    padding: 4px 16px;
+    border: none;
+    border-radius: 8px;
 }
 .selected {
     background-color: #e0e0e0;

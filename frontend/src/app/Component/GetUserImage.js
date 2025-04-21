@@ -13,7 +13,7 @@ export default function GetUserImage({ userId }) {
         console.log("UserId in GetImage:\n",userId)
         const fetchUserImage = async () => {
             try {
-                const response = await axiosInterceptor.get(`${baseUrl}/getUserImage/user/${userId}`, {
+                const response = await axiosInterceptor.get(`${baseUrl}/api/users/getUserImage/user/${userId}`, {
                     headers: { Authorization: `Bearer ${token()}` },
                     responseType: 'blob',
                 });
@@ -34,8 +34,8 @@ export default function GetUserImage({ userId }) {
                 <Image
                     src={imageUrl}
                     alt="User"
-                    width={80} // 96px = 6rem (Tailwind w-24)
-                    height={80}
+                    width={30} // 96px = 6rem (Tailwind w-24)
+                    height={30}
                     className="rounded-full object-cover"
                 />
             )}
