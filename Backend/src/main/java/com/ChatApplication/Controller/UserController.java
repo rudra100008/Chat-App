@@ -90,4 +90,9 @@ public class UserController {
         this.userService.deleteUser(userId);
         return ResponseEntity.ok(deletedUser);
     }
+    @GetMapping("/search/{userName}")
+    public ResponseEntity<List<UserDTO>> searchUser(@PathVariable String username){
+        List<UserDTO> users = this.userService.searchUser(username);
+        return ResponseEntity.ok(users);
+    }
 }

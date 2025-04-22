@@ -17,5 +17,6 @@ public interface UserService {
     User authenticate(AuthRequest request);
     boolean existsByPhoneNumber(String phoneNumber);
     User findByPhoneNumber(String phoneNumber);
+    List<UserDTO> searchUser(String username);
 
 }
