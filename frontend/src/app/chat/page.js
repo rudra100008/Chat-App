@@ -337,7 +337,7 @@ const firstMessageElementRef = useCallback(
         <div className={style.body}>
             <div className={style.UserChat}>
                  {/* display chat  */}
-                 <UserChats userId={userId} token={token} onChatSelect={handleChatSelect} />
+                 <UserChats userId={userId} otherUserId={otherUserDetails.userId} token={token} onChatSelect={handleChatSelect} />
             </div>
             <div className={style.ChatContainer}>
                 
