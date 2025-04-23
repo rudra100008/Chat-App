@@ -7,8 +7,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import GetUserImage from "./GetUserImage";
+import { useRouter } from "next/navigation";
+import SearchUser  from "./SearchUser";
 
 export default function UserChats({userId,token,onChatSelect,otherUserId}){
+    const router = useRouter()
     const [chatInfo,setChatInfo] = useState([]);
     const [selectedChat,setSelectedChat] = useState(null);
     const [showbox,setShowBox] = useState(false);
@@ -25,6 +28,9 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
             console.log('Response of userChats:',response.data);
             setChatInfo(response.data);
         }catch(error){
+            if(error.response.status ==='403'){
+                router.push("/")
+            }
             console.log(error.response.data)
         }
     }
@@ -47,9 +53,9 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
         <div>
             <div className={style.Container}>
                 <div className={style.Section}>
+                    <SearchUser/>
                     <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
                     <FontAwesomeIcon  icon={faEllipsisV}  />
-
                     </div>
                     {showbox && 
                        <>

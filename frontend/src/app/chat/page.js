@@ -10,6 +10,12 @@ import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import GetUserImage from '../Component/GetUserImage';
 
+const getToken=()=>{
+    localStorage.getItem('token');
+}
+const getUserId=()=>{
+    localStorage.getItem('userId');
+}
 export default function Chat() {
     const route = useRouter();
     const [message, setMessage] = useState([]);
@@ -34,8 +40,8 @@ export default function Chat() {
     })
     const messagesEndRef = useRef(null);
     const observer = useRef(null);
-    const [token, setToken] = useState(() => localStorage.getItem('token') || '');
-    const [userId, setUserId] = useState(() => localStorage.getItem('userId') || '');
+    const [token, setToken] = useState(() =>  localStorage.getItem('token') || '');
+    const [userId, setUserId] = useState(() =>  localStorage.getItem('userId') || '');
     const [userChat,setUserChat]= useState({
         chatId:"",
         chatName:"",
@@ -219,6 +225,11 @@ const firstMessageElementRef = useCallback(
                 return;
             }
             setError("Missing required authentication information");
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            setTimeout(()=>{
+                route.push("/")
+            },100)
             return;
         }
         setMessage([]);
@@ -313,6 +324,11 @@ const firstMessageElementRef = useCallback(
     useEffect(()=>{
         if( !token || !userId){
             setError("Missing required authentication information");
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            setTimeout(()=>{
+                route.push("/")
+            },100)
             return;
         }
         if(!chatId) return;
