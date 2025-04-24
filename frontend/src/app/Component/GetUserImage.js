@@ -34,9 +34,9 @@ export default function GetUserImage({ userId }) {
                 <Image
                     src={imageUrl}
                     alt="User"
-                    width={30} // 96px = 6rem (Tailwind w-24)
-                    height={30}
-                    className="rounded-full object-cover"
+                    width={40} // 96px = 6rem (Tailwind w-24)
+                    height={40}
+                    className="rounded-full object-cover "
                 />
             )}
         </>

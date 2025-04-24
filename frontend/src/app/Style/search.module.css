@@ -22,10 +22,10 @@
 .searchicon {
     /* Search Icon Styles */
     margin-right: 0.75rem;   
-    color: white;
+    color: rgb(180, 175, 175);
     font-size: 1.2rem;
 }
-.search-input {
+.searchinput {
     /* Input Field Styles */
     border: none;          
     outline: none;          /* Remove focus outline */
@@ -33,7 +33,7 @@
     width: 100%;          
 }
 
-.search-input::placeholder {
+.searchinput::placeholder {
     /* Placeholder Text Styles */
     color: rgba(119, 110, 110, 0.2); /* Lighter placeholder text */
 }

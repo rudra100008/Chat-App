@@ -29,9 +29,11 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
             setChatInfo(response.data);
         }catch(error){
             if(error.response.status ==='403'){
+                localStorage.removeItem('token');
+                localStorage.removeItem('userId')
                 router.push("/")
             }
-            console.log(error.response.data)
+            console.log("Error from UserChat.js:",error.response.data)
         }
     }
     const getOtherUser =(chat)=>{
@@ -76,7 +78,7 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
                             key={chat.chatId}
                             onClick={()=>handleChatClick(chat.chatId)}>
                                 <GetUserImage userId={getOtherUser(chat)} />
-                                <p>{chat.chatName}</p>
+                                <p className="mt-2 ml-1">{chat.chatName}</p>
                             </div>
                         ))}      
                     </div>

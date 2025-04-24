@@ -10,12 +10,12 @@ import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import GetUserImage from '../Component/GetUserImage';
 
-const getToken=()=>{
-    localStorage.getItem('token');
-}
-const getUserId=()=>{
-    localStorage.getItem('userId');
-}
+// const getToken=()=>{
+//     localStorage.getItem('token');
+// }
+// const getUserId=()=>{
+//     localStorage.getItem('userId');
+// }
 export default function Chat() {
     const route = useRouter();
     const [message, setMessage] = useState([]);
@@ -50,6 +50,7 @@ export default function Chat() {
         messageIds:[]
     })
     const [chatId,setChatId] =useState('');
+
 
     const handleChatSelect=(selectedChat)=>{
         if(stompClient && stompClient.connected){
@@ -361,7 +362,7 @@ const firstMessageElementRef = useCallback(
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
                         <GetUserImage userId={otherUserDetails.userId}/>
-                        {userChat.chatName}
+                        <p className='mt-2 ml-1'>{userChat.chatName}</p>
                     </div>
                     <div className={style.Button}>
                         <button onClick={logout} className={style.logoutButton}>Logout</button>

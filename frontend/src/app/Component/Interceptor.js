@@ -31,6 +31,11 @@ axiosInterceptor.interceptors.response.use(
             localStorage.removeItem("userId");
             window.location.href ="http://localhost:3000/";
         }
+        if(error.response && error.response.status === 403){
+            localStorage.removeItem("token");
+            localStorage.removeItem("userId");
+            window.location.href ="http://localhost:3000/";
+        }
         return Promise.reject(error);
     }
 )
