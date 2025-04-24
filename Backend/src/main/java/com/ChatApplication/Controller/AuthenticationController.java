@@ -120,7 +120,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/verify-token")
+    @GetMapping("/verify-token")
     public ResponseEntity<?> verifyToken(
             @RequestParam("userId") String userId,
             @RequestHeader("Authorization")String authorization

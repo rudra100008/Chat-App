@@ -91,8 +91,8 @@ public class UserController {
         return ResponseEntity.ok(deletedUser);
     }
     @GetMapping("/search/{userName}")
-    public ResponseEntity<List<UserDTO>> searchUser(@PathVariable String username){
-        List<UserDTO> users = this.userService.searchUser(username);
+    public ResponseEntity<List<UserDTO>> searchUser(@PathVariable(value = "userName") String userName){
+        List<UserDTO> users = this.userService.searchUser(userName);
         return ResponseEntity.ok(users);
     }
 }

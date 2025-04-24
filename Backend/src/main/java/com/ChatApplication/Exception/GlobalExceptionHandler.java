@@ -1,5 +1,6 @@
 package com.ChatApplication.Exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -113,6 +114,10 @@ public class GlobalExceptionHandler {
                 "/queue/errors",
                new WebSocketErrorMessage("Validation failed",errors));
 
+    }
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<?> handleExpiredJwtException(ExpiredJwtException e,WebRequest request){
+        return createErrorResponse(HttpStatus.UNAUTHORIZED,e.getMessage(),request);
     }
 
 
