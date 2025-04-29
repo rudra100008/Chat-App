@@ -362,7 +362,7 @@ const firstMessageElementRef = useCallback(
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
                         <GetUserImage userId={otherUserDetails.userId}/>
-                        <p className='mt-2 ml-1'>{userChat.chatName}</p>
+                        <p className={style.chatName}>{userChat.chatName}</p>
                     </div>
                     <div className={style.Button}>
                         <button onClick={logout} className={style.logoutButton}>Logout</button>

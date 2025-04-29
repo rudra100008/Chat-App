@@ -1,33 +1,51 @@
-.ChatContainer{
+.ChatContainer {
     display: flex;
+    align-items: center;
     cursor: pointer;
     margin: 10px 10px;
     padding: 10px 20px;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 10px;
-    transition: all ease-in;
+    transition: all 0.2s ease;
+    min-height: 60px;
+    box-sizing: border-box;
 }
-.ChatContainer:hover{
-    background-color: lightgray;
 
+.ChatContainer:hover {
+    background-color: rgba(211, 211, 211, 0.5); 
 }
+
+/* Make the active state more consistent */
 .active {
     background-color: #e0e0e0;
-    font-weight: bold;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-weight: 600; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); 
+}
+
+.chatName {
+    margin-left: 10px;
+    padding: 2px 0;
+    /* Reserve space for bold text to prevent layout shift */
+    font-weight: normal;
+}
+
+.active .chatName {
+    font-weight: 600;
 }
 
 .Section {
     display: flex;
     justify-content: flex-end;
     position: relative;
-    padding: 9px 0;
+    padding: 10px 0;
     border-bottom: 1px solid lightgrey;
     margin-bottom: 10px;
 }
 
 .faEllipsisV {
     color: black;
-    padding: 10px;
+    padding:9px;
     margin: 0px 10px;
     pointer-events:auto;
     cursor: pointer;

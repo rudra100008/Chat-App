@@ -9,13 +9,14 @@ import Link from "next/link";
 import GetUserImage from "./GetUserImage";
 import { useRouter } from "next/navigation";
 import SearchUser  from "./SearchUser";
+import ErrorMessage from "./ErrorMessage";
 
 export default function UserChats({userId,token,onChatSelect,otherUserId}){
     const router = useRouter()
     const [chatInfo,setChatInfo] = useState([]);
     const [selectedChat,setSelectedChat] = useState(null);
     const [showbox,setShowBox] = useState(false);
-    const [otherUser,setOtherUser] = useState([]);
+    const [errorMessage,setErrorMessage] = useState('');
 
     // const getOtherUser =()=>{
     //     const otherUser = chatInfo.
@@ -48,14 +49,24 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
     const handleEllipseVClick=()=>{
       setShowBox((prevState)=>!prevState);
     }
+
+    const handleErrorMessage=(message)=>{
+        setErrorMessage(message);
+    }
+
+    const closeErrorMessage=()=>{
+        setErrorMessage("");
+    }
+
     useEffect(()=>{
         fetchUserChats();
     },[userId,token])
     return(
         <div>
+            <ErrorMessage errorMessage={errorMessage} onClose={closeErrorMessage}/>
             <div className={style.Container}>
                 <div className={style.Section}>
-                    <SearchUser/>
+                    <SearchUser onError={handleErrorMessage} />
                     <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
                     <FontAwesomeIcon  icon={faEllipsisV}  />
                     </div>
@@ -78,7 +89,7 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
                             key={chat.chatId}
                             onClick={()=>handleChatClick(chat.chatId)}>
                                 <GetUserImage userId={getOtherUser(chat)} />
-                                <p className="mt-2 ml-1">{chat.chatName}</p>
+                                <p className={style.chatName}>{chat.chatName}</p>
                             </div>
                         ))}      
                     </div>

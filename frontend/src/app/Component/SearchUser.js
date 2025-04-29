@@ -7,28 +7,34 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 
-export default function SearchUser() {
+export default function SearchUser({onError}) {
     const [userName, setUserName] = useState("");
     const [user,setUser] =  useState([]);
+    const [errorMessage,setErrorMessage] =  useState('');
     const onValueChange = (e) => {
         setUserName(e.target.value)
     }
     const searchUser=async()=>{
         const token = localStorage.getItem('token');
         
-        axiosInterceptor.get(`${baseUrl}/api/users/search/${userName}`,{
+        await axiosInterceptor.get(`${baseUrl}/api/users/search/${userName}`,{
             headers:{Authorization:`Bearer ${token}`}
         }).then((response)=>{
             console.log(response.data)
             setUser(response.data)
         }).catch((error)=>{
-            console.error('Error in SearchUser:\n',error.response?.data)
+            console.error('Error in SearchUser:\n',error.response?.data);
+            onError(error.response?.data.message);
         })
+    }
+    const handleSubmit =(e)=>{
+        e.preventDefault();
+        searchUser();
     }
     return (
         <div  className={style.searchcontainer}>
             <div className={style.searchbox}>
-            <FontAwesomeIcon className={style.searchicon}  icon={faSearch}/>
+            <FontAwesomeIcon className={style.searchicon}  icon={faSearch} onClick={handleSubmit}/>
                 <input
                     type="text"
                     id="username"
@@ -36,6 +42,7 @@ export default function SearchUser() {
                     value={userName}
                     className={style.searchinput}
                     onChange={onValueChange}
+                    onKeyPress={(e)=> e.key === 'Enter' && handleSubmit(e)}
                     placeholder="Search here" />
             </div>
         </div>
