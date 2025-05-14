@@ -30,13 +30,6 @@ public class User  implements UserDetails {
     private UserStatus status;
     private LocalDateTime last_seen;
 
-    //this is owned by the field sender in the Message class
-   @DBRef
-    private List<Message> message;
-    //this is owned by the field participants in the Chat class
-    @DBRef
-    private List<Chat> chat;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

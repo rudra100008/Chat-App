@@ -20,10 +20,6 @@ public class Chat {
     private String chatId;
     private String chatName;
     private ChatType chatType; //SINGLE,GROUP
-
-    @DBRef
     private List<User> participants;
 
-    @DBRef
-    private List<Message> messages;
 }

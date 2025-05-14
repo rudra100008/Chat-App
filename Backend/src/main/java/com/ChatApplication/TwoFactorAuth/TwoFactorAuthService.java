@@ -42,16 +42,18 @@ public class TwoFactorAuthService {
             return false;
         }
     }
-    public  boolean verifyCode(String phoneNumber,String verificationCode){
-        try{
+    public boolean verifyCode(String phoneNumber, String verificationCode) {
+        try {
             String formattedPhoneNumber = formatPhoneNumber(phoneNumber);
-            VerificationCheck verificationCheck = VerificationCheck.creator(
-                    VERIFY_SERVICE_SID,verificationCode
-            ).setTo(formattedPhoneNumber).create();
-           return verificationCheck.getStatus().equals("approved");
-        }catch (Exception e){
+            VerificationCheck verificationCheck = VerificationCheck.creator(VERIFY_SERVICE_SID)
+                    .setTo(formattedPhoneNumber)
+                    .setCode(verificationCode)
+                    .create();
+            return verificationCheck.getStatus().equals("approved");
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             return false;
         }
     }
+
 }
