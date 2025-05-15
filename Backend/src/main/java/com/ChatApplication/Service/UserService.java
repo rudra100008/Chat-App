@@ -1,8 +1,8 @@
 package com.ChatApplication.Service;
 
 import com.ChatApplication.DTO.UserDTO;
-import com.ChatApplication.Entity.AuthRequest;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.entity.AuthRequest;
+import com.ChatApplication.entity.User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,6 +1,5 @@
 package com.ChatApplication.DTO;
 
-import com.ChatApplication.Entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatNameDTO {
+public class ChatDisplayNameDTO {
     private String id;
-    private String chatName;
-
-    private String user;
+    private String chatname;
+    private String userId;
+    private String chatId;
 }

@@ -1,8 +1,7 @@
 package com.ChatApplication.Service;
 
 import com.ChatApplication.DTO.MessageDTO;
-import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.PageInfo;
+import com.ChatApplication.entity.PageInfo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 

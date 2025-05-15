@@ -1,11 +1,10 @@
-package com.ChatApplication.Entity;
+package com.ChatApplication.entity;
 
 
 import com.ChatApplication.Enum.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,14 +20,14 @@ import java.util.List;
 @NoArgsConstructor
 public class User  implements UserDetails {
   @MongoId
-    private String user_Id;
+    private String userId;
     private String userName;
     private String email;
     private String password;
-    private String profile_picture;
+    private String profilePicture;
     private String phoneNumber;
     private UserStatus status;
-    private LocalDateTime last_seen;
+    private LocalDateTime lastSeen;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

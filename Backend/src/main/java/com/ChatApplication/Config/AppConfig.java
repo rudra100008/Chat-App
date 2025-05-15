@@ -1,9 +1,9 @@
 package com.ChatApplication.Config;
 
 import com.ChatApplication.DTO.ChatDTO;
-import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.entity.Chat;
+import com.ChatApplication.entity.Message;
+import com.ChatApplication.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -14,7 +14,6 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.stream.Collectors;
 

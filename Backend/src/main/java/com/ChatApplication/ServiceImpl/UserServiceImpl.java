@@ -1,8 +1,8 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.UserDTO;
-import com.ChatApplication.Entity.AuthRequest;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.entity.AuthRequest;
+import com.ChatApplication.entity.User;
 import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
@@ -33,10 +33,14 @@ public class UserServiceImpl implements UserService {
     private final AuthUtils authUtils;
 
     private void validateUserNameUniqueness(String databaseUserName,String updatedUserName){
-        if(!databaseUserName.equals(updatedUserName) &&
-                this.userRepository.existsByUserName(updatedUserName)){
-            throw new AlreadyExistsException(updatedUserName+" already exists");
+        boolean isUsernameChangedAndExists =
+                !databaseUserName.equals(updatedUserName) &&
+                        this.userRepository.existsByUserName(updatedUserName);
+
+        if (isUsernameChangedAndExists) {
+            throw new AlreadyExistsException(updatedUserName + " already exists");
         }
+
     }
     @Override
     public List<UserDTO> fetchAllUser() {
@@ -47,28 +51,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDTO fetchUser(String user_Id) {
-        return this.userRepository.findById(user_Id)
+    public UserDTO fetchUser(String userId) {
+        return this.userRepository.findById(userId)
                 .map(user -> mapper.map(user,UserDTO.class))
-                .orElseThrow(()-> new ResourceNotFoundException(user_Id +" not found in the server"));
+                .orElseThrow(()-> new ResourceNotFoundException(userId +" not found in the server"));
     }
 
     @Override
     @Transactional
     public UserDTO signup(UserDTO userDTO) {
-        if(this.userRepository.existsByUserName(userDTO.getUserName())){
-            throw new AlreadyExistsException(userDTO.getUserName()+" already exists");
+        if(this.userRepository.existsByUserName(userDTO.getUsername())){
+            throw new AlreadyExistsException(userDTO.getUsername()+" already exists");
         }
         if(this.userRepository.existsByEmail(userDTO.getEmail())){
             throw  new AlreadyExistsException(userDTO.getEmail()+" already exists");
         }
-        if(this.userRepository.existsByPhoneNumber(userDTO.getPhoneNumber())){
-            throw new AlreadyExistsException(userDTO.getPhoneNumber()+"already exists");
+        if(this.userRepository.existsByPhoneNumber(userDTO.getPhonenumber())){
+            throw new AlreadyExistsException(userDTO.getPhonenumber()+"already exists");
         }
         if(userDTO.getProfile_picture() == null || userDTO.getProfile_picture().isEmpty()){
             userDTO.setProfile_picture("default.jpg");
         }
-        userDTO.setLast_seen(LocalDateTime.now());
+        userDTO.setLastSeen(LocalDateTime.now());
         userDTO.setStatus(UserStatus.Available);
         userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         User user = mapper.map(userDTO,User.class);
@@ -76,48 +80,49 @@ public class UserServiceImpl implements UserService {
         return mapper.map(savedUser,UserDTO.class);
     }
     private void validateUniqueEmail(String databaseEmail,String updatedEmail){
-        if(!databaseEmail.equals(updatedEmail)&&
-                this.userRepository.existsByEmail(updatedEmail)){
+        boolean isEmailChangedAndExits = !databaseEmail.equals(updatedEmail)&&
+                this.userRepository.existsByEmail(updatedEmail);
+        if(isEmailChangedAndExits){
             throw  new AlreadyExistsException(updatedEmail+" already exists");
         }
     }
     @Override
     @Transactional
-    public UserDTO updateUser(String user_id, UserDTO userDTO) {
+    public UserDTO updateUser(String userId, UserDTO userDTO) {
         User loggedInuser = this.authUtils.getLoggedInUsername();
-        User user = this.userRepository.findById(user_id).orElseThrow(()->
-                new ResourceNotFoundException(user_id + " not found."));
-        if(!loggedInuser.getUser_Id().equals(user.getUser_Id())){
+        User user = this.userRepository.findById(userId).orElseThrow(()->
+                new ResourceNotFoundException(userId + " not found."));
+        if(!loggedInuser.getUserId().equals(user.getUserId())){
             throw new AccessDeniedException(user.getUsername()+"cannot updated this profile.");
         }
-        validateUserNameUniqueness(user.getUsername(),userDTO.getUserName());
-        validateUniqueEmail(user.getEmail(),userDTO.getUserName());
+        validateUserNameUniqueness(user.getUsername(),userDTO.getUsername());
+        validateUniqueEmail(user.getEmail(),userDTO.getUsername());
 
-        if(userDTO.getPhoneNumber() != null && !userDTO.getPhoneNumber().equals(user.getPhoneNumber())) {
+        if(userDTO.getPhonenumber() != null && !userDTO.getPhonenumber().equals(user.getPhoneNumber())) {
             throw new IllegalArgumentException("Phone number cannot be updated");
         }
         if(userDTO.getPassword() != null){
         }
         if(userDTO.getProfile_picture() == null || userDTO.getProfile_picture().isEmpty()){
-            user.setProfile_picture("default.png");
+            user.setProfilePicture("default.png");
         }else {
-            user.setProfile_picture(userDTO.getProfile_picture());
+            user.setProfilePicture(userDTO.getProfile_picture());
         }
-        Optional.ofNullable(userDTO.getUserName()).ifPresent(user::setUserName);
+        Optional.ofNullable(userDTO.getUsername()).ifPresent(user::setUserName);
         Optional.ofNullable(userDTO.getEmail()).ifPresent(user::setEmail);
-        Optional.ofNullable(userDTO.getPhoneNumber()).ifPresent(user::setPhoneNumber);
+        Optional.ofNullable(userDTO.getPhonenumber()).ifPresent(user::setPhoneNumber);
         Optional.ofNullable(userDTO.getStatus()).ifPresent(user::setStatus);
 
-        user.setLast_seen(LocalDateTime.now());
+        user.setLastSeen(LocalDateTime.now());
         User updatedUser = this.userRepository.save(user);
         return mapper.map(updatedUser,UserDTO.class);
     }
 
     @Override
     @Transactional
-    public void deleteUser(String user_id) {
-        User user = this.userRepository.findById(user_id).orElseThrow(()->
-                new ResourceNotFoundException(user_id + " not found."));
+    public void deleteUser(String userId) {
+        User user = this.userRepository.findById(userId).orElseThrow(()->
+                new ResourceNotFoundException(userId + " not found."));
         this.userRepository.delete(user);
     }
 

@@ -2,10 +2,9 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
-import com.ChatApplication.Entity.*;
+import com.ChatApplication.entity.*;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.UserRepository;
-import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Security.JwtService;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;

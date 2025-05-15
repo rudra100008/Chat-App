@@ -1,4 +1,4 @@
-package com.ChatApplication.Entity;
+package com.ChatApplication.entity;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

@@ -1,4 +1,4 @@
-package com.ChatApplication.Entity;
+package com.ChatApplication.entity;
 
 
 import lombok.AllArgsConstructor;
@@ -7,18 +7,22 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import java.time.LocalDateTime;
 
-@Document(collection = "chatName")
+@Document(collection = "Message")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatName {
-   @MongoId
-    private String id;
-
-    private String chatName;
+public class Message {
+    @MongoId
+    private String messageId;
+    private String content;
+    private LocalDateTime timestamp;
+    private boolean isRead;
     @DBRef
-    private User user;
+    private User sender;
     @DBRef
     private Chat chat;
+
+
 }

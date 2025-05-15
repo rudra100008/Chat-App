@@ -2,9 +2,9 @@ package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.UserDTO;
-import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.entity.Chat;
+import com.ChatApplication.entity.Message;
+import com.ChatApplication.entity.User;
 import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
@@ -58,7 +58,7 @@ public class ChatServiceImpl implements ChatService {
 
             if(chatDTO.getChatType()== ChatType.SINGLE){
                 User otherUser = chat.getParticipants().stream()
-                        .filter(user->!user.getUser_Id().equals(currentUser.getUser_Id()))
+                        .filter(user->!user.getUserId().equals(currentUser.getUserId()))
                         .findFirst()
                         .orElse(null);
                 if(otherUser != null){
@@ -81,7 +81,7 @@ public class ChatServiceImpl implements ChatService {
 
         // Validate logged in user is a participant
         User loggedInUsername = this.authUtils.getLoggedInUsername();
-        if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUser_Id())) {
+        if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())) {
             throw new IllegalArgumentException("Logged in user must be a participant in the chat.");
         }
 
@@ -107,7 +107,7 @@ public class ChatServiceImpl implements ChatService {
 
         // Find other user for chat naming
         User otherUser = findUser.stream()
-                .filter(user -> !user.getUser_Id().equals(loggedInUsername.getUser_Id()))
+                .filter(user -> !user.getUserId().equals(loggedInUsername.getUserId()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Other user not found"));
 
@@ -115,7 +115,6 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = new Chat();
         chat.setChatName(otherUser.getUsername()+" & "+loggedInUsername.getUsername());
         chat.setChatType(ChatType.SINGLE);
-        chat.setMessages(new ArrayList<>());
         chat.setParticipants(findUser);
 
         Chat savedChat = this.chatRepository.save(chat);
@@ -125,10 +124,7 @@ public class ChatServiceImpl implements ChatService {
                 savedChat.getChatId(),
                 savedChat.getChatName(),
                 savedChat.getChatType(),
-                savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
-                savedChat.getMessages() != null
-                        ? savedChat.getMessages().stream().map(Message::getMessageId).toList()
-                        : Collections.emptyList()
+                savedChat.getParticipants().stream().map(User::getUserId).toList()
         );
     }
 
@@ -142,7 +138,7 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("Group Chat name cannot not be empty");
         }
         User loggedInUsername = authUtils.getLoggedInUsername();
-        if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUser_Id())){
+        if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("Logged in user must be participants of the chat");
         }
        Chat chat = new Chat();
@@ -163,15 +159,7 @@ public class ChatServiceImpl implements ChatService {
         if(existsChat){
             throw new AlreadyExistsException("A group with these exact participants already exists.");
         }
-        if(chatDTO.getMessageIds() != null && !chatDTO.getMessageIds().isEmpty()){
-            List<Message> messages = chatDTO.getMessageIds().stream()
-                    .map(message->this.messageRepository.findById(message)
-                            .orElseThrow(()->  new ResourceNotFoundException("Message not found")))
-                    .toList();
-            chat.setMessages(messages);
-        }else{
-            chat.setMessages(new ArrayList<>());
-        }
+
         // saving the chat details in the database
         chat.setChatType(ChatType.GROUP);
         chat.setChatName(chatDTO.getChatName());
@@ -181,8 +169,7 @@ public class ChatServiceImpl implements ChatService {
                savedChat.getChatId(),
                savedChat.getChatName(),
                savedChat.getChatType(),
-               savedChat.getParticipants().stream().map(User::getUser_Id).toList(),
-               savedChat.getMessages().stream().map(Message::getMessageId).toList()
+               savedChat.getParticipants().stream().map(User::getUserId).toList()
                );
     }
 
@@ -201,11 +188,11 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // Check if the loggedIn user has permission to access the chat
-        validateChatAccess(chatId,loggedUser.getUser_Id());
+        validateChatAccess(chatId,loggedUser.getUserId());
 
         User newuser =  this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found"));
-        if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(newuser.getUser_Id()))){
+        if(chat.getParticipants().stream().noneMatch(user -> user.getUserId().equals(newuser.getUserId()))){
             Query query = new Query(Criteria.where("_id").is(chatId));
             Update update =new Update().addToSet("participants",newuser);
             this.mongoTemplate.updateFirst(query,update,Chat.class);
@@ -225,7 +212,7 @@ public class ChatServiceImpl implements ChatService {
         }
         User loggedUser = this.authUtils.getLoggedInUsername();
         // Check if the loggedIn user has permission to access the chat
-        validateChatAccess(chatId,loggedUser.getUser_Id());
+        validateChatAccess(chatId,loggedUser.getUserId());
 
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+ " not found"));
@@ -254,7 +241,7 @@ public class ChatServiceImpl implements ChatService {
         }
         User loggedUser = this.authUtils.getLoggedInUsername();
         // Check if the loggedIn user has permission to access the chat
-        validateChatAccess(chatId,loggedUser.getUser_Id());
+        validateChatAccess(chatId,loggedUser.getUserId());
 
         Chat chat =  this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+"not found."));
@@ -276,7 +263,7 @@ public class ChatServiceImpl implements ChatService {
         }
         User loggedUser = this.authUtils.getLoggedInUsername();
         // Check if the loggedIn user has permission to access the chat
-        validateChatAccess(chatId,loggedUser.getUser_Id());
+        validateChatAccess(chatId,loggedUser.getUserId());
 
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+"not found"));
@@ -287,13 +274,13 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatDTO fetchUserChat(String chatId, StompHeaderAccessor headerAccessor) {
         User loggedInUser = this.authUtils.getLoggedInUsername();
-        validateChatAccess(chatId, loggedInUser.getUser_Id());
+        validateChatAccess(chatId, loggedInUser.getUserId());
 
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("chat not found: " + chatId));
         if (chat.getChatType() == ChatType.SINGLE) {
             User user = chat.getParticipants().stream()
-                    .filter(p -> !p.getUser_Id().equals(loggedInUser.getUser_Id()))
+                    .filter(p -> !p.getUserId().equals(loggedInUser.getUserId()))
                     .findFirst()
                     .orElse(null);
 

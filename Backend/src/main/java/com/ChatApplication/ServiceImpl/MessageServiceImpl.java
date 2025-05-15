@@ -1,10 +1,10 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.MessageDTO;
-import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.PageInfo;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.entity.Chat;
+import com.ChatApplication.entity.Message;
+import com.ChatApplication.entity.PageInfo;
+import com.ChatApplication.entity.User;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
@@ -105,12 +105,12 @@ public class MessageServiceImpl implements MessageService {
         validateChatAccess(chatId,loggedInUsername);
         User sender = this.userRepository.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
-        if (!senderId.equals(loggedInUsername.getUser_Id())){
+        if (!senderId.equals(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("Sender cannot access message in this chat");
         }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
-        if(chat.getParticipants().stream().noneMatch(user -> user.getUser_Id().equals(sender.getUser_Id()))){
+        if(chat.getParticipants().stream().noneMatch(user -> user.getUserId().equals(sender.getUserId()))){
             throw new IllegalArgumentException(sender.getUsername() + " is not a participant of "+chat.getChatName());
         }
         Message message = new Message();
@@ -118,11 +118,7 @@ public class MessageServiceImpl implements MessageService {
         message.setChat(chat);
         message.setContent(content);
         message.setTimestamp(LocalDateTime.now());
-
         Message savedMessage = this.messageRepository.save(message);
-
-        chat.getMessages().add(savedMessage);
-        this.chatRepository.save(chat);
         return modelMapper.map(savedMessage, MessageDTO.class);
     }
 
@@ -135,7 +131,7 @@ public class MessageServiceImpl implements MessageService {
         User loggedInUsername = this.authUtils.getLoggedInUsername();
         validateChatAccess(existingMessage.getChat().getChatId(),loggedInUsername);
 
-        if(!existingMessage.getSender().getUser_Id().equals(loggedInUsername.getUser_Id())){
+        if(!existingMessage.getSender().getUserId().equals(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("You can edit only your messages.");
         }
         existingMessage.setContent(newContent);
@@ -155,13 +151,9 @@ public class MessageServiceImpl implements MessageService {
 
         validateChatAccess(message.getChat().getChatId(),loggedInUsername);
 
-        if(!message.getSender().getUser_Id().equals(loggedInUsername.getUser_Id())){
+        if(!message.getSender().getUserId().equals(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("You can delete your own messages.");
         }
-        Chat chat = message.getChat();
-        chat.getMessages().remove(message);
-        this.chatRepository.save(chat);
-
         this.messageRepository.delete(message);
     }
 

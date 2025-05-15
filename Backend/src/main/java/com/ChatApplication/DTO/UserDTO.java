@@ -21,7 +21,7 @@ public class UserDTO {
     @NotBlank(message = "username cannot be blank")
     @Size(min = 3,max = 50,message = "username should be between 3 and 50 letters")
     @Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "Username can only contain letters, numbers, underscores, and hyphens")
-    private String userName;
+    private String username;
 
     @NotBlank(message = "Email cannot be blank")
     @Email(message = "Invalid email format")
@@ -37,8 +37,7 @@ public class UserDTO {
 
     @NotBlank(message = "Phone number cannot be blank")
     @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Invalid phone number format")
-    private String phoneNumber;
+    private String phonenumber;
     private UserStatus status;
-    private LocalDateTime last_seen;
-    private List<String> chatIds;
+    private LocalDateTime lastSeen;
 }

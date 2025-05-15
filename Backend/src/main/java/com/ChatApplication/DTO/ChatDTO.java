@@ -17,5 +17,4 @@ public class ChatDTO {
     private String chatName;
     private ChatType chatType; // GROUP,SINGLE
     private List<String> participantIds =  new ArrayList<>();
-    private List<String> messageIds = new ArrayList<>();
 }

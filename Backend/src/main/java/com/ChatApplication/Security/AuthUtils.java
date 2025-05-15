@@ -1,6 +1,6 @@
 package com.ChatApplication.Security;
 
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.entity.User;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
