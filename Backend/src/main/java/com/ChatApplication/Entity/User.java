@@ -1,4 +1,4 @@
-package com.ChatApplication.entity;
+package com.ChatApplication.Entity;
 
 
 import com.ChatApplication.Enum.UserStatus;

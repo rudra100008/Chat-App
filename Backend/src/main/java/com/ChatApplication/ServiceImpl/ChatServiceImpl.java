@@ -2,9 +2,8 @@ package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.UserDTO;
-import com.ChatApplication.entity.Chat;
-import com.ChatApplication.entity.Message;
-import com.ChatApplication.entity.User;
+import com.ChatApplication.Entity.Chat;
+import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Exception.AlreadyExistsException;
 import com.ChatApplication.Exception.ResourceNotFoundException;

@@ -1,6 +1,6 @@
 package com.ChatApplication.Repository;
 
-import com.ChatApplication.entity.User;
+import com.ChatApplication.Entity.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

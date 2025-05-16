@@ -1,9 +1,8 @@
 package com.ChatApplication.Config;
 
 import com.ChatApplication.DTO.ChatDTO;
-import com.ChatApplication.entity.Chat;
-import com.ChatApplication.entity.Message;
-import com.ChatApplication.entity.User;
+import com.ChatApplication.Entity.Chat;
+import com.ChatApplication.Entity.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -36,13 +35,10 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
             if(chat.getParticipants() != null){
                 chatDTO.setParticipantIds(chat.getParticipants()
                         .stream()
-                        .map(User::getUser_Id)
+                        .map(User::getUserId)
                         .collect(Collectors.toList()));
             }
-            if(chat.getMessages() != null){
-                chatDTO.setMessageIds(chat.getMessages().stream()
-                        .map(Message::getMessageId).toList());
-            }
+
             return chatDTO;
         });
         mapper.getConfiguration()

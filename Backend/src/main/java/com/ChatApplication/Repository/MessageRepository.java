@@ -1,8 +1,8 @@
 package com.ChatApplication.Repository;
 
-import com.ChatApplication.entity.Chat;
-import com.ChatApplication.entity.Message;
-import com.ChatApplication.entity.User;
+import com.ChatApplication.Entity.Chat;
+import com.ChatApplication.Entity.Message;
+import com.ChatApplication.Entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

@@ -1,4 +1,4 @@
-package com.ChatApplication.entity;
+package com.ChatApplication.Entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,10 +1,10 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.MessageDTO;
-import com.ChatApplication.entity.Chat;
-import com.ChatApplication.entity.Message;
-import com.ChatApplication.entity.PageInfo;
-import com.ChatApplication.entity.User;
+import com.ChatApplication.Entity.Chat;
+import com.ChatApplication.Entity.Message;
+import com.ChatApplication.Entity.PageInfo;
+import com.ChatApplication.Entity.User;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
