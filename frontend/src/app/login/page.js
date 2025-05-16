@@ -54,9 +54,9 @@ export default function LogInPage(){
         })
         .then((response)=>{
             if(response && response.data){
-                const { token, user: { user_Id },isTokenValid } = response.data;
+                const { token, user: { userId },isTokenValid } = response.data;
                 localStorage.setItem("token", token);
-                localStorage.setItem("userId", user_Id);
+                localStorage.setItem("userId", userId);
                 localStorage.setItem("isTokenValid",isTokenValid);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
@@ -67,17 +67,16 @@ export default function LogInPage(){
                 router.push("/chat")
             }, 2000);
         }).catch((error)=>{
-            console.log("Error: ",error.response.data)
             const message = error.response.data || "Unknown Error";
             if(error.response.status === 401){
                 console.log("Invalid username or password");
             }else if(error.response.status === 500){
-                console.log(message);
+                console.log("Error:\n",message);
             }else{
                 console.log("Something went wrong")
             }
             localStorage.clear();
-            console.log(error?.response?.data|| "Unknown Error" )
+           
         })
     }
     const handleForm=(e)=>{

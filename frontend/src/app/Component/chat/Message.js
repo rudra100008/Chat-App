@@ -1,10 +1,13 @@
 "use client"
 import { useEffect, useRef } from 'react'
-import style from '../Style/chat.module.css'
+import style from '../../Style/chat.module.css'
 import PropTypes from 'prop-types'
 
-export default function Message({ message, userId , lastPostElementRef}) {
+export default function Message({ message, userId , firstPostElementRef,loading}) {
     const messageEndRef = useRef(null);
+    const scrollToTop=()=>{
+        messageEndRef.current?.scrollIntoView({behavior : "smooth"})
+    }
    
     // Format timestamp function to avoid repetition
     const formatTimestamp = (timestamp) => {
@@ -13,7 +16,7 @@ export default function Message({ message, userId , lastPostElementRef}) {
 
     // Scroll to bottom whenever messages change
     useEffect(() => {
-        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        scrollToTop()
     }, [message]);
 
     return (
@@ -23,7 +26,7 @@ export default function Message({ message, userId , lastPostElementRef}) {
             ) : (
                 message.map((msg,index) => (
                     <div 
-                        ref={index === 0 ? lastPostElementRef : null}
+                        ref={index === 0 ? firstPostElementRef : null}
                         key={msg.messageId}
                         className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
                     >

@@ -5,7 +5,7 @@ import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import baseUrl from '../baseUrl';
 import axiosInterceptor from '../Component/Interceptor';
-import Message from '../Component/Message';
+import Message from '../Component/chat/Message';
 import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import GetUserImage from '../Component/GetUserImage';
@@ -24,7 +24,7 @@ export default function Chat() {
     const [initialLoad,setInitialLoad] = useState(true);
     const [hasMore,setHasMore] = useState(true);
     const [loading ,setLoading] = useState(true);
-    const [inputValue, setInputValue] = useState('');
+    const [value, setvalue] = useState('');
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState(null);
@@ -69,8 +69,8 @@ export default function Chat() {
 
    
 
-    const handleValueChange = (e) => {
-        setInputValue(e.target.value)
+    const onChange = (e) => {
+        setvalue(e.target.value)
     }
 
     const scrollToBottom = () => {
@@ -196,13 +196,13 @@ const firstMessageElementRef = useCallback(
             console.log("Error: ",error.response?.data)
         }
     }    
-    const handleSendMessage = () => {
-        if (!inputValue.trim() || !connected) return;
+    const onSend = () => {
+        if (!value.trim() || !connected) return;
 
         const messageDTO = {
             senderId: userId,
             chatId: chatId,
-            content: inputValue.trim()
+            content: value.trim()
         }
 
         try {
@@ -212,7 +212,7 @@ const firstMessageElementRef = useCallback(
                 }, 
                 JSON.stringify(messageDTO)
             );
-            setInputValue('');
+            setvalue('');
         } catch (error) {
             console.error("Error sending message:", error);
             setError("Failed to send message");
@@ -342,7 +342,7 @@ const firstMessageElementRef = useCallback(
         }
     }, [userChat]);
 
-    const logout=()=>{
+    const  onLogout=()=>{
         localStorage.clear();
         route.push("/")
     }
@@ -357,20 +357,18 @@ const firstMessageElementRef = useCallback(
                  <UserChats userId={userId} otherUserId={otherUserDetails.userId} token={token} onChatSelect={handleChatSelect} />
             </div>
             <div className={style.ChatContainer}>
-                
-                    
                 <div className={style.ChatHeader}>
                     <div className={style.ChatHeaderName}>
                         <GetUserImage userId={otherUserDetails.userId}/>
                         <p className={style.chatName}>{userChat.chatName}</p>
                     </div>
                     <div className={style.Button}>
-                        <button onClick={logout} className={style.logoutButton}>Logout</button>
+                        <button onClick={onLogout} className={style.logoutButton}>Logout</button>
                     </div>
                 </div>
                 {chatId ? (
                     <>
-                <Message message={message} userId={userId} lastPostElementRef ={firstMessageElementRef} />
+                <Message message={message} userId={userId} firstPostElementRef ={firstMessageElementRef} loading={loading} />
                 <div className={style.inputWrapper}>
                     <div className={style.FieldGroup}>
                         <input
@@ -379,15 +377,15 @@ const firstMessageElementRef = useCallback(
                             id='content'
                             placeholder='Type a message'
                             className={style.FieldInput}
-                            value={inputValue}
-                            onChange={handleValueChange}
-                            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                            value={value}
+                            onChange={onChange}
+                            onKeyPress={(e) => e.key === "Enter" && onSend()}
                         />
                     </div>
                     <div className={style.ButtonGroup}>
                         <button 
                             className={style.SendButton}
-                            onClick={handleSendMessage}
+                            onClick={onSend}
                             disabled={!connected}
                         >
                             Send
