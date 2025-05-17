@@ -1,3 +1,4 @@
+"use client"
 import style from '../../Style/chat.module.css'
 
 const ChatInput = ({ value, onSend, onChange, connected }) => {

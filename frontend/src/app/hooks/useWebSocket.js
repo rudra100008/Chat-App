@@ -1,8 +1,8 @@
+"use client"
 import { Stomp } from "@stomp/stompjs";
 import { useEffect, useState } from "react";
 import SockJS from "sockjs-client";
 import baseUrl from "../baseUrl";
-import { headers } from "next/headers";
 
 const useWebSocket = ({ userId, chatId, token }) => {
     const [connected, setConnected] = useState(false);

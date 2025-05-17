@@ -9,6 +9,7 @@ import Message from '../Component/chat/Message';
 import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import GetUserImage from '../Component/GetUserImage';
+import ChatContainer from '../Component/chat/ChatContainer';
 
 // const getToken=()=>{
 //     localStorage.getItem('token');
@@ -354,53 +355,19 @@ const firstMessageElementRef = useCallback(
         <div className={style.body}>
             <div className={style.UserChat}>
                  {/* display chat  */}
-                 <UserChats userId={userId} otherUserId={otherUserDetails.userId} token={token} onChatSelect={handleChatSelect} />
+                 <UserChats 
+                 userId={userId} 
+                 otherUserId={otherUserDetails.userId} 
+                 token={token} 
+                 onChatSelect={handleChatSelect} />
             </div>
-            <div className={style.ChatContainer}>
-                <div className={style.ChatHeader}>
-                    <div className={style.ChatHeaderName}>
-                        <GetUserImage userId={otherUserDetails.userId}/>
-                        <p className={style.chatName}>{userChat.chatName}</p>
-                    </div>
-                    <div className={style.Button}>
-                        <button onClick={onLogout} className={style.logoutButton}>Logout</button>
-                    </div>
-                </div>
-                {chatId ? (
-                    <>
-                <Message message={message} userId={userId} firstPostElementRef ={firstMessageElementRef} loading={loading} />
-                <div className={style.inputWrapper}>
-                    <div className={style.FieldGroup}>
-                        <input
-                            type="text"
-                            name='content'
-                            id='content'
-                            placeholder='Type a message'
-                            className={style.FieldInput}
-                            value={value}
-                            onChange={onChange}
-                            onKeyPress={(e) => e.key === "Enter" && onSend()}
-                        />
-                    </div>
-                    <div className={style.ButtonGroup}>
-                        <button 
-                            className={style.SendButton}
-                            onClick={onSend}
-                            disabled={!connected}
-                        >
-                            Send
-                        </button>
-                    </div>
-                </div>
-                </>
-                ):(
-                    <>
-                     <div className={style.selectChatPrompt}>
-                        Select a chat to start messaging
-                     </div>
-                    </>
-                )}
-            </div>
+           <ChatContainer 
+           chatId={chatId}
+           userId={userId}
+           token={token}
+           setOtherUserDetails={setOtherUserDetails}
+           otherUserDetails={otherUserDetails}
+           onLogout={onLogout} />
         </div>
     )
 }
