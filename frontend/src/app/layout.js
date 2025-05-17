@@ -1,18 +1,17 @@
 import localFont from "next/font/local";
-import "./globals.css";
-
-
-
-
+import "./globals.css"; // Import the AuthProvider
+import { AuthProvider } from "./context/AuthContext";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-        <head>
+      <head>
         <title>Chat App</title>
       </head>
       <body>
-        {children} {/* Ensure children are rendered inside the body */}
+        <AuthProvider>
+          {children} {/* Children wrapped in AuthProvider */}
+        </AuthProvider>
       </body>
     </html>
   );

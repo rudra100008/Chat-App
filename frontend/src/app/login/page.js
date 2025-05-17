@@ -5,8 +5,10 @@ import baseUrl from '../baseUrl'
 import { useRouter } from 'next/navigation'
 import axiosInterceptor from '../Component/Interceptor'
 import Link from 'next/link'
+import { useAuth } from '../context/AuthContext'
 export default function LogInPage(){
     const router = useRouter();
+    const {login} = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [user,setUser] = useState({
         userName: "",
@@ -55,8 +57,7 @@ export default function LogInPage(){
         .then((response)=>{
             if(response && response.data){
                 const { token, user: { userId },isTokenValid } = response.data;
-                localStorage.setItem("token", token);
-                localStorage.setItem("userId", userId);
+               login(userId,token)
                 localStorage.setItem("isTokenValid",isTokenValid);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
