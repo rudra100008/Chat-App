@@ -65,7 +65,6 @@ public class ChatServiceImpl implements ChatService {
                 }
             }
             chatDTOS.add(chatDTO);
-
         }
         return  chatDTOS;
     }
