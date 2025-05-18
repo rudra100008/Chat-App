@@ -14,8 +14,10 @@ const AuthContext = createContext();
         const storedUserId = localStorage.getItem('userId');
         const storedToken =  localStorage.getItem('token');
 
-        setToken(storedToken);
-        setUserId(storedUserId);
+         if (storedUserId && storedToken) {
+            setUserId(storedUserId);
+            setToken(storedToken);
+        }
         setIsLoading(false);
 
     },[])

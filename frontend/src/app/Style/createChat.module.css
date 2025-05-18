@@ -1,21 +1,84 @@
-.Container{
-    background-color: white;  
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.Container {
+  background-color: #f7fafc;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
 }
-.Form{
-    background-color: rgb(155, 147, 147);
-    width: 500px;
-    padding: 4rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-.FormGroup{
-    display:flex;
-    flex-direction:column;
-    justify-items: center;
-    align-items: center;
 
+.Form {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 3rem 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.Form:hover {
+  transform: scale(1.01);
+}
+
+.FormGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+
+.Label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2d3748;
+}
+
+.inputForm[type="tel"],
+.inputForm[type="text"] {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  background-color: #f9fafb;
+  color: #2d3748;
+}
+
+.inputForm[type="tel"]:focus,
+.inputForm[type="text"]:focus {
+  outline: none;
+  border-color: #63b3ed;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.inputForm::placeholder {
+  color: #a0aec0;
+  font-weight: 400;
+}
+
+.ButtonGroup {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.ButtonGroup button {
+  background-color: #3182ce;
+  color: white;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.ButtonGroup button:hover {
+  background-color: #2b6cb0;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(50, 115, 220, 0.2);
 }

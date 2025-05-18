@@ -22,6 +22,7 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
     //     const otherUser = chatInfo.
     // }
     const fetchUserChats=async()=>{
+         if (!userId || !token) return;
         try{
             const response = await axiosInterceptor.get(`${baseUrl}/api/chats/user/${userId}`,{
                 headers:{Authorization:`Bearer ${token}`}
@@ -59,6 +60,9 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
     }
 
     useEffect(()=>{
+        if(!userId || !token){
+            router.push("/")
+        }
         fetchUserChats();
     },[userId,token])
     return(
