@@ -2,13 +2,19 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.Entity.User;
+import com.ChatApplication.Enum.ChatType;
+import com.ChatApplication.Security.AuthUtils;
+import com.ChatApplication.Service.ChatDisplayNameService;
 import com.ChatApplication.Service.ChatService;
+import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +24,26 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
-    @PostMapping
-    public ResponseEntity<ChatDTO> createChat(@RequestBody ChatDTO chatDTO){
+    private  final ChatDisplayNameService chatDisplayNameService;
+    private final UserService userService;
+    private final AuthUtils authUtils;
+
+
+    @PostMapping()
+    public ResponseEntity<ChatDTO> createChat(
+            @RequestParam String phoneNumber,
+            @RequestParam String chatName){
+        User loginUser = this.authUtils.getLoggedInUsername();
+        User otherUser = this.userService.findByPhoneNumber(phoneNumber);
+        ChatDTO chatDTO = new ChatDTO();
+        List<String> participantsIds = new ArrayList<>();
+        participantsIds.add(otherUser.getUserId());
+        participantsIds.add(loginUser.getUserId());
+        chatDTO.setParticipantIds(participantsIds);
+        chatDTO.setChatType(ChatType.SINGLE);
         ChatDTO savedChat = this.chatService.createChat(chatDTO);
+
+        this.chatDisplayNameService.saveChatName(savedChat.getChatId(), chatName);
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
     @PostMapping("/groupChat")
