@@ -53,7 +53,7 @@ export default function Chat() {
             console.log("No participants availble");
             return [];
         }
-        if (!userChat.chatType === 'GROUP') {
+        if (userChat.chatType === 'GROUP') {
             console.log("Chat is group type");
             return [];
         }
