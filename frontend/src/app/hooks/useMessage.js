@@ -43,7 +43,7 @@ const useMessages = ({userId,token,chatId})=>{
 
         try{
             const response = await  axiosInterceptor.get(
-                `${baseUrl}/api/messages/chat/${chat}?latest=false&pageNumber=${page}`,
+                `${baseUrl}/api/messages/chat/${chatId}?latest=false&pageNumber=${page}`,
             {
                 headers:{
                     Authorization:`Bearer ${token}`

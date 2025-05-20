@@ -10,10 +10,9 @@ import useChatDetails from '@/app/hooks/useChatDetails';
 
 export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout }) {
     const [value, setValue] = useState('');
-
-    const { connected, stompClient, error } = useWebSocket(userId, chatId, token);
-    const { messages, setMessages, loading, firstMessageElementRef } = useMessages(userId, token,chatId);
-    const {userChat} = useChatDetails(chatId,token,userId,setOtherUserDetails)
+    const { messages, setMessages, loading, firstMessageElementRef } = useMessages({userId, token,chatId});
+    const { connected, stompClient, error } = useWebSocket({userId, chatId, token, messages, setMessages});
+    const {userChat} = useChatDetails({chatId,token,userId,setOtherUserDetails})
     const onChange = (e) => {
         setValue(e.target.value);
     }

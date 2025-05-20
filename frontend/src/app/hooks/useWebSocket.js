@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import SockJS from "sockjs-client";
 import baseUrl from "../baseUrl";
 
-const useWebSocket = ({ userId, chatId, token }) => {
+const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState('');
-    const [messages, setMessages] = useState([]);
 
     useEffect(() => {
         if (!userId || !chatId || !token) {
@@ -31,29 +30,46 @@ const useWebSocket = ({ userId, chatId, token }) => {
             client.connect(headers, () => {
                 setConnected(true);
                 setStompClient(client);
+                console.log(messages);
+                console.log("ChatId in usewebsocket: \n", chatId)
 
-                client.subscribe(`private/chat/${chatId}`, (message) => {
-                    const receivedMessage = JSON.parse(message);
-                    setMessages((prevMessage) => prevMessage
-                        .filter(msg => msg.messageId !== receivedMessage.messageId))
-                        .concat(receivedMessage)
-                })
+                client.subscribe(`/private/chat/${chatId}`, (message) => {
+                    console.log("Received message:", message.body); // More detailed logging
+                    try {
+                        const receivedMessage = JSON.parse(message.body);
+                        console.log("Parsed message:", receivedMessage);
+
+                        setMessages((prevMessages) => {
+                            // Check if message already exists
+                            const exists = prevMessages.some(msg => msg.messageId === receivedMessage.messageId);
+                            if (exists) {
+                                console.log("Message already exists, not adding duplicate");
+                                return prevMessages;
+                            }
+                            console.log("Adding new message to state");
+                            return [...prevMessages, receivedMessage];
+                        });
+                    } catch (error) {
+                        console.error("Error processing received message:", error);
+                    }
+                });
+
             }, (error) => {
-                    console.error("WebSocket connection error:\n", error);
-                    setConnected(false);
-                    setError("Falied to connect to server")
-                })
-                return client;
+                console.error("WebSocket connection error:\n", error);
+                setConnected(false);
+                setError("Falied to connect to server")
+            })
+            return client;
         }
         const client = connectWebSocket();
 
-        return ()=>{
-            if(client ,client.connected){
-                client.disconnect
+        return () => {
+            if (client && client.connected) {
+                client.disconnect()
             }
         }
     }, [chatId, userId, token])
-    return { connected, stompClient, error, messages, setMessages }
+    return { connected, stompClient, error }
 }
 
 export default useWebSocket;

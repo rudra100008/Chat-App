@@ -9,17 +9,17 @@ import Link from "next/link";
 export default function SignUp(){
     const router = useRouter();
     const [validationError,setValidationError] = useState({
-        userName: "",
+        username: "",
         email : "",
         password :"",
-        phoneNumber :"",
+        phonenumber :"",
         message:""
     });
     const [userInfo,setUserInfo] = useState({
-        userName:"",
+        username:"",
         email : "",
         password : "",
-        phoneNumber : "",
+        phonenumber : "",
         image : null
     });
     
@@ -31,19 +31,21 @@ export default function SignUp(){
     const handleSignUpForm= async()=>{
         const formData = new FormData();
         formData.append("user",new Blob([JSON.stringify({
-            userName:userInfo.userName,
+            username:userInfo.username,
             email:userInfo.email,
             password:userInfo.password,
-            phoneNumber:userInfo.phoneNumber
+            phonenumber:userInfo.phonenumber
         })],{type:"application/json"}))
-
-        formData.append("image",userInfo.image)
+        if(userInfo.image){
+           formData.append("image",userInfo.image)
+        }
         try{
             const response = await axiosInterceptor.post(`${baseUrl}/auth/signup`,formData);
             console.log("UserInfo: ",userInfo)
             console.log(response.data);
             router.push("/")
         }catch(error){
+            console.log(error.response.data)
             if (error.response?.status === 400) {
                 // Handle validation errors from backend
                 const errorData = error.response.data;
@@ -88,12 +90,12 @@ if(validationError.message){
             <form onSubmit={handleForm} className={Style.Form} action="post">
                 <header className={Style.Header}>Sign Up here</header>
                 <div className={Style.FormGroup}>
-                    <label htmlFor="userName" className={Style.Label}>Username</label>
+                    <label htmlFor="username" className={Style.Label}>Username</label>
                     <input
                     type="text"
-                    id="userName"
-                    name="userName"
-                    value={userInfo.userName}
+                    id="username"
+                    name="username"
+                    value={userInfo.username}
                     onChange={newUser}
                     placeholder="Enter user name"
                     className={Style.InputForm}
@@ -118,12 +120,12 @@ if(validationError.message){
                     )}
                 </div>
                 <div className={Style.FormGroup}>
-                    <label htmlFor="phoneNumber" className={Style.Label}>PhoneNumber</label>
+                    <label htmlFor="phonenumber" className={Style.Label}>PhoneNumber</label>
                     <input
                     type="text"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    value={userInfo.phoneNumber}
+                    id="phonenumber"
+                    name="phonenumber"
+                    value={userInfo.phonenumber}
                     onChange={newUser}
                     placeholder="Enter phoneNumber"
                     className={Style.InputForm}

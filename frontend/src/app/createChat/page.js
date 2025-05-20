@@ -38,7 +38,7 @@ export default function CreateChat() {
       console.log('Chat created successfully:', response.data);
       
       // Navigate to the chat or chat list page after successful creation
-      router.push('/chats');
+      router.push('/chat');
     } catch (error) {
       console.error('Error creating chat:', error);
       if (error.response && error.response.data && error.response.data.message) {
