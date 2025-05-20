@@ -49,14 +49,14 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
         String imageName = "";
-        try{
-            imageName = this.imageService.uploadImage(uploadDir,imageFile);
-        }catch (IOException e){
-            return ResponseEntity.internalServerError().body("Image upload Failed:\n "+e.getMessage());
+        if(imageFile != null && !imageFile.isEmpty()){
+            try{
+                imageName = this.imageService.uploadImage(uploadDir,imageFile);
+            }catch (IOException e){
+                return ResponseEntity.internalServerError().body("Image upload Failed:\n "+e.getMessage());
+            }
         }
-        if(imageFile == null || imageFile.isEmpty()){
-            imageName = "";
-        }
+
         userDTO.setProfile_picture(imageName);
         UserDTO postUser = this.userService.signup(userDTO);
         return ResponseEntity
