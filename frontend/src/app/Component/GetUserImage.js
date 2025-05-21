@@ -17,7 +17,7 @@ export default function GetUserImage({ userId }) {
                     headers: { Authorization: `Bearer ${token()}` },
                     responseType: 'blob',
                 });
-                console.log("Image:\n\n",response.data)
+                console.log("Image:\n",response.data)
                 const url = URL.createObjectURL(response.data);
                 setImageUrl(url);
             } catch (error) {

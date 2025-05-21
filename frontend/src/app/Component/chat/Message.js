@@ -1,7 +1,6 @@
 "use client"
 import { useEffect, useRef } from 'react'
 import style from '../../Style/chat.module.css'
-import PropTypes from 'prop-types'
 
 export default function Message({ message, userId , firstPostElementRef,loading}) {
     const messageEndRef = useRef(null);

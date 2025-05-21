@@ -1,4 +1,5 @@
 "use client"
+import { faL } from "@fortawesome/free-solid-svg-icons";
 import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 
@@ -12,6 +13,20 @@ const useMessages = ({userId,token,chatId})=>{
     const [page,setPage] = useState(0);
     const [totalPage,setTotalPage] = useState(null);
     const observer = useRef(null);
+
+
+    const removeDuplicateMessage =(messageArray) => {
+        const uniqueMessage = [];
+        const seenIds = new Set();
+
+        messageArray.forEach(message => {
+            if(!seenIds.has(message.messageId)){
+                seenIds.add(message.messageId);
+                uniqueMessage.push(message);
+            }
+        })
+        return uniqueMessage;
+    }
 
     const intialFetch=async()=>{
         setLoading(true);
@@ -53,9 +68,14 @@ const useMessages = ({userId,token,chatId})=>{
                 setHasMore(false);
             }
             const {data} = response.data;
-            if(data && page >=0){
+            if(data &&  data.length >0 && page >=0){
                 setPage(prev=>prev-1);
-                setMessages(prev=>[...data,...prev])
+                setMessages(prev=>{
+                   const messageArray =  [...data,...prev];
+                   return removeDuplicateMessage(messageArray)
+                })
+            }else if(data && data.length === 0){
+                setHasMore(false)
             }
         }catch(error){
             console.log("Error occured fetching older messages:\n",error.response.data)
