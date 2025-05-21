@@ -15,8 +15,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,32 +47,32 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
     
-//    @PostMapping("/userImages")
-//    public ResponseEntity<?> uploadImages(@RequestParam() MultipartFile imageFile){
-//        String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
-//        String uniqueName;
-//        try {
-//             uniqueName = this.imageService.uploadImage(uploadDir, imageFile);
-//
-//        }catch (IOException io){
-//            return ResponseEntity.badRequest().body("Error in handling image:\n "+io.getMessage());
-//        }
-//        return  ResponseEntity.ok("Image upload successful:"+ uniqueName );
-//    }
 
-    @GetMapping(value = "/getUserImage/user/{userId}", produces = MediaType.IMAGE_JPEG_VALUE)
+
+    @GetMapping(value = "/getUserImage/user/{userId}", produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> getImages(@PathVariable("userId") String userId) {
+        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\userImage";
+        File directory = new File(uploadDir);
+        if (!directory.exists()) {
+            logger.error("Image directory does not exist: {}", uploadDir);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("error", "Image directory not found"));
+        }
         try {
             UserDTO userDTO = this.userService.fetchUser(userId);
             logger.debug("Profile_Picture:{}",userDTO.getProfile_picture());
-
-            String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
             byte[] b = this.imageService.getImage(uploadDir, userDTO.getProfile_picture());
             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
         } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body("Image not found: " + e.getMessage());
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error reading image: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.APPLICATION_JSON).body("Error reading image: " + e.getMessage());
+        }catch (Exception e) {
+            logger.error("Unexpected error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("error", "Unexpected error: " + e.getMessage()));
         }
     }
 

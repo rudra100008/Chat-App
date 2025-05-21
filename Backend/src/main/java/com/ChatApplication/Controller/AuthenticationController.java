@@ -3,7 +3,6 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.*;
-import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.JwtService;
 import com.ChatApplication.Service.ImageService;
@@ -30,7 +29,6 @@ import java.util.Map;
 public class AuthenticationController {
     private final UserService userService;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
     private final TwoFactorAuthService twoFactorAuthService;
     private final UserDetailsService userDetailsService;
     private final ImageService imageService;
@@ -42,7 +40,7 @@ public class AuthenticationController {
             @RequestPart(value = "image",required = false) MultipartFile imageFile
     )
     {
-        String uploadDir = "D:\\Chat-App\\Backend\\Images\\userImage";
+        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\userImage";
         if(result.hasErrors()){
             Map<String,Object> errors = new HashMap<>();
             result.getFieldErrors().forEach(f-> errors.put(f.getField(),f.getDefaultMessage()));
@@ -51,14 +49,14 @@ public class AuthenticationController {
         String imageName = "";
         if(imageFile != null && !imageFile.isEmpty()){
             try{
-                imageName = this.imageService.uploadImage(uploadDir,imageFile);
+                imageName = imageService.uploadImage(uploadDir,imageFile);
             }catch (IOException e){
                 return ResponseEntity.internalServerError().body("Image upload Failed:\n "+e.getMessage());
             }
         }
 
         userDTO.setProfile_picture(imageName);
-        UserDTO postUser = this.userService.signup(userDTO);
+        UserDTO postUser = userService.signup(userDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(postUser);
@@ -67,10 +65,10 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-            User authenticatedUser = this.userService.authenticate(request);
-            String jwtToken = this.jwtService.generateToken(authenticatedUser);
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(authenticatedUser.getUsername());
-            Boolean isTokenValid = this.jwtService.isTokenValid(jwtToken,userDetails);
+            User authenticatedUser = userService.authenticate(request);
+            String jwtToken = jwtService.generateToken(authenticatedUser);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(authenticatedUser.getUsername());
+            Boolean isTokenValid = jwtService.isTokenValid(jwtToken,userDetails);
             AuthResponse response = new AuthResponse(authenticatedUser,jwtToken, isTokenValid);
             return ResponseEntity.ok(response);
     }
@@ -126,17 +124,21 @@ public class AuthenticationController {
     )
     {
         if(authorization == null || !authorization.startsWith("Bearer ")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing or invalid Authorization Header");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization Header");
         }
         String token = authorization.substring(7);
-        User user = this.userRepository.findById(userId)
-                .orElseThrow(()-> new ResourceNotFoundException("User not found in the server"));
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(user.getUsername());
-        Boolean isTokenValid = this.jwtService.isTokenValid(token,userDetails);
+        String username = jwtService.extractUsername(token);
+        if(username ==  null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        if(!jwtService.isTokenValid(token,userDetails)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token is invalid");
+        }
         return ResponseEntity.ok(Map.of(
-                "userId",userId,
-                "userName",user.getUsername(),
-                "isTokenValid",isTokenValid
+                "isTokenValid", true,
+                "username", username
         ));
     }
 

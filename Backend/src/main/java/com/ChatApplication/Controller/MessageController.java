@@ -35,16 +35,6 @@ public class MessageController {
     public void sendMessage(@Valid @Payload MessageDTO messageDTO,
                             StompHeaderAccessor headerAccessor) throws ResourceNotFoundException {
         logger.debug("Message received from the client.");
-
-//        // Retrieve the authenticated user using AuthUtils
-//        User sender = authUtils.getLoggedInUserFromWebSocket(headerAccessor);
-//
-//        // Ensure the sender ID in the message matches the authenticated user's ID
-//        if (!messageDTO.getSenderId().equals(sender.getUser_Id())) {
-//            logger.error("Sender ID mismatch");
-//            throw new AccessDeniedException("Sender ID does not match authenticated user");
-//        }
-
         // Proceed with posting the message
         MessageDTO savedMessage = messageService.postMessage(
                 messageDTO.getSenderId(),
