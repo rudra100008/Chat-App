@@ -3,18 +3,18 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import baseUrl from "../baseUrl";
 import axiosInterceptor from "./Interceptor";
-
-const token = () => localStorage.getItem("token");
+import { useAuth } from "../context/AuthContext";
 
 export default function GetUserImage({ userId }) {
     const [imageUrl, setImageUrl] = useState("");
+    const {token} = useAuth();
 
     useEffect(() => {
         console.log("UserId in GetImage:\n",userId)
         const fetchUserImage = async () => {
             try {
                 const response = await axiosInterceptor.get(`${baseUrl}/api/users/getUserImage/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${token()}` },
+                    headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob',
                 });
                 console.log("Image:\n",response.data)

@@ -77,9 +77,9 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
                     {showbox && 
                        <>
                        <div className={style.ShowBox}>
-                          <p><Link href="/createChat">Create chat</Link></p> 
-                          <p><Link href="/setting">Setting</Link></p>
-                          <p><Link href="/profile">Profile</Link></p>
+                          <Link href="/createChat">Create chat</Link> 
+                          <Link href="/setting">Setting</Link>
+                          <Link href="/profile">Profile</Link>
                        </div>
                        </>
                     }

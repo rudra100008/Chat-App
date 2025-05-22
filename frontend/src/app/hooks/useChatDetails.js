@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import axiosInterceptor from '../Component/Interceptor'
 import baseUrl from '../baseUrl'
 
-const useChatDetails = (chatId, token, userId, setOtherUserDetails) => {
+const useChatDetails = ({chatId, token, userId, setOtherUserDetails}) => {
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -16,7 +16,6 @@ const useChatDetails = (chatId, token, userId, setOtherUserDetails) => {
     // Fetch chat details
     const fetchUserChatDetails = async () => {
         if (!chatId || !token) return
-        
         try {
             const response = await axiosInterceptor.get(
                 `${baseUrl}/api/chats/chatDetails/${chatId}`,

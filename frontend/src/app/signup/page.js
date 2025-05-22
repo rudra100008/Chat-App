@@ -12,14 +12,14 @@ export default function SignUp(){
         username: "",
         email : "",
         password :"",
-        phonenumber :"",
+        phoneNumber :"",
         message:""
     });
     const [userInfo,setUserInfo] = useState({
         username:"",
         email : "",
         password : "",
-        phonenumber : "",
+        phoneNumber : "",
         image : null
     });
     
@@ -34,7 +34,7 @@ export default function SignUp(){
             username:userInfo.username,
             email:userInfo.email,
             password:userInfo.password,
-            phonenumber:userInfo.phonenumber
+            phoneNumber:userInfo.phoneNumber
         })],{type:"application/json"}))
         if(userInfo.image){
            formData.append("image",userInfo.image)
@@ -100,7 +100,7 @@ if(validationError.message){
                     placeholder="Enter user name"
                     className={Style.InputForm}
                     />
-                    {validationError.userName && (
+                    {validationError.username && (
                         <p className={Style.FieldError}>{validationError.userName}</p>
                     )}
                 </div>
@@ -123,9 +123,9 @@ if(validationError.message){
                     <label htmlFor="phonenumber" className={Style.Label}>PhoneNumber</label>
                     <input
                     type="text"
-                    id="phonenumber"
-                    name="phonenumber"
-                    value={userInfo.phonenumber}
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={userInfo.phoneNumber}
                     onChange={newUser}
                     placeholder="Enter phoneNumber"
                     className={Style.InputForm}
