@@ -25,7 +25,7 @@ public class AuthUtils {
             throw new IllegalArgumentException("No authenticated user found");
         }
 
-        return userRepository.findByUserName(authentication.getName())
+        return userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         authentication.getName() + " not found in the server."));
     }
@@ -39,7 +39,7 @@ public class AuthUtils {
             throw new IllegalArgumentException("No authenticated user found.");
         }
 
-        return userRepository.findByUserName(authentication.getName())
+        return userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         authentication.getName() + " not found in the server."));
     }

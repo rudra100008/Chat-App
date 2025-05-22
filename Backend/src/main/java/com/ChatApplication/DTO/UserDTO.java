@@ -33,11 +33,11 @@ public class UserDTO {
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
             message = "Password must contain at least one letter, one number, and one special character")
     private String password;
-    private String profile_picture;
+    private String profilePicture;
 
     @NotBlank(message = "Phone number cannot be blank")
     @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Invalid phone number format")
-    private String phonenumber;
+    private String phoneNumber;
     private UserStatus status;
     private LocalDateTime lastSeen;
 }

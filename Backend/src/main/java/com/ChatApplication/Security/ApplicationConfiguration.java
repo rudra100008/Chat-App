@@ -19,8 +19,8 @@ public class ApplicationConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService(){
-        return username -> userRepository.findByUserName(username)
-                .orElseThrow(()-> new ResourceNotFoundException(username + " not found"));
+        return username -> userRepository.findByUsername(username)
+                .orElseThrow(()-> new ResourceNotFoundException(username + " hello"));
     }
     @Bean
     public BCryptPasswordEncoder bcryptPasswordEncoder(){

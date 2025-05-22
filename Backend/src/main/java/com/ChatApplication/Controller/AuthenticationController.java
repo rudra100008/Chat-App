@@ -55,7 +55,7 @@ public class AuthenticationController {
             }
         }
 
-        userDTO.setProfile_picture(imageName);
+        userDTO.setProfilePicture(imageName);
         UserDTO postUser = userService.signup(userDTO);
         return ResponseEntity
                 .status(HttpStatus.CREATED)

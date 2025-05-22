@@ -51,7 +51,7 @@ public class UserController {
 
     @GetMapping(value = "/getUserImage/user/{userId}", produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> getImages(@PathVariable("userId") String userId) {
-        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\userImage";
+        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\userImage\\";
         File directory = new File(uploadDir);
         if (!directory.exists()) {
             logger.error("Image directory does not exist: {}", uploadDir);
@@ -61,8 +61,9 @@ public class UserController {
         }
         try {
             UserDTO userDTO = this.userService.fetchUser(userId);
-            logger.debug("Profile_Picture:{}",userDTO.getProfile_picture());
-            byte[] b = this.imageService.getImage(uploadDir, userDTO.getProfile_picture());
+            logger.debug("Profile_Picture:{}",userDTO.getProfilePicture());
+            logger.info(userDTO.getProfilePicture());
+            byte[] b = this.imageService.getImage(uploadDir, userDTO.getProfilePicture());
             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body("Image not found: " + e.getMessage());

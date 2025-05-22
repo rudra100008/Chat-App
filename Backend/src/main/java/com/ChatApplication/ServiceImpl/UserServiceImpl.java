@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
     private void validateUsernameUniqueness(String currentUsername, String newUsername) {
         if (newUsername != null &&
                 !newUsername.equals(currentUsername) &&
-                userRepository.existsByUserName(newUsername)) {
+                userRepository.existsByUsername(newUsername)) {
             throw new AlreadyExistsException(newUsername + ALREADY_EXISTS_MESSAGE);
         }
     }
@@ -98,11 +98,11 @@ public class UserServiceImpl implements UserService {
         // Validate uniqueness for username, email, and phone number
         validateUsernameUniqueness(null, userDTO.getUsername());
         validateEmailUniqueness(null, userDTO.getEmail());
-        validatePhoneNumberUniqueness(userDTO.getPhonenumber());
+        validatePhoneNumberUniqueness(userDTO.getPhoneNumber());
 
         // Set default values
-        if (userDTO.getProfile_picture() == null || userDTO.getProfile_picture().isEmpty()) {
-            userDTO.setProfile_picture(DEFAULT_PROFILE_PICTURE);
+        if (userDTO.getProfilePicture() == null || userDTO.getProfilePicture().isEmpty()) {
+            userDTO.setProfilePicture(DEFAULT_PROFILE_PICTURE);
         }
 
         userDTO.setLastSeen(LocalDateTime.now());
@@ -132,18 +132,18 @@ public class UserServiceImpl implements UserService {
         validateEmailUniqueness(user.getEmail(), userDTO.getEmail());
 
         // Phone number cannot be updated
-        if (userDTO.getPhonenumber() != null && !userDTO.getPhonenumber().equals(user.getPhoneNumber())) {
+        if (userDTO.getPhoneNumber() != null && !userDTO.getPhoneNumber().equals(user.getPhoneNumber())) {
             throw new IllegalArgumentException("Phone number cannot be updated");
         }
 
         // Update profile picture
-        String profilePicture = (userDTO.getProfile_picture() == null || userDTO.getProfile_picture().isEmpty())
+        String profilePicture = (userDTO.getProfilePicture() == null || userDTO.getProfilePicture().isEmpty())
                 ? DEFAULT_PROFILE_PICTURE
-                : userDTO.getProfile_picture();
+                : userDTO.getProfilePicture();
         user.setProfilePicture(profilePicture);
 
         // Update other fields if provided
-        Optional.ofNullable(userDTO.getUsername()).ifPresent(user::setUserName);
+        Optional.ofNullable(userDTO.getUsername()).ifPresent(user::setUsername);
         Optional.ofNullable(userDTO.getEmail()).ifPresent(user::setEmail);
         Optional.ofNullable(userDTO.getStatus()).ifPresent(user::setStatus);
 
@@ -168,7 +168,7 @@ public class UserServiceImpl implements UserService {
                 new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword())
         );
 
-        return userRepository.findByUserName(request.getUserName())
+        return userRepository.findByUsername(request.getUserName())
                 .orElseThrow(() -> new ResourceNotFoundException(request.getUserName() + NOT_FOUND_MESSAGE));
     }
 
@@ -185,7 +185,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserDTO> searchUser(String username) {
-        List<User> users = userRepository.findByUserNameContainingIgnoreCase(username);
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(username);
 
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found with username containing: " + username);

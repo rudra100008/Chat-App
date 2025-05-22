@@ -21,7 +21,7 @@ import java.util.List;
 public class User  implements UserDetails {
   @MongoId
     private String userId;
-    private String userName;
+    private String username;
     private String email;
     private String password;
     private String profilePicture;
@@ -36,7 +36,7 @@ public class User  implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.userName;
+        return this.username;
     }
 
     @Override
