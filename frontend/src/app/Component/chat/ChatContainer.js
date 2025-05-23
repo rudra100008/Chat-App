@@ -7,6 +7,7 @@ import ChatInput from './ChatInput';
 import useWebSocket from '@/app/hooks/useWebSocket';
 import useMessages from '@/app/hooks/useMessage';
 import useChatDetails from '@/app/hooks/useChatDetails';
+import useChatName from '@/app/hooks/useChatName';
 
 export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout }) {
     const [value, setValue] = useState('');

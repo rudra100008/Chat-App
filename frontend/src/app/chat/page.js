@@ -7,13 +7,15 @@ import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import ChatContainer from '../Component/chat/ChatContainer';
 import { useAuth } from '../context/AuthContext';
+import useChatName from '../hooks/useChatName';
 
 export default function Chat() {
     const route = useRouter();
     const { token, userId, logout, isLoading } = useAuth()
     const [error, setError] = useState(null);
+
     const [otherUserDetails, setOtherUserDetails] = useState({
-        profile_picture: "",
+        profilePicture: "",
         status: '',
         userId: '',
         last_seen: '',
@@ -114,7 +116,8 @@ export default function Chat() {
                     userId={userId}
                     otherUserId={otherUserDetails.userId}
                     token={token}
-                    onChatSelect={handleChatSelect} />
+                    onChatSelect={handleChatSelect}
+                    chatId ={chatId} />
             </div>
             <ChatContainer
                 chatId={chatId}
