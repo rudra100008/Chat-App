@@ -43,7 +43,9 @@ public class ChatController {
         chatDTO.setChatType(ChatType.SINGLE);
         ChatDTO savedChat = this.chatService.createChat(chatDTO);
 
-        this.chatDisplayNameService.saveChatName(savedChat.getChatId(), chatName);
+        String otherUserChatName =  loginUser.getPhoneNumber();
+        this.chatDisplayNameService.saveChatName(savedChat.getChatId(), chatName, loginUser.getUserId());
+        chatDisplayNameService.saveChatName(savedChat.getChatId(),otherUserChatName,otherUser.getUserId());
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
     @PostMapping("/groupChat")

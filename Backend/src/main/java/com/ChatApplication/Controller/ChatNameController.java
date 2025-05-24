@@ -18,15 +18,6 @@ public class ChatNameController {
             @PathVariable("chatId")String chatId
     ){
         ChatDisplayNameDTO  chatName = this.chatDisplayNameService.fetchChatName(chatId,userId);
-
         return ResponseEntity.ok(chatName);
-    }
-    @PostMapping("/{chatName}/chat/{chatId}")
-    public ResponseEntity<ChatDisplayNameDTO> saveChatName(
-            @PathVariable("chatName")String chatName,
-            @PathVariable("chatId")String chatId
-    ){
-        ChatDisplayNameDTO chatDisplayNameDTO = this.chatDisplayNameService.saveChatName(chatId,chatName);
-        return ResponseEntity.ok(chatDisplayNameDTO);
     }
 }

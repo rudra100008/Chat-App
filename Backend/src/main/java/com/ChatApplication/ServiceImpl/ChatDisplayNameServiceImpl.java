@@ -24,10 +24,8 @@ public class ChatDisplayNameServiceImpl implements ChatDisplayNameService {
     }
 
     @Override
-    public ChatDisplayNameDTO saveChatName(String chatId, String chatName) {
-        User user = this.authUtils.getLoggedInUsername();
-
-        ChatDisplayName existing  = this.chatNameRepository.findByChatIdAndUserId(chatId,user.getUserId());
+    public ChatDisplayNameDTO saveChatName(String chatId, String chatName,String userId) {
+        ChatDisplayName existing  = this.chatNameRepository.findByChatIdAndUserId(chatId,userId);
 
         if(existing != null){
             existing.setChatname(chatName);
@@ -37,7 +35,7 @@ public class ChatDisplayNameServiceImpl implements ChatDisplayNameService {
             ChatDisplayName chatDisplayName = new ChatDisplayName();
             chatDisplayName.setChatId(chatId);
             chatDisplayName.setChatname(chatName);
-            chatDisplayName.setUserId(user.getUserId());
+            chatDisplayName.setUserId(userId);
             ChatDisplayName savedChatName = this.chatNameRepository.save(chatDisplayName);
             return modelMapper.map(savedChatName,ChatDisplayNameDTO.class);
         }
