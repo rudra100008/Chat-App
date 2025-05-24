@@ -129,3 +129,16 @@
     text-align: center;
     padding: 20px;
 }
+
+.searchButton {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 24px;
+    transition: all 0.3s ease;
+    color: #333;
+}
+
+.searchButton:hover {
+    transform: scale(1.05);
+    color: #005fa3;
+}

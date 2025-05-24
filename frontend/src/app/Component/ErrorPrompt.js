@@ -1,12 +1,12 @@
 "use client"
 import style from '../Style/errorMessage.module.css'
-export default function ErrorMessage({ errorMessage, onClose }) {
+export default function ErrorPrompt({ errorMessage, onClose }) {
     if (!errorMessage) return null;
     const handleClose=()=>{
         if(onClose) onClose();
     }
     return (
-        <div>
+        <div className={style.errorOverlay}>
             {errorMessage &&
                 <div className={style.errorBox}>
                     <p className={style.errorMessage}>{errorMessage}</p>

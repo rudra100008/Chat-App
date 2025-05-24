@@ -4,19 +4,18 @@ import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 import style from "../Style/userChats.module.css"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import { faEllipsisV, faSearch, faSearchDollar, faSearchPlus } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import GetUserImage from "./GetUserImage";
 import { useRouter } from "next/navigation";
 import SearchUser  from "./SearchUser";
-import ErrorMessage from "./ErrorMessage";
+import ErrorMessage from "./ErrorPrompt";
 
-export default function UserChats({userId,token,onChatSelect,otherUserId}){
+export default function UserChats({userId,token,onChatSelect,otherUserId,setShowSearchBox}){
     const router = useRouter()
     const [chatInfo,setChatInfo] = useState([]);
     const [selectedChat,setSelectedChat] = useState(null);
     const [showbox,setShowBox] = useState(false);
-    const [errorMessage,setErrorMessage] = useState('');
     const [chatNames,setChatNames] = useState({});
 
     // const getOtherUser =()=>{
@@ -49,10 +48,12 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
             setChatInfo(response.data);
             fetchChatName(response.data)
         }catch(error){
-            if(error.response.status ==='403'){
+            if( error.response && error.response.status === 403){
                 localStorage.removeItem('token');
                 localStorage.removeItem('userId')
                 router.push("/")
+            }else{
+                console.log("ERROR from useChat:\n",error.response.message)
             }
             console.log("Error from UserChat.js:",error.response.data)
         }
@@ -70,14 +71,10 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
       setShowBox((prevState)=>!prevState);
     }
 
-    const handleErrorMessage=(message)=>{
-        setErrorMessage(message);
+    const handleSearchClick =() => {
+        setShowSearchBox(prev => !prev);
     }
-
-    const closeErrorMessage=()=>{
-        setErrorMessage("");
-    }
-
+   
     useEffect(()=>{
         if(!userId || !token){
             router.push("/")
@@ -86,11 +83,11 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
     },[userId,token])
     return(
         <div>
-            <ErrorMessage errorMessage={errorMessage} onClose={closeErrorMessage}/>
             <div className={style.Container}>
                 <div className={style.Section}>
-                    <SearchUser onError={handleErrorMessage} />
-                    <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
+                    <FontAwesomeIcon icon={faSearch}  className={style.searchButton}onClick={handleSearchClick} />
+                    {/* <SearchUser onError={handleErrorMessage} /> */}
+                    <div className={style.faEllipsisV} onClick={handleEllipseVClick} >
                     <FontAwesomeIcon  icon={faEllipsisV}  />
                     </div>
                     {showbox && 

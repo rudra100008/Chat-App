@@ -1,27 +1,27 @@
-/* Style for the errorMessage.module.css */
-
+/* Top-centered error box overlay */
 .errorOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* Ensure it appears above other content */
-  }
-  
-  .errorBox {
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
-  }
+  position: fixed;
+  top: 20px; /* Distance from top */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none; /* Allow clicks to go through except on error box */
+}
+
+.errorBox {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  pointer-events: auto; /* Allow interaction with close button */
+}
+
   
   .errorMessage {
     color: #dc3545;

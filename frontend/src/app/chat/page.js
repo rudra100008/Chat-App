@@ -7,13 +7,16 @@ import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import ChatContainer from '../Component/chat/ChatContainer';
 import { useAuth } from '../context/AuthContext';
-import useChatName from '../hooks/useChatName';
+import ErrorPrompt from '../Component/ErrorPrompt';
+import SearchUser from '../Component/SearchUser';
 
 export default function Chat() {
     const route = useRouter();
     const { token, userId, logout, isLoading } = useAuth()
     const [error, setError] = useState(null);
     const [chatName,setChatName] = useState('');
+    const [errorMessage,setErrorMessage] = useState('');
+    const [showSearchBox,setShowSearchBox] = useState(false);
 
     const [otherUserDetails, setOtherUserDetails] = useState({
         profilePicture: "",
@@ -102,6 +105,13 @@ export default function Chat() {
         }
     }, [userChat]);
 
+    const closeErrorMessage=()=>{
+        setErrorMessage("");
+    }
+     const handleErrorMessage=(message)=>{
+        setErrorMessage(message);
+    }
+
     if(isLoading){
         return <div className={style.loading}>Loading authentication....</div>
     }
@@ -111,6 +121,8 @@ export default function Chat() {
 
     return (
         <div className={style.body}>
+            <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage}/>
+            {showSearchBox && <SearchUser onError={handleErrorMessage} />}
             <div className={style.UserChat}>
                 {/* display chat  */}
                 <UserChats
@@ -118,6 +130,7 @@ export default function Chat() {
                     otherUserId={otherUserDetails.userId}
                     token={token}
                     onChatSelect={handleChatSelect}
+                    setShowSearchBox={setShowSearchBox}
                     chatId ={chatId} />
             </div>
             <ChatContainer

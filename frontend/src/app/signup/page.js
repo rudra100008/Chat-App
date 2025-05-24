@@ -62,7 +62,7 @@ export default function SignUp(){
             } else if (error.response?.status === 500) {
                 setValidationError(prev => ({
                     ...prev,
-                    message: "Server error. Please try again later."
+                    message: error.response.data.message
                 }));
             } else {
                 setValidationError(prev => ({
@@ -101,7 +101,7 @@ if(validationError.message){
                     className={Style.InputForm}
                     />
                     {validationError.username && (
-                        <p className={Style.FieldError}>{validationError.userName}</p>
+                        <p className={Style.FieldError}>{validationError.username}</p>
                     )}
                 </div>
                 <div className={Style.FormGroup}>
