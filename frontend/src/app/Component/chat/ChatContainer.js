@@ -9,7 +9,7 @@ import useMessages from '@/app/hooks/useMessage';
 import useChatDetails from '@/app/hooks/useChatDetails';
 import useChatName from '@/app/hooks/useChatName';
 
-export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout }) {
+export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout,chatName }) {
     const [value, setValue] = useState('');
     const { messages, setMessages, loading, firstMessageElementRef } = useMessages({ userId, token, chatId });
     const { connected, stompClient, error } = useWebSocket({ userId, chatId, token, messages, setMessages });
@@ -45,7 +45,8 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
             <ChatHeader
                 otherUserDetails={otherUserDetails}
                 userChat={userChat}
-                onLogout={onLogout} />
+                onLogout={onLogout}
+                chatName = {chatName} />
             {chatId ? (
                 <>
                     <Message

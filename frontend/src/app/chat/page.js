@@ -13,6 +13,7 @@ export default function Chat() {
     const route = useRouter();
     const { token, userId, logout, isLoading } = useAuth()
     const [error, setError] = useState(null);
+    const [chatName,setChatName] = useState('');
 
     const [otherUserDetails, setOtherUserDetails] = useState({
         profilePicture: "",
@@ -32,10 +33,10 @@ export default function Chat() {
     const [chatId, setChatId] = useState('');
 
 
-    const handleChatSelect = (selectedChat) => {
+    const handleChatSelect = (selectedChat,selectedChatName) => {
         setChatId(selectedChat)
+        setChatName(selectedChatName);
     }
-
     const fetchUserChatDetails = async () => {
         if (!chatId && !token) return;
         try {
@@ -123,6 +124,7 @@ export default function Chat() {
                 chatId={chatId}
                 userId={userId}
                 token={token}
+                chatName = {chatName}
                 setOtherUserDetails={setOtherUserDetails}
                 otherUserDetails={otherUserDetails}
                 onLogout={logout} />

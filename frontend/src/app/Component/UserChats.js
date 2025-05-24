@@ -17,10 +17,28 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
     const [selectedChat,setSelectedChat] = useState(null);
     const [showbox,setShowBox] = useState(false);
     const [errorMessage,setErrorMessage] = useState('');
+    const [chatNames,setChatNames] = useState({});
 
     // const getOtherUser =()=>{
     //     const otherUser = chatInfo.
     // }
+
+    const fetchChatName = async(chats) => {
+        const newChatName = {};
+
+        for (const chat of chats){
+            try{
+                const response = await axiosInterceptor.get(`${baseUrl}/api/chatName/fetchChatName/${userId}/chat/${chat.chatId}`,{
+                    headers:{Authorization: `Bearer ${token}`}
+                })
+                newChatName[chat.chatId] = response.data.chatname;
+            }catch(error){
+                console.log("Error in ChatName:\n",error.response.message);
+                newChatName[chat.chatId] = "Unknown chat";
+            }
+        }
+        setChatNames(newChatName);
+    }
     const fetchUserChats=async()=>{
          if (!userId || !token) return;
         try{
@@ -29,6 +47,7 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
             })
             console.log('Response of userChats:',response.data);
             setChatInfo(response.data);
+            fetchChatName(response.data)
         }catch(error){
             if(error.response.status ==='403'){
                 localStorage.removeItem('token');
@@ -45,7 +64,7 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
     const handleChatClick=(chatId)=>{
         console.log("handleChatClick",chatId)
         setSelectedChat(chatId);
-        onChatSelect(chatId);
+        onChatSelect(chatId,chatNames[chatId] || "Unknown chat");
     }
     const handleEllipseVClick=()=>{
       setShowBox((prevState)=>!prevState);
@@ -93,7 +112,7 @@ export default function UserChats({userId,token,onChatSelect,otherUserId}){
                             key={chat.chatId}
                             onClick={()=>handleChatClick(chat.chatId)}>
                                 <GetUserImage userId={getOtherUser(chat)} />
-                                <p className={style.chatName}>{chat.chatName}</p>
+                                <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
                             </div>
                         ))}      
                     </div>
