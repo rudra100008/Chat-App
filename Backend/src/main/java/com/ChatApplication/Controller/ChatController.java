@@ -48,8 +48,14 @@ public class ChatController {
         chatDisplayNameService.saveChatName(savedChat.getChatId(),otherUserChatName,otherUser.getUserId());
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
-    @PostMapping("/groupChat")
-    public ResponseEntity<ChatDTO> createGroupChat(@RequestBody ChatDTO chatDTO){
+    @PostMapping("/groupChat/{chatName}")
+    public ResponseEntity<ChatDTO> createGroupChat(
+            @PathVariable("chatName") String chatName,
+            @RequestParam("participantIds") List<String> participantIds){
+        ChatDTO chatDTO = new ChatDTO();
+        chatDTO.setChatName(chatName);
+        chatDTO.setParticipantIds(participantIds);
+        chatDTO.setChatType(ChatType.GROUP);
         ChatDTO savedGroupChat = this.chatService.createGroupChat(chatDTO);
         return ResponseEntity.ok(savedGroupChat);
     }
