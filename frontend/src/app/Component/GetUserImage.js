@@ -10,14 +10,12 @@ export default function GetUserImage({ userId }) {
     const {token} = useAuth();
 
     useEffect(() => {
-        console.log("UserId in GetImage:\n",userId)
         const fetchUserImage = async () => {
             try {
                 const response = await axiosInterceptor.get(`${baseUrl}/api/users/getUserImage/user/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: 'blob',
                 });
-                console.log("Image:\n",response.data)
                 const url = URL.createObjectURL(response.data);
                 setImageUrl(url);
             } catch (error) {

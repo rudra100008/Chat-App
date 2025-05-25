@@ -1,6 +1,6 @@
 "use client"
 import { Stomp } from "@stomp/stompjs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
 import baseUrl from "../baseUrl";
 
@@ -8,26 +8,24 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
     const [connected, setConnected] = useState(false);
     const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState('');
+    const currentChatIdRef = useRef(null);
 
-    useEffect(() => {
-        if (!userId || !chatId || !token) {
-            if (!chatId) {
-                return
+    const disconnectWebSocket = useCallback(()=>{
+         if (stompClient && stompClient.connected) {
+                stompClient.disconnect()
             }
-            setError("Missing required authentication information")
-            return;
-        }
-        if (stompClient && stompClient.connected) {
-            stompClient.disconnect();
-            setStompClient(null);
-            setConnected(false);
-        }
-        setMessages([]);
-
-        const connectWebSocket = () => {
+        setStompClient(null);
+        setConnected(false);
+    },[])
+    const connectWebSocket = useCallback(() => {
+        if(!userId || !chatId || !token) return;
             const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
             const headers = { 'Authorization': `Bearer ${token}` }
             client.connect(headers, () => {
+                if (currentChatIdRef.current !== chatId) {
+                client.disconnect();
+                return;
+            }
                 setConnected(true);
                 setStompClient(client);
                 console.log(messages);
@@ -55,20 +53,39 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
                 });
 
             }, (error) => {
-                console.error("WebSocket connection error:\n", error);
+               if (currentChatIdRef.current === chatId) {
+                console.error("useWebSocket: Connection error for chatId:", chatId, error);
                 setConnected(false);
-                setError("Falied to connect to server")
+                setError("Failed to connect to server");
+            }
             })
             return client;
+        },[userId,token,chatId,setMessages])
+
+   useEffect(() => {
+        if (!chatId) {
+            disconnectWebSocket();
+            currentChatIdRef.current = null;
+            return;
         }
-        const client = connectWebSocket();
+
+        if (chatId !== currentChatIdRef.current) {
+            console.log("useWebSocket: ChatId changed from", currentChatIdRef.current, "to", chatId);
+            
+            // Disconnect from previous chat
+            disconnectWebSocket();
+            
+            // Update current chat reference
+            currentChatIdRef.current = chatId;
+            
+            // Connect to new chat
+            connectWebSocket();
+        }
 
         return () => {
-            if (client && client.connected) {
-                client.disconnect()
-            }
-        }
-    }, [chatId, userId, token])
+            disconnectWebSocket();
+        };
+    }, [chatId, connectWebSocket, disconnectWebSocket]);
     return { connected, stompClient, error }
 }
 

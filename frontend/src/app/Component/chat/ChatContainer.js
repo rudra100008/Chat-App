@@ -1,5 +1,5 @@
 "use client"
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import style from '../../Style/chat.module.css'
 import ChatHeader from './ChatHeader'
 import Message from './Message';
@@ -7,18 +7,25 @@ import ChatInput from './ChatInput';
 import useWebSocket from '@/app/hooks/useWebSocket';
 import useMessages from '@/app/hooks/useMessage';
 import useChatDetails from '@/app/hooks/useChatDetails';
-import useChatName from '@/app/hooks/useChatName';
 
 export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout,chatName }) {
     const [value, setValue] = useState('');
-    const { messages, setMessages, loading, firstMessageElementRef } = useMessages({ userId, token, chatId });
+    const [currentChatId,setCurrentChatId] = useState(null);
+    const { messages, setMessages, loading, firstMessageElementRef,resetState } = useMessages({ userId, token, chatId });
     const { connected, stompClient, error } = useWebSocket({ userId, chatId, token, messages, setMessages });
     const { userChat } = useChatDetails({ chatId, token, userId, setOtherUserDetails })
     const onChange = (e) => {
         setValue(e.target.value);
     }
 
-    const onSend = () => {
+    useEffect(() => {
+        if (chatId && chatId !== currentChatId) {
+            console.log("ChatContainer: Switching to new chat:", chatId);
+            setCurrentChatId(chatId);
+        }
+    }, [chatId, currentChatId]);
+
+    const onSend = useCallback(() => {
         if (!value.trim() || !connected) return
         const messageDTO = {
             senderId: userId,
@@ -35,7 +42,7 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
         } catch (error) {
             console.log("Fail to send message:\n", error);
         }
-    }
+    },[value, connected, currentChatId, userId, stompClient, token])
 
     if (error) {
         return <div className={style.error}>{error}</div>

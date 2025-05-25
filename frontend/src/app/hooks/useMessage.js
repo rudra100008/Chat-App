@@ -13,6 +13,7 @@ const useMessages = ({userId,token,chatId})=>{
     const [page,setPage] = useState(0);
     const [totalPage,setTotalPage] = useState(null);
     const observer = useRef(null);
+    const currentChatIdRef = useRef(null);
 
 
     const removeDuplicateMessage =(messageArray) => {
@@ -28,7 +29,29 @@ const useMessages = ({userId,token,chatId})=>{
         return uniqueMessage;
     }
 
-    const intialFetch=async()=>{
+      const resetState = useCallback(() => {
+        console.log("useMessages: Resetting state for new chat");
+        setMessages([]);
+        setLoading(false);
+        setHasMore(true);
+        setInitialLoad(true);
+        setPage(0);
+        setTotalPage(null);
+    }, []);
+
+    useEffect(()=>{
+        if(chatId && chatId !== currentChatIdRef.current){
+            currentChatIdRef.current = chatId;
+            resetState();
+        }else if(!chatId){
+            resetState();
+            currentChatIdRef.current = null;
+        }
+    },[chatId,resetState])
+    const intialFetch=useCallback(async()=>{
+         if (!chatId || !userId || !token) return;
+         if (currentChatIdRef.current !== chatId) return;
+
         setLoading(true);
         try{
              const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?latest=true`,{
@@ -36,6 +59,7 @@ const useMessages = ({userId,token,chatId})=>{
                 Authorization:`Bearer ${token}`
             }
         })
+        console.log("Message from useMessage:\n",response.data)
         const {data,totalPage} = response.data
         setMessages(data || []);
         setTotalPage(totalPage);
@@ -50,7 +74,7 @@ const useMessages = ({userId,token,chatId})=>{
         }finally{
             setLoading(false);
         }
-    }
+    },[userId,token,chatId])
 
     const fetchOlderMessages= useCallback(async()=>{
         if(loading || page < 0) return ;
@@ -118,18 +142,19 @@ const useMessages = ({userId,token,chatId})=>{
         }
     },[initialLoad,chatId])
 
-    useEffect(() => {
-        if (chatId && !initialLoad && hasMore && !loading && page >= 0) {
-            fetchOlderMessages()
-        }
-    }, [chatId, initialLoad, page, hasMore, loading, fetchOlderMessages])
+    // useEffect(() => {
+    //     if (chatId && !initialLoad && hasMore && !loading && page >= 0) {
+    //         fetchOlderMessages()
+    //     }
+    // }, [chatId, initialLoad, page, hasMore, loading, fetchOlderMessages])
 
     return { 
         messages, 
         setMessages, 
         loading, 
         hasMore, 
-        firstMessageElementRef
+        firstMessageElementRef,
+        resetState
     }
 
 }

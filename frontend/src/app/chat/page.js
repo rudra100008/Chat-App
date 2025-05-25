@@ -37,7 +37,7 @@ export default function Chat() {
 
 
     const handleChatSelect = (selectedChat,selectedChatName) => {
-        setChatId(selectedChat)
+        setChatId(selectedChat);
         setChatName(selectedChatName);
     }
     const fetchUserChatDetails = async () => {
