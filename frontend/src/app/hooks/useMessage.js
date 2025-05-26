@@ -141,13 +141,6 @@ const useMessages = ({userId,token,chatId})=>{
             intialFetch()
         }
     },[initialLoad,chatId])
-
-    // useEffect(() => {
-    //     if (chatId && !initialLoad && hasMore && !loading && page >= 0) {
-    //         fetchOlderMessages()
-    //     }
-    // }, [chatId, initialLoad, page, hasMore, loading, fetchOlderMessages])
-
     return { 
         messages, 
         setMessages, 
