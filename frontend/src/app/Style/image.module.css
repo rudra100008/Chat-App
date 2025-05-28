@@ -1,0 +1,8 @@
+.imageWrapper{
+    position:relative;
+    overflow:hidden;
+    border-radius:50%;
+}
+.imageresponsive{
+    object-fit:cover;
+}

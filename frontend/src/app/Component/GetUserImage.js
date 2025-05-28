@@ -4,8 +4,9 @@ import Image from "next/image";
 import baseUrl from "../baseUrl";
 import axiosInterceptor from "./Interceptor";
 import { useAuth } from "../context/AuthContext";
+import style from "../Style/image.module.css";
 
-export default function GetUserImage({ userId }) {
+export default function GetUserImage({ userId ,size = 40,className = ""}) {
     const [imageUrl, setImageUrl] = useState("");
     const {token} = useAuth();
 
@@ -29,13 +30,14 @@ export default function GetUserImage({ userId }) {
     return (
         <>
             {imageUrl && (
-                <Image
+                <div className={style.imageWrapper} style={{height:size,width:size}}>
+                     <Image
                     src={imageUrl}
                     alt="User"
-                    width={40} // 96px = 6rem (Tailwind w-24)
-                    height={40}
-                    className="rounded-full object-cover "
+                    fill
+                    className={style.imageresponsive}
                 />
+                </div>
             )}
         </>
     );
