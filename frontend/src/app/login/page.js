@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function LogInPage() {
     const router = useRouter();
-    const { login, isAuthenticated, isLoading } = useAuth();
+    const { login, isAuthenticated, isLoading, isInitialized } = useAuth();
     const [localLoading, setLocalLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
     const [user, setUser] = useState({
@@ -23,10 +23,10 @@ export default function LogInPage() {
 
     // Check if user is already authenticated
     useEffect(() => {
-        if (!isLoading && isAuthenticated) {
+        if (!isLoading && isAuthenticated && isInitialized) {
             router.push("/chat");
         }
-    }, [isLoading, isAuthenticated, router]);
+    }, [isLoading, isAuthenticated, router,isInitialized]);
 
     const handleLoginForm = async () => {
         setLocalLoading(true);
@@ -39,13 +39,13 @@ export default function LogInPage() {
                 { headers: { "Content-Type": "application/json" } }
             );
             
-            if (response && response.data) {
+            if (response?.data) {
                 const { token, user: { userId }, isTokenValid } = response.data;
                 login(userId, token);
                 localStorage.setItem("isTokenValid", isTokenValid);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
-                router.push("/chat");
+                router.replace("/chat");
             } else {
                 setLoginError("No data received from the server");
             }
@@ -69,10 +69,18 @@ export default function LogInPage() {
     }
 
     // Show loading while checking authentication status
-    if (isLoading) {
+    if (!isInitialized || isLoading ) {
         return (<div className={Style.Container}>Checking authentication status...</div>);
     }
 
+     if (isAuthenticated) {
+        return (
+            <div className={Style.Container}>
+                <div>Redirecting to chat...</div>
+            </div>
+        );
+    }
+    
     return (
         <div className={Style.Container}>
             <form onSubmit={handleForm} className={Style.Form}>

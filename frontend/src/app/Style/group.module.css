@@ -1,46 +1,95 @@
-.body{
-    background-color: aliceblue;
-    height: 100vh;
-    margin: 0px;
-    padding: 0px;
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+  padding-bottom: 40px;
 }
-.chatContainer{
-    display: flex;
-    flex-direction: column;
-    align-items:center;
+
+.chatGroup {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #ffffff;
+  padding: 12px 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
-.chatGroup{
-    width: 400px;
-    display: flex;
-    align-items: center;
-    gap:15px;
-    background-color: white;
-    padding: 10px 15px;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition:all 0.3s ease;
+
+.chatGroup:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.chatGroup:hover{
-    transform: translateY(-2px);
+
+.active {
+  background-color: #f0faff;
+  border-color: #91d5ff;
+  box-shadow: 0 4px 10px rgba(0, 80, 179, 0.1);
 }
-.active{
-    background-color: rgba(255, 255, 255, 0.664);
-    border-color: #91d5ff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
-}
+
 .chatName {
-    font-family:'Inter', sans-serif;
-    margin-left: 14px;
-    font-size: 0.95rem;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .active .chatName {
-    font-weight: 600;
-    color: #0050b3;
+  font-weight: 600;
+  color: #0050b3;
+}
+
+.inputGroup {
+  margin: 24px auto 16px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.input {
+  padding: 10px 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 420px;
+  font-size: 1rem;
+  background-color: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: #0050b3;
+  box-shadow: 0 0 0 2px rgba(0, 80, 179, 0.1);
+}
+
+.input::placeholder {
+  color: #999;
+  opacity: 0.7;
+}
+.ButtonGroup{
+    width:100px;
+    background-color: skyblue;
+    color: white;
+    text-align: center;
+    font-size: 1rem;
+    padding: 5px 10px;
+    margin: 10px 0;
+    box-shadow: 0 0 0 3px rgba(71, 147, 209, 0.1);
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+}
+.ButtonGroup:hover{
+    background-color: #4299e1;
+    transform: scale(1.1);
 }

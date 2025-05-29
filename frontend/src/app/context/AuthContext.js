@@ -1,48 +1,54 @@
 "use client"
 import { useRouter } from "next/navigation";
-import { createContext,useEffect,useState,useContext } from "react";
+import { createContext, useEffect, useState, useContext } from "react";
 
 const AuthContext = createContext();
 
- export const AuthProvider = ({children})=>{
-    const [userId,setUserId] = useState('');
-    const [token,setToken] = useState('');
+export const AuthProvider = ({ children }) => {
+    const [userId, setUserId] = useState('');
+    const [token, setToken] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isInitialized, setIsIntialized] = useState(false);
     const router = useRouter();
 
-    useEffect(()=>{
-        const storedUserId = localStorage.getItem('userId');
-        const storedToken =  localStorage.getItem('token');
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const storedUserId = localStorage.getItem('userId');
+            const storedToken = localStorage.getItem('token');
 
-         if (storedUserId && storedToken) {
-            setUserId(storedUserId);
-            setToken(storedToken);
+            if (storedUserId && storedToken) {
+                setUserId(storedUserId);
+                setToken(storedToken);
+            }
         }
         setIsLoading(false);
+        setIsIntialized(true);
 
-    },[])
+    }, [])
 
-    const login =(newUserId,newToken)=>{
-        localStorage.setItem("userId",newUserId);
-        localStorage.setItem("token",newToken);
+    const login = (newUserId, newToken) => {
+        localStorage.setItem("userId", newUserId);
+        localStorage.setItem("token", newToken);
         setUserId(newUserId);
         setToken(newToken);
     }
 
-    const logout  = () => {
+    const logout = () => {
         localStorage.removeItem("userId");
         localStorage.removeItem("token");
+        localStorage.removeItem("isTokenValid")
         setUserId('');
         setToken('');
         router.push('/')
     }
-      const value = {
+    const value = {
         token,
         userId,
         isLoading,
-        isAuthenticated: !!token,
+        isAuthenticated: !!token && !!userId,
         login,
-        logout
+        logout,
+        isInitialized
     }
 
     return (
@@ -51,9 +57,9 @@ const AuthContext = createContext();
         </AuthContext.Provider>
     )
 }
-export const useAuth=()=>{
+export const useAuth = () => {
     const context = useContext(AuthContext);
-    if(context === undefined){
+    if (context === undefined) {
         throw new Error("useAuth must used  within  an AuthProvider");
     }
     return context;
