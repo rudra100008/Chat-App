@@ -51,7 +51,7 @@ public class ChatController {
     @PostMapping("/groupChat/{chatName}")
     public ResponseEntity<ChatDTO> createGroupChat(
             @PathVariable("chatName") String chatName,
-            @RequestParam("participantIds") List<String> participantIds){
+            @RequestBody List<String> participantIds){
         ChatDTO chatDTO = new ChatDTO();
         chatDTO.setChatName(chatName);
         chatDTO.setParticipantIds(participantIds);

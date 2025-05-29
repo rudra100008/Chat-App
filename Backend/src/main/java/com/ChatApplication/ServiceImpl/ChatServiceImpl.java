@@ -129,13 +129,14 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createGroupChat(ChatDTO chatDTO) {
+        User loggedInUsername = authUtils.getLoggedInUsername();
+        chatDTO.getParticipantIds().add(loggedInUsername.getUserId());
         if (chatDTO.getParticipantIds().size() < 3){
             throw new IllegalArgumentException("Group Chat must have at least 3 participants");
         }
         if(chatDTO.getChatName() == null || chatDTO.getChatName().trim().isEmpty()){
             throw new IllegalArgumentException("Group Chat name cannot not be empty");
         }
-        User loggedInUsername = authUtils.getLoggedInUsername();
         if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("Logged in user must be participants of the chat");
         }
