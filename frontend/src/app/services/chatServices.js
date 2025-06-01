@@ -25,7 +25,11 @@ export const fetchChatNames = async (chats, userId, token) => {
             chatNames[chat.chatId] = response.data.chatname;
         } catch (error) {
             console.log("Error in ChatName:\n", error.response?.message || error.message);
+            if(chat.chatType === "GROUP"){
+                chatNames[chat.chatId] =  chat.chatName;
+            }else{
             chatNames[chat.chatId] = "Unknown chat";
+            }
         }
     }
     return chatNames;

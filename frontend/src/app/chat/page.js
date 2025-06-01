@@ -71,6 +71,7 @@ export default function Chat() {
     const fetchUserDetails = async () => {
         // userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
         const otherUserId = getOtherUserId();
+        console.log("Other user Id:\n",otherUserId)
         if (!otherUserId) return
 
         try {
