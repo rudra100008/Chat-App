@@ -6,7 +6,7 @@ const axiosInterceptor = axios.create();
 
 axiosInterceptor.interceptors.request.use(
     (config) => {
-        const userId = localStorage.getItem("userId")
+        const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
         const isTokenValid = localStorage.getItem("isTokenValid");
 

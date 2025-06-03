@@ -18,15 +18,7 @@ export default function Chat() {
     const [errorMessage,setErrorMessage] = useState('');
     const [showSearchBox,setShowSearchBox] = useState(false);
 
-    const [otherUserDetails, setOtherUserDetails] = useState({
-        profilePicture: "",
-        status: '',
-        userId: '',
-        last_seen: '',
-        email: '',
-        userName: '',
-        phoneNumber: '',
-    })
+    const [otherUserDetails, setOtherUserDetails] = useState([])
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -34,7 +26,6 @@ export default function Chat() {
         participantIds: [],
     })
     const [chatId, setChatId] = useState('');
-
 
     const handleChatSelect = (selectedChat,selectedChatName) => {
         setChatId(selectedChat);
@@ -46,7 +37,7 @@ export default function Chat() {
             const response = await axiosInterceptor.get(`${baseUrl}/api/chats/chatDetails/${chatId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            console.log("Data: ", response.data);
+            console.log("Data in /chat: ", response.data);
             const chatDetails = response.data
             setUserChat(chatDetails);
         } catch (error) {
@@ -61,7 +52,7 @@ export default function Chat() {
         }
         if (userChat.chatType === 'GROUP') {
             console.log("Chat is group type");
-            return [];
+            return null;
         }
         const otherUser = userChat.participantIds.filter(pIds => pIds !== userId)[0];
         // console.log("Other users after filtering:", otherUser);
@@ -70,19 +61,21 @@ export default function Chat() {
 
     const fetchUserDetails = async () => {
         // userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
-        const otherUserId = getOtherUserId();
-        console.log("Other user Id:\n",otherUserId)
-        if (!otherUserId) return
+        const otherUserIds = getOtherUserId();
+        console.log("Other user Id:\n",otherUserIds)
+        if (!otherUserIds) return
 
         try {
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserId}`, {
+            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserIds}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             console.log("OtherUser:\n", response.data)
             setOtherUserDetails(response.data);
         } catch (error) {
-            console.log("Error: ", error.response.data)
+            console.log("Error in fetchUserDetails: ", error.response.data);
+            setOtherUserDetails([]);
         }
+    
     }
 
     useEffect(() => {
@@ -128,7 +121,7 @@ export default function Chat() {
                 {/* display chat  */}
                 <UserChats
                     userId={userId}
-                    otherUserId={otherUserDetails.userId}
+                    otherUserId={ getOtherUserId }
                     token={token}
                     onChatSelect={handleChatSelect}
                     setShowSearchBox={setShowSearchBox}

@@ -48,6 +48,7 @@ const useMessages = ({userId,token,chatId})=>{
             currentChatIdRef.current = null;
         }
     },[chatId,resetState])
+    
     const intialFetch=useCallback(async()=>{
          if (!chatId || !userId || !token) return;
          if (currentChatIdRef.current !== chatId) return;

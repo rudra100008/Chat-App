@@ -73,7 +73,7 @@ export default function LogInPage() {
         return (<div className={Style.Container}>Checking authentication status...</div>);
     }
 
-     if (isAuthenticated) {
+     if (isAuthenticated && isInitialized) {
         return (
             <div className={Style.Container}>
                 <div>Redirecting to chat...</div>

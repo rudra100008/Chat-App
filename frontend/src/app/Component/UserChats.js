@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { fetchUserChatsWithNames } from "../services/chatServices";
 
 
-export default function UserChats({userId, token, onChatSelect, otherUserId, setShowSearchBox}) {
+export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox }) {
     const router = useRouter()
     const [chatInfo, setChatInfo] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
@@ -18,7 +18,7 @@ export default function UserChats({userId, token, onChatSelect, otherUserId, set
 
     const loadUserChats = async () => {
         if (!userId || !token) return;
-        
+
         try {
             const { chats, chatNames } = await fetchUserChatsWithNames(userId, token);
             setChatInfo(chats);
@@ -67,7 +67,7 @@ export default function UserChats({userId, token, onChatSelect, otherUserId, set
                     <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
                         <FontAwesomeIcon icon={faEllipsisV} />
                     </div>
-                    {showbox && 
+                    {showbox &&
                         <>
                             <div className={style.ShowBox}>
                                 <Link href="/createChat">New Chat</Link>
@@ -81,12 +81,23 @@ export default function UserChats({userId, token, onChatSelect, otherUserId, set
                 {chatInfo.length === 0 ? <p className={style.errorMessage}>No chats available</p> : (
                     <div>
                         {chatInfo.map((chat) => (
-                            <div 
-                                className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`} 
+                            <div
+                                className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
                                 key={chat.chatId}
                                 onClick={() => handleChatClick(chat.chatId)}>
-                                <GetUserImage userId={getOtherUser(chat)} />
-                                <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                {chat.chatType === "SINGLE" ? (
+                                    <>
+                                        <GetUserImage userId={getOtherUser(chat)} />
+                                        <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                    </>
+                                ) :
+                                    (
+                                        <>
+                                            <GetUserImage userId={getOtherUser(chat)} />
+                                            <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                        </>
+                                    )
+                                }
                             </div>
                         ))}
                     </div>
