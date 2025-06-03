@@ -15,6 +15,7 @@ import java.util.List;
 public class ChatDTO {
     private String chatId;
     private String chatName;
+    private String chatImageUrl;
     private ChatType chatType; // GROUP,SINGLE
     private List<String> participantIds =  new ArrayList<>();
 }

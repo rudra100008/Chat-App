@@ -7,13 +7,18 @@ import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.ChatDisplayNameService;
 import com.ChatApplication.Service.ChatService;
+import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +32,7 @@ public class ChatController {
     private  final ChatDisplayNameService chatDisplayNameService;
     private final UserService userService;
     private final AuthUtils authUtils;
+    private final ImageService imageService;
 
 
     @PostMapping()
@@ -121,4 +127,57 @@ public class ChatController {
         return ResponseEntity.ok(chatDTO);
     }
 
+    @GetMapping(value = "/defaultGroupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> getGroupImage(@RequestParam("imageName")String imageName){
+        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\groupChat";
+        File directory  = new File(uploadDir);
+        if(!directory.exists()){
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","Image directory not found"));
+        }
+        try{
+             byte[] b = imageService.getImage(uploadDir,imageName);
+             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
+        }catch(IOException e){
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("Error reading image:\n"+e.getMessage());
+        }catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","Unexcepted error occurred: "+e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/uploadGroupImage/{chatId}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> uploadGroupImage(
+            @PathVariable("chatId") String chatId,
+            StompHeaderAccessor headerAccessor,
+            @RequestParam(value = "image",required = false)MultipartFile imageFile){
+        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\groupChat";
+        String imageName = "";
+        ChatDTO  chatDTO = chatService.fetchUserChat(chatId,headerAccessor);
+        if(imageFile != null && !imageFile.isEmpty()){
+            try{
+                imageName = imageService.uploadImage(uploadDir,imageFile);
+            }catch (IOException e){
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("Error: "+e.getMessage());
+            }catch (Exception e){
+                return ResponseEntity
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("Error","Unexcepted error occurred: "+e.getMessage()));
+            }
+        }
+        chatDTO.setChatImageUrl(imageName);
+        ChatDTO  updatedChat = chatService.createGroupChat(chatDTO);
+        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(updatedChat);
+    }
 }

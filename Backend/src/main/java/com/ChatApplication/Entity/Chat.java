@@ -17,7 +17,8 @@ import java.util.List;
 public class Chat {
     @MongoId
     private String chatId;
-    private String  chatName; //only for GROUP chat
+    private String  chatName;//only for GROUP chat
+    private String chatImageUrl; // only for GROUP chat
     private ChatType chatType; //SINGLE,GROUP
     private List<User> participants;
 

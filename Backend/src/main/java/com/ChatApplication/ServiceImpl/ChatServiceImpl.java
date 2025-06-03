@@ -121,6 +121,7 @@ public class ChatServiceImpl implements ChatService {
         return new ChatDTO(
                 savedChat.getChatId(),
                 savedChat.getChatName(),
+                savedChat.getChatImageUrl(),
                 savedChat.getChatType(),
                 savedChat.getParticipants().stream().map(User::getUserId).toList()
         );
@@ -130,7 +131,9 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public ChatDTO createGroupChat(ChatDTO chatDTO) {
         User loggedInUsername = authUtils.getLoggedInUsername();
-        chatDTO.getParticipantIds().add(loggedInUsername.getUserId());
+        if(!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
+            chatDTO.getParticipantIds().add(loggedInUsername.getUserId());
+        }
         if (chatDTO.getParticipantIds().size() < 3){
             throw new IllegalArgumentException("Group Chat must have at least 3 participants");
         }
@@ -155,18 +158,20 @@ public class ChatServiceImpl implements ChatService {
                         )
         );
         boolean existsChat = mongoTemplate.exists(query,Chat.class);
-        if(existsChat){
-            throw new AlreadyExistsException("A group with these exact participants already exists.");
-        }
+//        if(existsChat){
+//            throw new AlreadyExistsException("A group with these exact participants already exists.");
+//        }
 
         // saving the chat details in the database
         chat.setChatType(ChatType.GROUP);
         chat.setChatName(chatDTO.getChatName());
+        chat.setChatImageUrl(chatDTO.getChatImageUrl());
         chat.setParticipants(participants);
         Chat savedChat = this.chatRepository.save(chat);
        return new ChatDTO(
                savedChat.getChatId(),
                savedChat.getChatName(),
+               savedChat.getChatImageUrl(),
                savedChat.getChatType(),
                savedChat.getParticipants().stream().map(User::getUserId).toList()
                );

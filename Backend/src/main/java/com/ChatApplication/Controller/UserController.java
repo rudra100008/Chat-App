@@ -61,14 +61,15 @@ public class UserController {
         }
         try {
             UserDTO userDTO = this.userService.fetchUser(userId);
-            logger.debug("Profile_Picture:{}",userDTO.getProfilePicture());
-            logger.info(userDTO.getProfilePicture());
             byte[] b = this.imageService.getImage(uploadDir, userDTO.getProfilePicture());
             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body("Image not found: " + e.getMessage());
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.APPLICATION_JSON).body("Error reading image: " + e.getMessage());
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("Error reading image: " + e.getMessage());
         }catch (Exception e) {
             logger.error("Unexpected error: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
