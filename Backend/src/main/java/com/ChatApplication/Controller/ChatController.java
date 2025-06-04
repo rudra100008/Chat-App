@@ -10,6 +10,7 @@ import com.ChatApplication.Service.ChatService;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,8 @@ public class ChatController {
     private final UserService userService;
     private final AuthUtils authUtils;
     private final ImageService imageService;
+    @Value("${file.upload.dir}")
+    private String baseUploadDir;
 
 
     @PostMapping()
@@ -128,17 +131,22 @@ public class ChatController {
     }
 
     @GetMapping(value = "/defaultGroupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> getGroupImage(@RequestParam("imageName")String imageName){
-        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\groupChat";
+    public ResponseEntity<?> getGroupImage(
+            @RequestParam("chatId")String chatId,
+            StompHeaderAccessor headerAccessor
+            ){
+        String uploadDir = baseUploadDir + File.separator + "groupChat";
+        ChatDTO getUserChat = chatService.fetchUserChat(chatId,headerAccessor);
+
         File directory  = new File(uploadDir);
         if(!directory.exists()){
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("Error","Image directory not found"));
+                    .body(Map.of("Error:","Image directory not found"));
         }
         try{
-             byte[] b = imageService.getImage(uploadDir,imageName);
+             byte[] b = imageService.getImage(uploadDir,getUserChat.getChatImageUrl());
              return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
         }catch(IOException e){
             return ResponseEntity
@@ -158,7 +166,7 @@ public class ChatController {
             @PathVariable("chatId") String chatId,
             StompHeaderAccessor headerAccessor,
             @RequestParam(value = "image",required = false)MultipartFile imageFile){
-        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\groupChat";
+        String uploadDir = baseUploadDir + File.separator + "groupChat";
         String imageName = "";
         ChatDTO  chatDTO = chatService.fetchUserChat(chatId,headerAccessor);
         if(imageFile != null && !imageFile.isEmpty()){

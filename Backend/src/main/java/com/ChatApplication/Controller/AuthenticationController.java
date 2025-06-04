@@ -3,13 +3,13 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.*;
-import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.JwtService;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -32,6 +33,9 @@ public class AuthenticationController {
     private final TwoFactorAuthService twoFactorAuthService;
     private final UserDetailsService userDetailsService;
     private final ImageService imageService;
+    @Value("${file.upload.dir}")
+    private String baseUploadDir;
+
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(
@@ -40,7 +44,7 @@ public class AuthenticationController {
             @RequestPart(value = "image",required = false) MultipartFile imageFile
     )
     {
-        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\userImage";
+        String uploadDir = baseUploadDir + File.separator + "userImage";
         if(result.hasErrors()){
             Map<String,Object> errors = new HashMap<>();
             result.getFieldErrors().forEach(f-> errors.put(f.getField(),f.getDefaultMessage()));
@@ -72,6 +76,7 @@ public class AuthenticationController {
             AuthResponse response = new AuthResponse(authenticatedUser,jwtToken, isTokenValid);
             return ResponseEntity.ok(response);
     }
+
     @PostMapping("/send")
     public ResponseEntity<?> send(
             @Valid @RequestBody TwoFactorRequest request,
@@ -92,6 +97,7 @@ public class AuthenticationController {
         response.setTwoFactorEnabled(false);
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/verify")
     public ResponseEntity<?> verify(
             @Valid @RequestBody TwoFactorVerification info

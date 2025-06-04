@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,8 @@ public class UserController {
     private final UserService userService;
     private final AuthUtils authUtils;
     private final ImageService imageService;
+    @Value(("${file.upload.dir}"))
+    private String baseUploadDir;
 
     Logger logger  = LoggerFactory.getLogger(UserController.class);
 
@@ -51,7 +54,7 @@ public class UserController {
 
     @GetMapping(value = "/getUserImage/user/{userId}", produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> getImages(@PathVariable("userId") String userId) {
-        String uploadDir = "E:\\Chat-App\\Chat-App\\Backend\\Images\\userImage\\";
+        String uploadDir = baseUploadDir + File.separator + "userImage";
         File directory = new File(uploadDir);
         if (!directory.exists()) {
             logger.error("Image directory does not exist: {}", uploadDir);

@@ -6,6 +6,7 @@ spring:
       database: chatApplication
       host: localhost
       port: 27017
+
 security:
   jwt:
     security-key: 4bbf5ef641e95aa5474f6f9e000b80e83e7c2e441cff743658aafd16a08234c6
@@ -22,5 +23,9 @@ twilio:
 
 file:
   upload:
-    dir:D:\Chat-App\Backend\Images
+    dir: D:\Chat-App\Backend\Images
+
+logging:
+  level:
+    org.mongodb.driver: WARN
 
