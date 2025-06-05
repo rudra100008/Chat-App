@@ -7,6 +7,7 @@ import Link from "next/link";
 import GetUserImage from "./GetUserImage";
 import { useRouter } from "next/navigation";
 import { fetchUserChatsWithNames } from "../services/chatServices";
+import GetGroupImage from "./GetGroupImage";
 
 
 export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox }) {
@@ -81,24 +82,24 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                 {chatInfo.length === 0 ? <p className={style.errorMessage}>No chats available</p> : (
                     <div>
                         {chatInfo.map((chat) => (
-                            <div
-                                className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
-                                key={chat.chatId}
-                                onClick={() => handleChatClick(chat.chatId)}>
-                                {chat.chatType === "SINGLE" ? (
-                                    <>
+                            chat.chatType === "SINGLE" ?
+                                (
+                                    <div
+                                        className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
+                                        key={chat.chatId}
+                                        onClick={() => handleChatClick(chat.chatId)}>
                                         <GetUserImage userId={getOtherUser(chat)} />
                                         <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
-                                    </>
-                                ) :
-                                    (
-                                        <>
-                                            <GetUserImage userId={getOtherUser(chat)} />
-                                            <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
-                                        </>
-                                    )
-                                }
-                            </div>
+                                    </div>):
+                                (
+                                    <div className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active :''}`}
+                                    key={chat.chatId}
+                                    onClick={()=> handleChatClick(chat.chatId)}
+                                    >
+                                        <GetGroupImage chatId={chat.chatId} />
+                                        <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                        </div>
+                                )     
                         ))}
                     </div>
                 )}
