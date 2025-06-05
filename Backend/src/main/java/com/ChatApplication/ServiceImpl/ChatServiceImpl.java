@@ -295,5 +295,18 @@ public class ChatServiceImpl implements ChatService {
 
         return modelMapper.map(chat, ChatDTO.class);
     }
+    @Override
+    public ChatDTO updateGroupChat(ChatDTO chatDTO){
+        if(chatDTO.getChatType() == ChatType.GROUP) {
+            Chat oldChat = chatRepository.findById(chatDTO.getChatId())
+                    .orElseThrow(() -> new ResourceNotFoundException("chat not found" + chatDTO.getChatId()));
+            oldChat.setChatName(chatDTO.getChatName());
+            oldChat.setChatImageUrl(chatDTO.getChatImageUrl());
+            Chat newChat = chatRepository.save(oldChat);
 
+            return modelMapper.map(newChat, ChatDTO.class);
+        }else{
+            throw new IllegalArgumentException("Chat must be group chat");
+        }
+    }
 }

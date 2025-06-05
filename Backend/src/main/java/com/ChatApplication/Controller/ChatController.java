@@ -30,7 +30,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
-    private  final ChatDisplayNameService chatDisplayNameService;
+    private final ChatDisplayNameService chatDisplayNameService;
     private final UserService userService;
     private final AuthUtils authUtils;
     private final ImageService imageService;
@@ -130,14 +130,19 @@ public class ChatController {
         return ResponseEntity.ok(chatDTO);
     }
 
-    @GetMapping(value = "/defaultGroupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(value = "/groupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> getGroupImage(
             @RequestParam("chatId")String chatId,
             StompHeaderAccessor headerAccessor
             ){
         String uploadDir = baseUploadDir + File.separator + "groupChat";
         ChatDTO getUserChat = chatService.fetchUserChat(chatId,headerAccessor);
+        String imageName = getUserChat.getChatImageUrl();
+        System.out.println("Image name: "+uploadDir + File.separator + imageName);
 
+        if(imageName == null || imageName.trim().isEmpty()){
+           imageName = "defaultGroupChat.jpg";
+        }
         File directory  = new File(uploadDir);
         if(!directory.exists()){
             return ResponseEntity
@@ -146,7 +151,7 @@ public class ChatController {
                     .body(Map.of("Error:","Image directory not found"));
         }
         try{
-             byte[] b = imageService.getImage(uploadDir,getUserChat.getChatImageUrl());
+             byte[] b = imageService.getImage(uploadDir,imageName);
              return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
         }catch(IOException e){
             return ResponseEntity
@@ -185,7 +190,7 @@ public class ChatController {
             }
         }
         chatDTO.setChatImageUrl(imageName);
-        ChatDTO  updatedChat = chatService.createGroupChat(chatDTO);
+        ChatDTO  updatedChat = chatService.updateGroupChat(chatDTO);
         return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(updatedChat);
     }
 }

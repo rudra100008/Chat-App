@@ -1,6 +1,11 @@
 spring:
   application:
     name: ChatApplication
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
   data:
     mongodb:
       database: chatApplication
@@ -23,7 +28,7 @@ twilio:
 
 file:
   upload:
-    dir: D:\Chat-App\Backend\Images
+    dir: E:\Chat-App\Backend\Images
 
 logging:
   level:
