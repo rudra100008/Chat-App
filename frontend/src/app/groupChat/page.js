@@ -103,10 +103,12 @@ const GroupChat = () => {
                     <button type="submit" onClick={setGroupChat}>Submit</button>
                 </div>
             </div>
-            {participantIds}
             <div className={style.chatContainer} ref={chatContainerRef}>
                 {chatInfos && chatInfos.map((chats) => (
-                    <div
+
+                    chats.chatType === "SINGLE" ?
+                    (
+                         <div
                         className={`${style.chatGroup} ${selectedChat.includes(chats.chatId) ? style.active : ''}`}
                         key={chats.chatId}
                         onClick={(e) => {
@@ -117,6 +119,7 @@ const GroupChat = () => {
                         <p className={style.chatName}>{chatNames[chats.chatId]}</p>
 
                     </div>
+                    ): null
                 ))}
             </div>
         </div>

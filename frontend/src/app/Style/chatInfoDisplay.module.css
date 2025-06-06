@@ -1,0 +1,14 @@
+.chatInfoContainer{
+    position: fixed;
+    width: 600px;
+    height :510px;
+    top: 10%;
+    left: 30%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(229, 231, 235, 0.6);
+    border-radius: 20px;
+    background-color: rgb(217, 223, 228);
+    z-index: 1000000;
+}

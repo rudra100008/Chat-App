@@ -2,15 +2,16 @@
 import { useEffect, useState } from "react"
 import style from "../Style/userChats.module.css"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisV, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faCircleUser, faEllipsisV, faGear, faSearch, faUser, faUserGroup } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import GetUserImage from "./GetUserImage";
 import { useRouter } from "next/navigation";
 import { fetchUserChatsWithNames } from "../services/chatServices";
 import GetGroupImage from "./GetGroupImage";
+import ChatInfoDisplay from "./ChatInfoDisplay";
 
 
-export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox }) {
+export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox,setShowChatInfoBox,setSelectedChatInfo }) {
     const router = useRouter()
     const [chatInfo, setChatInfo] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
@@ -49,6 +50,10 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
         setShowBox((prevState) => !prevState);
     }
 
+    const handleChatContainerClick = (chatDetails) => {
+        setSelectedChatInfo(chatDetails);
+        setShowChatInfoBox((prev)=> !prev);
+    }
     const handleSearchClick = () => {
         setShowSearchBox(prev => !prev);
     }
@@ -71,10 +76,22 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                     {showbox &&
                         <>
                             <div className={style.ShowBox}>
-                                <Link href="/createChat">New Chat</Link>
-                                <Link href="/groupChat">New Group</Link>
-                                <Link href="/setting">Setting</Link>
-                                <Link href="/profile">Profile</Link>
+                                <Link href="/createChat">
+                                   <div><FontAwesomeIcon icon={faUser} /></div>
+                                    New Chat
+                                </Link>
+                                <Link href="/groupChat">
+                                <div><FontAwesomeIcon icon={faUserGroup} /></div>
+                                    New Group
+                                </Link>
+                                <Link href="/setting">
+                                <div><FontAwesomeIcon icon={faGear} /></div>
+                                    Setting
+                                </Link>
+                                <Link href="/profile">
+                                <div><FontAwesomeIcon icon={faCircleUser} /></div>
+                                    Profile
+                                </Link>
                             </div>
                         </>
                     }
@@ -88,18 +105,27 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                                         className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
                                         key={chat.chatId}
                                         onClick={() => handleChatClick(chat.chatId)}>
-                                        <GetUserImage userId={getOtherUser(chat)} />
+                                            <div onClick={(e)=>{
+                                                e.stopPropagation();
+                                                handleChatContainerClick(chat);
+                                            }}> 
+                                                 <GetUserImage userId={getOtherUser(chat)} />
+                                            </div>
                                         <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
-                                    </div>):
+                                    </div>
+                                ) :
                                 (
-                                    <div className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active :''}`}
-                                    key={chat.chatId}
-                                    onClick={()=> handleChatClick(chat.chatId)}
+                                    <div className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
+                                        key={chat.chatId}
+                                        onClick={() => handleChatClick(chat.chatId)}
                                     >
                                         <GetGroupImage chatId={chat.chatId} />
                                         <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                        <div className={style.faEllipseChatIcon} onClick={handleChatContainerClick}>
+                                            <FontAwesomeIcon icon={faEllipsisV} />
                                         </div>
-                                )     
+                                    </div>
+                                )
                         ))}
                     </div>
                 )}

@@ -39,32 +39,72 @@
 
 .ShowBox {
     position: absolute;
-    top: calc(100% + 10px);
+    top: calc(100% + 8px);
     right: 0;
     background-color: #ffffff;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    min-width: 180px;
-    padding: 10px 0;
-    z-index: 10;
-    border: 1px solid #e5e7eb;
+    min-width: 200px;
+    padding: 12px 0;
+    z-index: 15;
+    border: 1px solid  rgba(229, 231, 235, 0.6);
     display: flex;
     flex-direction: column;
-    animation: fadeIn 0.2s ease-out;
+   animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
 }
 
+.ShowBox::before{
+    content:'';
+    position: absolute;
+    top:-6px;
+    right:16px;
+    height:12px;
+    width:12px;
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border:1px solid rgba(229,231,235,0.6);
+    border-bottom: none;
+    border-right:none;
+    transform: rotate(45deg);
+    z-index: -1;
+
+}
 .ShowBox a {
-    padding: 12px 18px;
+    position:relative;
+    margin: 2px 8px;
+    border-radius: 10px;
+    padding: 14px 20px;
     font-size: 0.95rem;
+    font-weight: 500;
+    gap: 12px;
     color: #374151;
     text-decoration: none;
-    transition: background-color 0.2s ease, padding-left 0.2s ease;
+    display: flex;
+    align-items:center;
+    justify-content: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.ShowBox a div{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: #6b7280;
+    transition:  all 0.3s ease;
+}
 .ShowBox a:hover {
-    background-color: #f9fafb;
-    padding-left: 22px;
-    border-radius: 8px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e6f7ff 100%);
+    color: #366094;
+    transform: translateX(4px);
+    box-shadow: 0px 4px 12px rgba(0,80,170,0.1);
+}
+
+.ShowBox a:hover div {
+    color: #0050b3;
+    transform: scale(1.1);
 }
 
 @keyframes fadeIn {
@@ -141,4 +181,34 @@
 .searchButton:hover {
     transform: scale(1.05);
     color: #005fa3;
+}
+
+.faEllipseChatIcon{
+    margin-left:auto;
+    color: #9ca3af;
+    opacity:0;    
+    padding:6px;
+    border-radius:50%;
+    cursor:pointer;
+    transition:all 0.3s ease;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0.9);
+    align-self: flex-start;
+}
+
+.faEllipseChatIcon:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+    transform: scale(1);
+}
+
+.ChatContainer:hover .faEllipseChatIcon{
+    opacity:1;
+    transform:scale(1);
+}
+.active .faEllipseChatIcon{
+    opacity: 1;
+    color:#0050b3;
 }

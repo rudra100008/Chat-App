@@ -51,7 +51,8 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
         <div className={style.ChatContainer}>
             <ChatHeader
                 otherUserDetails={otherUserDetails}
-                userChat={userChat}
+                chatId={chatId}
+                userChat ={userChat}
                 onLogout={onLogout}
                 chatName = {chatName} />
             {chatId ? (

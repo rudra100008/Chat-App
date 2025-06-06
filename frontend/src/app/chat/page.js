@@ -9,6 +9,7 @@ import ChatContainer from '../Component/chat/ChatContainer';
 import { useAuth } from '../context/AuthContext';
 import ErrorPrompt from '../Component/ErrorPrompt';
 import SearchUser from '../Component/SearchUser';
+import ChatInfoDisplay from '../Component/ChatInfoDisplay';
 
 export default function Chat() {
     const route = useRouter();
@@ -17,7 +18,8 @@ export default function Chat() {
     const [chatName,setChatName] = useState('');
     const [errorMessage,setErrorMessage] = useState('');
     const [showSearchBox,setShowSearchBox] = useState(false);
-
+    const [showChatInfoBox,setShowChatInfoBox] =  useState(false);
+     const[selectedChatInfo,setSelectedChatInfo] = useState(null);
     const [otherUserDetails, setOtherUserDetails] = useState([])
     const [userChat, setUserChat] = useState({
         chatId: "",
@@ -117,6 +119,7 @@ export default function Chat() {
         <div className={style.body}>
             <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage}/>
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
+            {showChatInfoBox && <ChatInfoDisplay chatData={selectedChatInfo} onClose={()=> setShowChatInfoBox(false)}/>}
             <div className={style.UserChat}>
                 {/* display chat  */}
                 <UserChats
@@ -125,6 +128,8 @@ export default function Chat() {
                     token={token}
                     onChatSelect={handleChatSelect}
                     setShowSearchBox={setShowSearchBox}
+                    setShowChatInfoBox ={setShowChatInfoBox}
+                    setSelectedChatInfo={setSelectedChatInfo}
                     chatId ={chatId} />
             </div>
             <ChatContainer
