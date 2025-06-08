@@ -22,6 +22,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
+
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -123,7 +125,12 @@ public class ChatServiceImpl implements ChatService {
                 savedChat.getChatName(),
                 savedChat.getChatImageUrl(),
                 savedChat.getChatType(),
-                savedChat.getParticipants().stream().map(User::getUserId).toList()
+                savedChat.getParticipants().stream().map(User::getUserId).toList(),
+                savedChat.getCreatedAt(),
+                savedChat.getLastMessage(),
+                savedChat.getLastMessageTime(),
+                savedChat.getAdminIds(),
+                savedChat.getBlockedBy()
         );
     }
 
@@ -149,32 +156,39 @@ public class ChatServiceImpl implements ChatService {
                .map(userId->this.userRepository.findById(userId)
                        .orElseThrow(()-> new ResourceNotFoundException(userId+" not found")))
                .toList();
-       // query if the chat with same participants exits in the database
-       Query query = new Query(
-                Criteria.where("chatType").is("GROUP")
-                        .andOperator(
-                                Criteria.where("participants").size(chatDTO.getParticipantIds().size()),
-                                Criteria.where("participants").all(participants)
-                        )
-        );
-        boolean existsChat = mongoTemplate.exists(query,Chat.class);
-//        if(existsChat){
-//            throw new AlreadyExistsException("A group with these exact participants already exists.");
-//        }
+//       // query if the chat with same participants exits in the database
+//       Query query = new Query(
+//                Criteria.where("chatType").is("GROUP")
+//                        .andOperator(
+//                                Criteria.where("participants").size(chatDTO.getParticipantIds().size()),
+//                                Criteria.where("participants").all(participants)
+//                        )
+//        );
+//        boolean existsChat = mongoTemplate.exists(query,Chat.class);
+////        if(existsChat){
+////            throw new AlreadyExistsException("A group with these exact participants already exists.");
+////        }
 
         // saving the chat details in the database
         chat.setChatType(ChatType.GROUP);
         chat.setChatName(chatDTO.getChatName());
         chat.setChatImageUrl(chatDTO.getChatImageUrl());
         chat.setParticipants(participants);
+        chat.setCreatedAt(LocalDateTime.now());
+        chat.setAdminIds(new ArrayList<>(List.of(loggedInUsername.getUserId())));
         Chat savedChat = this.chatRepository.save(chat);
-       return new ChatDTO(
-               savedChat.getChatId(),
-               savedChat.getChatName(),
-               savedChat.getChatImageUrl(),
-               savedChat.getChatType(),
-               savedChat.getParticipants().stream().map(User::getUserId).toList()
-               );
+        return new ChatDTO(
+                savedChat.getChatId(),
+                savedChat.getChatName(),
+                savedChat.getChatImageUrl(),
+                savedChat.getChatType(),
+                savedChat.getParticipants().stream().map(User::getUserId).toList(),
+                savedChat.getCreatedAt(),
+                savedChat.getLastMessage(),
+                savedChat.getLastMessageTime(),
+                savedChat.getAdminIds(),
+                savedChat.getBlockedBy()
+        );
     }
 
     @Override

@@ -5,6 +5,8 @@ import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.Message;
 import com.ChatApplication.Entity.PageInfo;
 import com.ChatApplication.Entity.User;
+import com.ChatApplication.Enum.ChatType;
+import com.ChatApplication.Exception.ForbiddenException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
@@ -110,6 +112,10 @@ public class MessageServiceImpl implements MessageService {
         }
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat not found"));
+
+        if(chat.getChatType()== ChatType.SINGLE){
+          validateBlockStatus(chat,senderId);
+        }
         if(chat.getParticipants().stream().noneMatch(user -> user.getUserId().equals(sender.getUserId()))){
             throw new IllegalArgumentException(sender.getUsername() + " is not a participant of "+chat.getChatName());
         }
@@ -119,6 +125,10 @@ public class MessageServiceImpl implements MessageService {
         message.setContent(content);
         message.setTimestamp(LocalDateTime.now());
         Message savedMessage = this.messageRepository.save(message);
+
+        chat.setLastMessage(content);
+        chat.setLastMessageTime(LocalDateTime.now());
+        chatRepository.save(chat);
         return modelMapper.map(savedMessage, MessageDTO.class);
     }
 
@@ -161,5 +171,26 @@ public class MessageServiceImpl implements MessageService {
     public int countMessageByChatId(String chatId) {
         Chat chat = this.chatRepository.findById(chatId).orElseThrow(()-> new ResourceNotFoundException("chat not found."));
         return this.messageRepository.countByChat(chat);
+    }
+
+
+    //helper function
+    private String getOtherUserId(List<User> participantIds,String senderId){
+        for ( User user: participantIds){
+            if(!user.getUserId().equals(senderId)){
+                return  user.getUserId();
+            }
+        }
+        throw new IllegalStateException("SINGLE chat must have two participants");
+    }
+
+    private void validateBlockStatus(Chat chat,String senderId){
+        String userId = getOtherUserId(chat.getParticipants(),senderId);
+        if(chat.getBlockedBy().contains(senderId)){
+            throw new ForbiddenException("You have blocked this user.Unblock to send message");
+        }
+        if(chat.getBlockedBy().contains(userId)){
+            throw new ForbiddenException("You are blocked by the user. You cannot send messages");
+        }
     }
 }

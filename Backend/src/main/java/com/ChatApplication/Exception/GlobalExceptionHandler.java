@@ -120,5 +120,9 @@ public class GlobalExceptionHandler {
         return createErrorResponse(HttpStatus.UNAUTHORIZED,e.getMessage(),request);
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<?> handleAccessDeniedException(ForbiddenException e,WebRequest request){
+        return createErrorResponse(HttpStatus.FORBIDDEN,e.getMessage(),request);
+    }
 
 }

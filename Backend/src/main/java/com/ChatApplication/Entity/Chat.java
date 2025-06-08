@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Document(collection = "Chat")
@@ -21,5 +22,10 @@ public class Chat {
     private String chatImageUrl; // only for GROUP chat
     private ChatType chatType; //SINGLE,GROUP
     private List<User> participants;
+    private LocalDateTime createdAt;
+    private String lastMessage;
+    private LocalDateTime lastMessageTime;
+    private List<String> adminIds;// for group chat
+    private List<String> blockedBy; // for single chat
 
 }

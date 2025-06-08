@@ -14,6 +14,7 @@ public class MessageDTO {
     @NotEmpty(message = "content cannot be empty")
     private String content;
     private LocalDateTime timestamp;
+    private boolean isRead;
     @NotEmpty(message = "SenderId cannot be empty")
     private String senderId;
     @NotEmpty(message = "ChatId cannot be empty")
