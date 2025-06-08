@@ -51,8 +51,16 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
     }
 
     const handleChatContainerClick = (chatDetails) => {
-        setSelectedChatInfo(chatDetails);
-        setShowChatInfoBox((prev)=> !prev);
+        setSelectedChatInfo(prevChatDetails=>{
+            const isSame = prevChatDetails?.chatId === chatDetails;
+            if(isSame){
+                setShowChatInfoBox(false);
+                return null;
+            }else{
+                setShowChatInfoBox(true);
+                return {...chatDetails,chatName: chatNames[chatDetails.chatId]};
+            }
+        });
     }
     const handleSearchClick = () => {
         setShowSearchBox(prev => !prev);
@@ -119,11 +127,13 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                                         key={chat.chatId}
                                         onClick={() => handleChatClick(chat.chatId)}
                                     >
-                                        <GetGroupImage chatId={chat.chatId} />
-                                        <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
-                                        <div className={style.faEllipseChatIcon} onClick={handleChatContainerClick}>
-                                            <FontAwesomeIcon icon={faEllipsisV} />
+                                        <div onClick={(e)=>{
+                                            e.stopPropagation();
+                                            handleChatContainerClick(chat);
+                                        }}>
+                                            <GetGroupImage chatId={chat.chatId}/>
                                         </div>
+                                        <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
                                     </div>
                                 )
                         ))}

@@ -119,7 +119,7 @@ export default function Chat() {
         <div className={style.body}>
             <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage}/>
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
-            {showChatInfoBox && <ChatInfoDisplay chatData={selectedChatInfo} onClose={()=> setShowChatInfoBox(false)}/>}
+            {showChatInfoBox && <ChatInfoDisplay userId ={userId} chatData={selectedChatInfo} onClose={()=> setShowChatInfoBox(false)}/>}
             <div className={style.UserChat}>
                 {/* display chat  */}
                 <UserChats

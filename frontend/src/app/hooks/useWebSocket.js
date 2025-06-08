@@ -20,7 +20,7 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
     const connectWebSocket = useCallback(() => {
         if(!userId || !chatId || !token) return;
             const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
-            const headers = { 'Authorization': `Bearer ${token}` }
+            const headers = { 'Authorization': `Bearer ${token}`,'userId':userId }
             client.connect(headers, () => {
                 if (currentChatIdRef.current !== chatId) {
                 client.disconnect();
@@ -28,15 +28,10 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
             }
                 setConnected(true);
                 setStompClient(client);
-                console.log(messages);
-                console.log("ChatId in usewebsocket: \n", chatId)
-
                 client.subscribe(`/private/chat/${chatId}`, (message) => {
                     console.log("Received message:", message.body); // More detailed logging
                     try {
                         const receivedMessage = JSON.parse(message.body);
-                        console.log("Parsed message:", receivedMessage);
-
                         setMessages((prevMessages) => {
                             // Check if message already exists
                             const exists = prevMessages.some(msg => msg.messageId === receivedMessage.messageId);

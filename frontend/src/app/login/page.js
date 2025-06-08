@@ -111,7 +111,7 @@ export default function LogInPage() {
                         id='password'
                         placeholder='Enter password..'
                         className={Style.InputForm}
-                        value={user.password}
+                        value={user.password.trim()}
                         onChange={newUser}
                         required
                     />
