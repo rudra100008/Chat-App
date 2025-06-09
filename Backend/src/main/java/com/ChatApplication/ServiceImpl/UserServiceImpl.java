@@ -195,4 +195,15 @@ public class UserServiceImpl implements UserService {
                 .map(user -> mapper.map(user, UserDTO.class))
                 .toList();
     }
+
+    @Override
+    public void updateLastSeen(String userId) {
+        User getUser = userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException("User not found in server."));
+
+        getUser.setLastSeen(LocalDateTime.now());
+
+        userRepository.save(getUser);
+
+    }
 }

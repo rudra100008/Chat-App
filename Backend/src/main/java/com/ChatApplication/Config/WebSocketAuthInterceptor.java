@@ -69,7 +69,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                         if(userId != null){
                             sessionAttributes.put("userId",userId);
                         }else{
-                            System.out.println("Not found userId");
+                            System.out.println("Not found userId in sessionAttribute");
                         }
                         stompHeaderAccessor.setUser(auth); // Attach authentication to the WebSocket session
                         SecurityContextHolder.getContext().setAuthentication(auth);

@@ -10,8 +10,8 @@ import java.util.List;
 
 @Repository
 public interface ChatRepository extends MongoRepository<Chat,String> {
-    List<Chat> findByParticipants(User user);
-    boolean existsByChatIdAndParticipantsContaining(String chatId,User user);
+    List<Chat> findByParticipants_UserIdIn(String userId);
+    boolean existsByChatIdAndParticipants_UserIdIn(String chatId,String userId);
     boolean existsByParticipantsAndChatType(List<User> participants, ChatType chatType);
 
 }

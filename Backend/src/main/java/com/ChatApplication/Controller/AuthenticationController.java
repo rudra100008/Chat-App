@@ -74,6 +74,7 @@ public class AuthenticationController {
             UserDetails userDetails = userDetailsService.loadUserByUsername(authenticatedUser.getUsername());
             Boolean isTokenValid = jwtService.isTokenValid(jwtToken,userDetails);
             AuthResponse response = new AuthResponse(authenticatedUser,jwtToken, isTokenValid);
+            userService.updateLastSeen(authenticatedUser.getUserId());
             return ResponseEntity.ok(response);
     }
 

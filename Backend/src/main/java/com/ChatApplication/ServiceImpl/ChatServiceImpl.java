@@ -47,12 +47,12 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<ChatDTO> fetchUserChats(String userId) {
-        if(userId == null || userId.trim().isEmpty()){
+        if(userId == null || userId.isEmpty()){
             throw new IllegalArgumentException("userID cannot be null or empty");
         }
         User currentUser = this.userRepository.findById(userId)
                 .orElseThrow(()->new ResourceNotFoundException(userId+" not found."));
-        List<Chat>  currentUserChat  = this.chatRepository.findByParticipants(currentUser);
+        List<Chat>  currentUserChat  = this.chatRepository.findByParticipants_UserIdIn(userId);
         List<ChatDTO> chatDTOS = new ArrayList<>();
         for(Chat chat: currentUserChat){
             ChatDTO chatDTO = modelMapper.map(chat,ChatDTO.class);
@@ -243,12 +243,12 @@ public class ChatServiceImpl implements ChatService {
         if(chatId == null || chatId.trim().isEmpty()  || userId == null || userId.trim().isEmpty()){
             throw new IllegalArgumentException("ChatId and userId cannot be null or empty");
         }
-        User user = this.userRepository.findById(userId)
+        this.userRepository.findById(userId)
                 .orElseThrow(()-> new ResourceNotFoundException(userId+" not found."));
 
         this.chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException(chatId+" not found"));
-        return this.chatRepository.existsByChatIdAndParticipantsContaining(chatId,user);
+        return this.chatRepository.existsByChatIdAndParticipants_UserIdIn(chatId,userId);
     }
 
     @Override
@@ -290,7 +290,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatDTO fetchUserChat(String chatId, StompHeaderAccessor headerAccessor) {
+    public ChatDTO fetchUserChat(String chatId) {
         User loggedInUser = this.authUtils.getLoggedInUsername();
         validateChatAccess(chatId, loggedInUser.getUserId());
 

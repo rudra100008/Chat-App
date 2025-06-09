@@ -20,11 +20,10 @@ public class ChatNameController {
     @GetMapping("/fetchChatName/{userId}/chat/{chatId}")
     public ResponseEntity<ChatDisplayNameDTO> fetchChatName(
             @PathVariable("userId")String userId,
-            @PathVariable("chatId")String chatId,
-            StompHeaderAccessor headerAccessor
+            @PathVariable("chatId")String chatId
     ){
         ChatDisplayNameDTO  chatName = this.chatDisplayNameService.fetchChatName(chatId,userId);
-        ChatDTO  fetchChat =  chatService.fetchUserChat(chatId,headerAccessor);
+        ChatDTO  fetchChat =  chatService.fetchUserChat(chatId);
         if(fetchChat.getChatType() == ChatType.GROUP){
             throw  new IllegalArgumentException("");
         }

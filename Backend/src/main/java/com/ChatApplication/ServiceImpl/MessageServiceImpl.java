@@ -38,7 +38,7 @@ public class MessageServiceImpl implements MessageService {
 
 
     private void validateChatAccess(String chatId,User user){
-        if(!this.chatRepository.existsByChatIdAndParticipantsContaining(chatId,user)){
+        if(!this.chatRepository.existsByChatIdAndParticipants_UserIdIn(chatId,user.getUserId())){
             throw new AccessDeniedException("User does not have access to this chat");
         }
     }

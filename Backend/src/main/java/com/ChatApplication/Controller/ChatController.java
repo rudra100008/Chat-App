@@ -122,23 +122,20 @@ public class ChatController {
 
     @GetMapping("/chatDetails/{chatId}")
     public ResponseEntity<?> getUserChat(
-            @PathVariable("chatId")String chatId,
-            StompHeaderAccessor headerAccessor
+            @PathVariable("chatId")String chatId
     )
     {
-        ChatDTO chatDTO = this.chatService.fetchUserChat(chatId,headerAccessor);
+        ChatDTO chatDTO = this.chatService.fetchUserChat(chatId);
         return ResponseEntity.ok(chatDTO);
     }
 
     @GetMapping(value = "/groupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<?> getGroupImage(
-            @RequestParam("chatId")String chatId,
-            StompHeaderAccessor headerAccessor
+            @RequestParam("chatId")String chatId
             ){
         String uploadDir = baseUploadDir + File.separator + "groupChat";
-        ChatDTO getUserChat = chatService.fetchUserChat(chatId,headerAccessor);
+        ChatDTO getUserChat = chatService.fetchUserChat(chatId);
         String imageName = getUserChat.getChatImageUrl();
-        System.out.println("Image name: "+uploadDir + File.separator + imageName);
 
         if(imageName == null || imageName.trim().isEmpty()){
            imageName = "defaultGroupChat.jpg";
@@ -169,11 +166,10 @@ public class ChatController {
     @PostMapping(value = "/uploadGroupImage/{chatId}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> uploadGroupImage(
             @PathVariable("chatId") String chatId,
-            StompHeaderAccessor headerAccessor,
             @RequestParam(value = "image",required = false)MultipartFile imageFile){
         String uploadDir = baseUploadDir + File.separator + "groupChat";
         String imageName = "";
-        ChatDTO  chatDTO = chatService.fetchUserChat(chatId,headerAccessor);
+        ChatDTO  chatDTO = chatService.fetchUserChat(chatId);
         if(imageFile != null && !imageFile.isEmpty()){
             try{
                 imageName = imageService.uploadImage(uploadDir,imageFile);

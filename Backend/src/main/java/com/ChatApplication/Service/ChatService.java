@@ -24,7 +24,7 @@ public interface ChatService {
     ChatDTO deleteParticipants(String chatId,String userId);
     void deleteChat(String chatId);
     //get single chat of the user
-    ChatDTO fetchUserChat(String chatId, StompHeaderAccessor headerAccessor);
+    ChatDTO fetchUserChat(String chatId);
     //update the group chat
     ChatDTO updateGroupChat(ChatDTO chatDTO);
 

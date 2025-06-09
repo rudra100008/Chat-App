@@ -18,5 +18,6 @@ public interface UserService {
     boolean existsByPhoneNumber(String phoneNumber);
     User findByPhoneNumber(String phoneNumber);
     List<UserDTO> searchUser(String username);
+    void updateLastSeen(String userId);
 
 }
