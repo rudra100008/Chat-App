@@ -68,7 +68,7 @@ export default function LogInPage() {
         handleLoginForm();
     }
 
-    // Show loading while checking authentication status
+    // // Show loading while checking authentication status
     if (!isInitialized || isLoading ) {
         return (<div className={Style.Container}>Checking authentication status...</div>);
     }

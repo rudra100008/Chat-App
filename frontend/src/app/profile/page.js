@@ -23,7 +23,11 @@ const Profile = () => {
 
     const timeformat = (time) => {
         if (!time) return "Unknown";
-        return new Date(time).toLocaleDateString();
+        return new Date(time).toLocaleDateString("en-us",{
+            day:'2-digit',
+            month:'long',
+            year:'numeric'
+        });
     }
 
     // Function to fetch profile image with authentication

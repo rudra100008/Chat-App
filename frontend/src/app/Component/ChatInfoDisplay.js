@@ -40,6 +40,27 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
             console.log(errorMessage);
         }
     }
+
+    const formatLastSeen = (lastSeen) => {
+        const lastSeenDate = new Date(lastSeen);
+        const today = new Date();
+
+        const isSame = lastSeenDate.toDateString() === today.toDateString();
+
+        if(isSame){
+            return lastSeenDate.toLocaleTimeString("en-us",{
+                hour:"2-digit",
+                minute:"2-digit",
+                hour12:true
+            })
+        }else{
+            return lastSeenDate.toLocaleDateString("en-us",{
+                day:"2-digit",
+                month:"long",
+                year:"numeric"
+            })
+        }
+    }
     useEffect(()=>{
         if(chatData.chatType === "SINGLE"){
             fetchOtherUser();
@@ -84,26 +105,7 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
 
                                     <div className={style.chatInfoDisplay}>
                                         {/* <FontAwesomeIcon icon={}/> */}
-                                        {
-                                            new Date(lastSeen).toLocaleDateString > new Date() 
-                                            ? 
-                                            (
-                                                <p>{new Date(lastSeen).toLocaleTimeString("en-us",{
-                                                    hour:"2-digit",
-                                                    minute:"2-digit",
-                                                    hour12:true
-                                                })}</p>
-                                            ):
-                                            (
-                                                <p>
-                                                    <p>{new Date(lastSeen).toLocaleDateString("en-us",{
-                                                    day:"2-digit",
-                                                    month:"long",
-                                                    year:"numeric"
-                                                })}</p>
-                                                </p>
-                                            )
-                                        }
+                                        <p>{formatLastSeen(lastSeen)}</p>
                                     </div>
 
                                 </div>

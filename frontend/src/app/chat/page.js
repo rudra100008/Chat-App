@@ -93,7 +93,7 @@ export default function Chat() {
         if(chatId){
             fetchUserChatDetails();
         }
-    }, [token, userId, chatId,route,isLoading])
+    }, [token, userId, chatId,isLoading])
 
     useEffect(() => {
         if (userChat.chatId) {
