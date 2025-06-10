@@ -106,7 +106,7 @@ public class UserServiceImpl implements UserService {
         }
 
         userDTO.setLastSeen(LocalDateTime.now());
-        userDTO.setStatus(UserStatus.Available);
+        userDTO.setStatus(UserStatus.ONLINE);
         userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
 
         // Map and save
@@ -118,7 +118,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDTO updateUser(String userId, UserDTO userDTO) {
-        // Get logged in user and verify access
+        // Get loggedIn user and verify access
         User loggedInUser = authUtils.getLoggedInUsername();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(userId + NOT_FOUND_MESSAGE));
@@ -198,12 +198,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateLastSeen(String userId) {
-        User getUser = userRepository.findById(userId)
-                .orElseThrow(()-> new ResourceNotFoundException("User not found in server."));
+        userRepository.findById(userId)
+                .ifPresent(user -> {
+                    user.setLastSeen(LocalDateTime.now());
+                    userRepository.save(user);
+                });
+    }
 
-        getUser.setLastSeen(LocalDateTime.now());
-
-        userRepository.save(getUser);
-
+    @Override
+    public void updateUserStatus(String userId,UserStatus status){
+        userRepository.findById(userId).ifPresent(user->{
+            user.setStatus(status);
+            userRepository.save(user);
+        });
     }
 }

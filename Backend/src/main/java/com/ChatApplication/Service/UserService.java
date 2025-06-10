@@ -3,6 +3,7 @@ package com.ChatApplication.Service;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.AuthRequest;
 import com.ChatApplication.Entity.User;
+import com.ChatApplication.Enum.UserStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,5 +20,6 @@ public interface UserService {
     User findByPhoneNumber(String phoneNumber);
     List<UserDTO> searchUser(String username);
     void updateLastSeen(String userId);
+    void updateUserStatus(String userId, UserStatus status);
 
 }
