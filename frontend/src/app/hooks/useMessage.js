@@ -30,7 +30,6 @@ const useMessages = ({userId,token,chatId})=>{
     }
 
       const resetState = useCallback(() => {
-        console.log("useMessages: Resetting state for new chat");
         setMessages([]);
         setLoading(false);
         setHasMore(true);

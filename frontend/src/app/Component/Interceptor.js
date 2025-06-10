@@ -31,10 +31,12 @@ axiosInterceptor.interceptors.response.use(
             localStorage.removeItem("userId");
             window.location.href ="http://localhost:3000/";
         }
-        if(error.response && error.response.status === 403){
+        else if(error.response && error.response.status === 403){
             localStorage.removeItem("token");
             localStorage.removeItem("userId");
             window.location.href ="http://localhost:3000/";
+        }else{
+            console.log(error.response)
         }
         return Promise.reject(error);
     }

@@ -23,10 +23,13 @@ const Profile = () => {
 
     const timeformat = (time) => {
         if (!time) return "Unknown";
-        return new Date(time).toLocaleDateString("en-us",{
+        return new Date(time).toLocaleString("en-us",{
             day:'2-digit',
             month:'long',
-            year:'numeric'
+            year:'numeric',
+            hour12:true,
+            hour:"2-digit",
+            minute:"2-digit"
         });
     }
 
