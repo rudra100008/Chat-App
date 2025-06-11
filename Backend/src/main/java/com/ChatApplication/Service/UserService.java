@@ -21,5 +21,6 @@ public interface UserService {
     List<UserDTO> searchUser(String username);
     void updateLastSeen(String userId);
     void updateUserStatus(String userId, UserStatus status);
+    User fetchUserByUserId(String userId);
 
 }

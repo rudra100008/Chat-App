@@ -212,4 +212,12 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         });
     }
+
+    @Override
+    public User fetchUserByUserId(String userId) {
+       return userRepository.findById(userId)
+               .orElseThrow(()->new ResourceNotFoundException("user not found in server"));
+
+    }
+
 }

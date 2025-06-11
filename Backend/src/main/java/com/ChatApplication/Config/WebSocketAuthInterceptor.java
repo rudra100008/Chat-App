@@ -41,8 +41,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
         if (StompCommand.CONNECT.equals(stompHeaderAccessor.getCommand())) {
             String authHeader = stompHeaderAccessor.getFirstNativeHeader("Authorization" );
-            String userId = stompHeaderAccessor.getFirstNativeHeader("userId");
-            if (authHeader == null || !authHeader.startsWith("Bearer " )) {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 logger.warn("Missing or invalid Authorization header in WebSocket request" );
                 throw new AccessDeniedException("Unauthorized WebSocket connection" );
             }
@@ -60,17 +59,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                                 userDetails, null, userDetails.getAuthorities()
                         );
 
-
-                        Map<String,Object> sessionAttributes = stompHeaderAccessor.getSessionAttributes();
-                        if(sessionAttributes == null){
-                            stompHeaderAccessor.setSessionAttributes(new HashMap<>());
-                        }
-
-                        if(userId != null){
-                            sessionAttributes.put("userId",userId);
-                        }else{
-                            System.out.println("Not found userId in sessionAttribute");
-                        }
                         stompHeaderAccessor.setUser(auth); // Attach authentication to the WebSocket session
                         SecurityContextHolder.getContext().setAuthentication(auth);
                         logger.info("WebSocket authentication successful for user: {}", username);
