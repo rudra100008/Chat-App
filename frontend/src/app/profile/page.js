@@ -4,10 +4,12 @@ import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 import { useAuth } from "../context/AuthContext";
 import style from "../Style/profile.module.css"
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
 
 const Profile = () => {
     const { userId, token, isLoading, logout } = useAuth();
-    
+
     const [user, setUser] = useState({
         username: "",
         lastSeen: "",
@@ -16,27 +18,27 @@ const Profile = () => {
         status: "",
         profilePicture: "",
     });
-    
+
     // Add state for profile image URL
     const [profileImageUrl, setProfileImageUrl] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
 
     const timeformat = (time) => {
         if (!time) return "Unknown";
-        return new Date(time).toLocaleString("en-us",{
-            day:'2-digit',
-            month:'long',
-            year:'numeric',
-            hour12:true,
-            hour:"2-digit",
-            minute:"2-digit"
+        return new Date(time).toLocaleString("en-us", {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+            hour12: true,
+            hour: "2-digit",
+            minute: "2-digit"
         });
     }
 
     // Function to fetch profile image with authentication
     const fetchProfileImage = async () => {
         if (!userId || !token) return;
-        
+
         setImageLoading(true);
         try {
             const response = await axiosInterceptor.get(
@@ -46,7 +48,7 @@ const Profile = () => {
                     responseType: 'blob' // Important: Get response as blob
                 }
             );
-            
+
             // Create object URL from blob
             const imageUrl = URL.createObjectURL(response.data);
             setProfileImageUrl(imageUrl);
@@ -70,6 +72,24 @@ const Profile = () => {
         }
     }
 
+    useEffect(() => {
+        const socket = new SockJS(`${baseUrl}/server`);
+        const stompClient = Stomp.over(socket);
+
+        stompClient.connect({ Authorization: `Bearer ${token}` }, () => {
+            stompClient.subscribe(`/topic/user-status`, (message) => {
+                const userStatusUpdate = JSON.parse(message.body);
+                if (userStatusUpdate.userId === userId && userStatusUpdate.lastSeen) {
+                    setUser(prev => ({
+                        ...prev,
+                        lastSeen: new Date(userStatusUpdate.lastSeen).toISOString()
+                    }));
+                }
+            })
+        })
+
+        return () => stompClient.disconnect();
+    }, [token, userId])
     useEffect(() => {
         if (token && userId) {
             fetchUser();
@@ -97,21 +117,21 @@ const Profile = () => {
                     {imageLoading ? (
                         <div className={style.placeholder}>⏳</div>
                     ) : profileImageUrl ? (
-                        <img 
+                        <img
                             src={profileImageUrl}
-                            alt="Profile Picture" 
+                            alt="Profile Picture"
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                     ) : (
                         <div className={style.placeholder}>👤</div>
                     )}
                 </div>
-                
+
                 <h1 className={style.username}>{user.username || "Anonymous User"}</h1>
                 <span className={`${style.status} ${style[user.status?.toLowerCase()]}`}>
                     {user.status || "offline"}
                 </span>
-                
+
                 <div className={style.profileinfo}>
                     <div className={style.infoitem}>
                         <div className={`${style.infoicon} ${style.phone}`}>📞</div>
@@ -122,7 +142,7 @@ const Profile = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className={style.infoitem}>
                         <div className={`${style.infoicon} ${style.email}`}>✉️</div>
                         <div className={style.infocontent}>
@@ -132,7 +152,7 @@ const Profile = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className={style.infoitem}>
                         <div className={`${style.infoicon} ${style.time}`}>🕐</div>
                         <div className={style.infocontent}>
