@@ -5,8 +5,8 @@ import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,7 +43,7 @@ public class WebSocketListener {
 
             userService.updateLastSeen(userId);
             userService.updateUserStatus(userId,UserStatus.ONLINE);
-            broadCastUserStatus(userId,UserStatus.ONLINE,user.getUsername());
+            userService.broadCastUserStatus(userId,UserStatus.ONLINE,user.getUsername());
         }catch (Exception e){
             System.out.println("Unexcepted Error Occurred: "+e.getMessage());
         }
@@ -81,7 +81,7 @@ public class WebSocketListener {
             userService.updateUserStatus(userId,UserStatus.OFFLINE);
             userService.updateLastSeen(userId);
             User user = userService.fetchUserByUserId(userId);
-            broadCastUserStatus(userId,UserStatus.OFFLINE,user.getUsername());
+            userService.broadCastUserStatus(userId,UserStatus.OFFLINE,user.getUsername());
         }
     }
 
@@ -99,21 +99,12 @@ public class WebSocketListener {
                 userService.updateLastSeen(userId);
                 User  user = userService.fetchUserByUserId(userId);
                 userService.updateUserStatus(userId,status);
-                broadCastUserStatus(userId,status,user.getUsername());
+                userService.broadCastUserStatus(userId,status,user.getUsername());
             }catch (Exception e){
                 System.out.println("Failed to update last Seen for user: "+userId+" error: "+e.getMessage());
             }
         }
     }
 
-    private void broadCastUserStatus(String userId,UserStatus status,String username){
-        Map<String,Object> statusUpdate = Map.of(
-                "type","USER_STATUS_UPDATE",
-                "userId",userId,
-                "username",username,
-                "status",status.toString(),
-                "lastSeen",LocalDateTime.now().toString()
-        );
-        messagingTemplate.convertAndSend("/topic/user-status", statusUpdate);
-    }
+
 }

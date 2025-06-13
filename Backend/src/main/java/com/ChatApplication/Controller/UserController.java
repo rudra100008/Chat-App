@@ -2,6 +2,7 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
+import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.ImageService;
@@ -14,10 +15,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +34,7 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final AuthUtils authUtils;
+    private final SimpMessagingTemplate messagingTemplate;
     private final ImageService imageService;
     @Value(("${file.upload.dir}"))
     private String baseUploadDir;
@@ -100,5 +108,28 @@ public class UserController {
     public ResponseEntity<List<UserDTO>> searchUser(@PathVariable(value = "userName") String userName){
         List<UserDTO> users = this.userService.searchUser(userName);
         return ResponseEntity.ok(users);
+    }
+    @MessageMapping("/userActive")
+    public void pingUserStatus(StompHeaderAccessor headerAccessor) {
+        try {
+            User user = authUtils.getLoggedInUserFromWebSocket(headerAccessor);
+            if (user == null) {
+                return;
+            }
+            System.out.println("\t\tConnected to the socket\t\t");
+            String userId = user.getUserId();
+            // Update activity timestamp
+
+
+            // Update user status and last seen in database
+            userService.updateUserStatus(userId, UserStatus.ONLINE);
+            userService.updateLastSeen(userId);
+
+            // Broadcast updated status to all clients
+            userService.broadCastUserStatus(userId, UserStatus.ONLINE, user.getUsername());
+
+        } catch (Exception e) {
+            System.out.println("Unexcepted error in WebSocketListener "+e.getMessage());
+        }
     }
 }

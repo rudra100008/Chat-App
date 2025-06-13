@@ -11,6 +11,7 @@ import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final ModelMapper mapper;
     private final AuthUtils authUtils;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final String DEFAULT_PROFILE_PICTURE = "default.png";
     private static final String NOT_FOUND_MESSAGE = " not found in the server";
@@ -218,6 +221,17 @@ public class UserServiceImpl implements UserService {
        return userRepository.findById(userId)
                .orElseThrow(()->new ResourceNotFoundException("user not found in server"));
 
+    }
+
+    public void broadCastUserStatus(String userId,UserStatus status,String username){
+        Map<String,Object> statusUpdate = Map.of(
+                "type","USER_STATUS_UPDATE",
+                "userId",userId,
+                "username",username,
+                "status",status.toString(),
+                "lastSeen",LocalDateTime.now().toString()
+        );
+        messagingTemplate.convertAndSend("/topic/user-status", statusUpdate);
     }
 
 }

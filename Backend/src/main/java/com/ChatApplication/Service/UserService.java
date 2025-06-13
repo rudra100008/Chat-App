@@ -22,5 +22,6 @@ public interface UserService {
     void updateLastSeen(String userId);
     void updateUserStatus(String userId, UserStatus status);
     User fetchUserByUserId(String userId);
+    void broadCastUserStatus(String userId,UserStatus status,String username);
 
 }
