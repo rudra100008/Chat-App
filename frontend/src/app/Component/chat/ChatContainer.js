@@ -38,7 +38,7 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
                 Authorization: `Bearer ${token}`
             },
                 JSON.stringify(messageDTO))
-            setValue('')
+                setValue('');
         } catch (error) {
             console.log("Fail to send message:\n", error);
         }

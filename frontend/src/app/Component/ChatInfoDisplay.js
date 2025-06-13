@@ -7,11 +7,15 @@ import GetUserImage from "./GetUserImage";
 import GetGroupImage from "./GetGroupImage";
 import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
+import useUserStatus from "../hooks/useUserStatus";
+import { useWebSocket } from "../context/WebSocketContext";
 
 const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
     const [activeTab, setActiveTab] = useState("overview");
     const [otherUserData,setOtherUserData] = useState({});
     const [lastSeen,setLastSeen] = useState(null);
+    const [status,setStatus] = useState(null);
+    const {stompClientRef} = useWebSocket();
 
     const handleOverView = () => {
         setActiveTab("overview");
@@ -33,7 +37,7 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
                 headers:{Authorization:`Bearer ${token}`}
             })
             console.log(response.data);
-            setLastSeen(response.data.lastSeen)
+            setLastSeen(response.data.lastSeen);
             setOtherUserData(response.data);
         }catch(error){
             const errorMessage = error?.response?.data;
@@ -62,10 +66,24 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
         }
     }
     useEffect(()=>{
-        if(chatData.chatType === "SINGLE"){
+        if(chatData.chatType !== "SINGLE") return
             fetchOtherUser();
-        }
-    },[chatData,token,userId])
+            const stompClient = stompClientRef.current;
+             const otherId = chatData.participantIds.find(pId => pId !== userId);
+             let subscription;
+             if(stompClient && stompClient.connected){
+                subscription = stompClient.subscribe("/topic/user-status",(message)=>{
+                    const payload = JSON.parse(message.body);
+                    if(payload.userId ===  otherId){
+                        setLastSeen(new Date(payload.lastSeen).toISOString())
+                        setStatus(payload.status);
+                    }
+                })
+             }
+             return ()=>{
+                if(subscription) subscription.unsubscribe();
+             }
+    },[chatData,token,userId,stompClientRef])
     return (
         <div className={style.chatInfoContainer}>
             <div className={style.leftContainer}>

@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css"; // Import the AuthProvider
 import { AuthProvider } from "./context/AuthContext";
+import { WebSocketProvider } from "./context/WebSocketContext";
 
 export default function RootLayout({ children }) {
   return (
@@ -11,7 +12,9 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <AuthProvider>
-          {children} {/* Children wrapped in AuthProvider */}
+          <WebSocketProvider>
+            {children}
+          </WebSocketProvider>
         </AuthProvider>
       </body>
     </html>

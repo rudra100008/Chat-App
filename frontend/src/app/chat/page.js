@@ -10,17 +10,20 @@ import { useAuth } from '../context/AuthContext';
 import ErrorPrompt from '../Component/ErrorPrompt';
 import SearchUser from '../Component/SearchUser';
 import ChatInfoDisplay from '../Component/ChatInfoDisplay';
+import useUserStatus from '../hooks/useUserStatus';
+import { useWebSocket } from '../context/WebSocketContext';
 
 export default function Chat() {
     const route = useRouter();
     const { token, userId, logout, isLoading } = useAuth()
     const [error, setError] = useState(null);
-    const [chatName,setChatName] = useState('');
-    const [errorMessage,setErrorMessage] = useState('');
-    const [showSearchBox,setShowSearchBox] = useState(false);
-    const [showChatInfoBox,setShowChatInfoBox] =  useState(false);
-     const[selectedChatInfo,setSelectedChatInfo] = useState(null);
-    const [otherUserDetails, setOtherUserDetails] = useState([])
+    const [chatName, setChatName] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [showSearchBox, setShowSearchBox] = useState(false);
+    const [showChatInfoBox, setShowChatInfoBox] = useState(false);
+    const [selectedChatInfo, setSelectedChatInfo] = useState(null);
+    const [otherUserDetails, setOtherUserDetails] = useState([]);
+    const { userLastSeen, userStatus,stompClientRef } = useWebSocket();
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -29,7 +32,8 @@ export default function Chat() {
     })
     const [chatId, setChatId] = useState('');
 
-    const handleChatSelect = (selectedChat,selectedChatName) => {
+    
+    const handleChatSelect = (selectedChat, selectedChatName) => {
         setChatId(selectedChat);
         setChatName(selectedChatName);
     }
@@ -64,7 +68,7 @@ export default function Chat() {
     const fetchUserDetails = async () => {
         // userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
         const otherUserIds = getOtherUserId();
-        console.log("Other user Id:\n",otherUserIds)
+        console.log("Other user Id:\n", otherUserIds)
         if (!otherUserIds) return
 
         try {
@@ -77,11 +81,11 @@ export default function Chat() {
             console.log("Error in fetchUserDetails: ", error.response.data);
             setOtherUserDetails([]);
         }
-    
+
     }
 
     useEffect(() => {
-        if(isLoading) return;
+        if (isLoading) return;
         if (!token || !userId) {
             setError("Missing required authentication information");
             setTimeout(() => {
@@ -89,11 +93,11 @@ export default function Chat() {
             }, 100)
             return;
         }
-        
-        if(chatId){
+
+        if (chatId) {
             fetchUserChatDetails();
         }
-    }, [token, userId, chatId,isLoading])
+    }, [token, userId, chatId, isLoading])
 
     useEffect(() => {
         if (userChat.chatId) {
@@ -101,14 +105,14 @@ export default function Chat() {
         }
     }, [userChat]);
 
-    const closeErrorMessage=()=>{
+    const closeErrorMessage = () => {
         setErrorMessage("");
     }
-     const handleErrorMessage=(message)=>{
+    const handleErrorMessage = (message) => {
         setErrorMessage(message);
     }
 
-    if(isLoading){
+    if (isLoading) {
         return <div className={style.loading}>Loading authentication....</div>
     }
     if (error) {
@@ -117,26 +121,26 @@ export default function Chat() {
 
     return (
         <div className={style.body}>
-            <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage}/>
+            <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage} />
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
-            {showChatInfoBox && <ChatInfoDisplay userId ={userId} chatData={selectedChatInfo} onClose={()=> setShowChatInfoBox(false)}/>}
+            {showChatInfoBox && <ChatInfoDisplay userId={userId} chatData={selectedChatInfo} onClose={() => setShowChatInfoBox(false)} />}
             <div className={style.UserChat}>
                 {/* display chat  */}
                 <UserChats
                     userId={userId}
-                    otherUserId={ getOtherUserId }
+                    otherUserId={getOtherUserId}
                     token={token}
                     onChatSelect={handleChatSelect}
                     setShowSearchBox={setShowSearchBox}
-                    setShowChatInfoBox ={setShowChatInfoBox}
+                    setShowChatInfoBox={setShowChatInfoBox}
                     setSelectedChatInfo={setSelectedChatInfo}
-                    chatId ={chatId} />
+                    chatId={chatId} />
             </div>
             <ChatContainer
                 chatId={chatId}
                 userId={userId}
                 token={token}
-                chatName = {chatName}
+                chatName={chatName}
                 setOtherUserDetails={setOtherUserDetails}
                 otherUserDetails={otherUserDetails}
                 onLogout={logout} />

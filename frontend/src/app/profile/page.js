@@ -6,10 +6,12 @@ import { useAuth } from "../context/AuthContext";
 import style from "../Style/profile.module.css"
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
+import { preconnect } from "react-dom";
+import { useWebSocket } from "../context/WebSocketContext";
 
 const Profile = () => {
     const { userId, token, isLoading, logout } = useAuth();
-
+    const { userLastSeen, userStatus,stompClientRef } = useWebSocket();
     const [user, setUser] = useState({
         username: "",
         lastSeen: "",
@@ -73,23 +75,16 @@ const Profile = () => {
     }
 
     useEffect(() => {
-        const socket = new SockJS(`${baseUrl}/server`);
-        const stompClient = Stomp.over(socket);
-
-        stompClient.connect({ Authorization: `Bearer ${token}` }, () => {
-            stompClient.subscribe(`/topic/user-status`, (message) => {
-                const userStatusUpdate = JSON.parse(message.body);
-                if (userStatusUpdate.userId === userId && userStatusUpdate.lastSeen) {
-                    setUser(prev => ({
-                        ...prev,
-                        lastSeen: new Date(userStatusUpdate.lastSeen).toISOString()
-                    }));
-                }
-            })
-        })
-
-        return () => stompClient.disconnect();
-    }, [token, userId])
+        if(!token || !userId)return;
+        console.log("User LastSeen:\n",userLastSeen,"\nUser Status:\n",userStatus);
+        if(userStatus || userLastSeen){
+        setUser((prev)=>({
+            ...prev,
+            lastSeen:userLastSeen || prev.lastSeen,
+            status:userStatus || prev.status
+        }))
+    }
+    }, [token,userLastSeen,userId,userStatus])
     useEffect(() => {
         if (token && userId) {
             fetchUser();
