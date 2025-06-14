@@ -14,6 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -167,10 +168,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User authenticate(AuthRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword())
-        );
-
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUserName(), request.getPassword())
+            );
+        }catch(BadCredentialsException e){
+            throw new BadCredentialsException("Invalid username or password");
+        }
         return userRepository.findByUsername(request.getUserName())
                 .orElseThrow(() -> new ResourceNotFoundException(request.getUserName() + NOT_FOUND_MESSAGE));
     }

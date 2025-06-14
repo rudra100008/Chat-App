@@ -11,6 +11,7 @@ import org.springframework.messaging.support.ErrorMessage;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,6 +40,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception e, WebRequest request) {
+        e.printStackTrace();
         return createErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred: " + e.getMessage(),
@@ -47,6 +49,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<?> handleAlreadyExistsException(AlreadyExistsException e, WebRequest request) {
+        e.printStackTrace();
         return createErrorResponse(
                 HttpStatus.CONFLICT,
                 e.getMessage(),
@@ -83,6 +86,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<?> handleBadCredentialsException(BadCredentialsException e,WebRequest request){
         return createErrorResponse(HttpStatus.UNAUTHORIZED,e.getMessage(),request);
+    }
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<?> handleUserNameNotFoundException(UsernameNotFoundException e,WebRequest request){
+        return createErrorResponse(HttpStatus.NOT_FOUND,e.getMessage(),request);
     }
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException e,WebRequest request){
