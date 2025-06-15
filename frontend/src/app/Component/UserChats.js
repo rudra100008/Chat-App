@@ -9,20 +9,25 @@ import { useRouter } from "next/navigation";
 import { fetchUserChatsWithNames } from "../services/chatServices";
 import GetGroupImage from "./GetGroupImage";
 import ChatInfoDisplay from "./ChatInfoDisplay";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import baseUrl from "../baseUrl";
+import { useAuth } from "../context/AuthContext";
 
 
-export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox,setShowChatInfoBox,setSelectedChatInfo }) {
-    const router = useRouter()
+export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox, setShowChatInfoBox, setSelectedChatInfo }) {
+    const router = useRouter();
+    const {logout} = useAuth();
     const [chatInfo, setChatInfo] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
     const [chatNames, setChatNames] = useState({});
 
-    const loadUserChats = async () => {
+    const loadUserChats =  async () => {
         if (!userId || !token) return;
 
         try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token);
+            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, router,logout);
             setChatInfo(chats);
             setChatNames(chatNames);
         } catch (error) {
@@ -51,14 +56,14 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
     }
 
     const handleChatContainerClick = (chatDetails) => {
-        setSelectedChatInfo(prevChatDetails=>{
+        setSelectedChatInfo(prevChatDetails => {
             const isSame = prevChatDetails?.chatId === chatDetails;
-            if(isSame){
+            if (isSame) {
                 setShowChatInfoBox(false);
                 return null;
-            }else{
+            } else {
                 setShowChatInfoBox(true);
-                return {...chatDetails,chatName: chatNames[chatDetails.chatId]};
+                return { ...chatDetails, chatName: chatNames[chatDetails.chatId] };
             }
         });
     }
@@ -66,6 +71,33 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
         setShowSearchBox(prev => !prev);
     }
 
+    useEffect(()=>{
+        const client = new Client({
+            webSocketFactory : ()=> new SockJS(`${baseUrl}/server`),
+            connectHeaders: {
+                Authorization:  `Bearer ${token}`
+            },
+            onConnect : ()=>{
+                console.log("WebSocketed connected for chat updates");
+                client.subscribe(`/user/${userId}/queue/chat-update`,(message)=>{
+                    const payload = JSON.parse(message.body);
+                    setChatInfo(prev =>(
+                        prev.map(chat=>
+                            chat.chatId === payload.chatId ? {...chat,...payload} : chat
+                        )
+                    ))
+                })
+            }
+        });
+        client.activate();
+
+        return ()=>{
+            if(client && client.active){
+                client.deactivate();
+                console.log("WebSocket disconnected.");
+            }
+        }
+    },[userId,token])
     useEffect(() => {
         if (!userId || !token) {
             router.push("/")
@@ -85,19 +117,19 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                         <>
                             <div className={style.ShowBox}>
                                 <Link href="/createChat">
-                                   <div><FontAwesomeIcon icon={faUser} /></div>
+                                    <div><FontAwesomeIcon icon={faUser} /></div>
                                     New Chat
                                 </Link>
                                 <Link href="/groupChat">
-                                <div><FontAwesomeIcon icon={faUserGroup} /></div>
+                                    <div><FontAwesomeIcon icon={faUserGroup} /></div>
                                     New Group
                                 </Link>
                                 <Link href="/setting">
-                                <div><FontAwesomeIcon icon={faGear} /></div>
+                                    <div><FontAwesomeIcon icon={faGear} /></div>
                                     Setting
                                 </Link>
                                 <Link href="/profile">
-                                <div><FontAwesomeIcon icon={faCircleUser} /></div>
+                                    <div><FontAwesomeIcon icon={faCircleUser} /></div>
                                     Profile
                                 </Link>
                             </div>
@@ -113,13 +145,24 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                                         className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
                                         key={chat.chatId}
                                         onClick={() => handleChatClick(chat.chatId)}>
-                                            <div onClick={(e)=>{
-                                                e.stopPropagation();
-                                                handleChatContainerClick(chat);
-                                            }}> 
-                                                 <GetUserImage userId={getOtherUser(chat)} />
-                                            </div>
-                                        <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                        <div onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleChatContainerClick(chat);
+                                        }}>
+                                            <GetUserImage userId={getOtherUser(chat)} />
+                                        </div>
+                                        <div>
+                                            <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                            {
+                                                chat.lastMessage &&
+                                               ( <p className={style.lastMessage}>
+                                                    {chat.lastMessage.length <= 20 ?
+                                                     chat.lastMessage
+                                                    : chat.lastMessage.slice(0,20) + "...."
+                                                    }
+                                                </p>)
+                                            }
+                                        </div>
                                     </div>
                                 ) :
                                 (
@@ -127,13 +170,24 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                                         key={chat.chatId}
                                         onClick={() => handleChatClick(chat.chatId)}
                                     >
-                                        <div onClick={(e)=>{
+                                        <div onClick={(e) => {
                                             e.stopPropagation();
                                             handleChatContainerClick(chat);
                                         }}>
-                                            <GetGroupImage chatId={chat.chatId}/>
+                                            <GetGroupImage chatId={chat.chatId} />
                                         </div>
-                                        <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                        <div>
+                                            <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                            {
+                                                chat.lastMessage &&
+                                               ( <p className={style.lastMessage}>
+                                                    {chat.lastMessage.length < 50 ?
+                                                     chat.lastMessage
+                                                    : chat.lastMessage.slice(0,50) + "...."
+                                                    }
+                                                </p>)
+                                            }
+                                        </div>
                                     </div>
                                 )
                         ))}

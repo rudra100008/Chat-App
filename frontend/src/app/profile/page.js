@@ -85,6 +85,7 @@ const Profile = () => {
         }))
     }
     }, [token,userLastSeen,userId,userStatus])
+    
     useEffect(() => {
         if (token && userId) {
             fetchUser();

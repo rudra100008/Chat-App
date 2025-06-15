@@ -1,6 +1,4 @@
 // services/chatService.js
-
-
 import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 
@@ -47,7 +45,7 @@ export const fetchChatNames = async (chats, userId, token) => {
  * @param {string} token - Authorization token
  * @returns {Array} Array of chat objects
  */
-export const fetchUserChats = async (userId, token) => {
+export const fetchUserChats = async (userId, token,router,logout) => {
     if (!userId || !token) {
         throw new Error("User ID and token are required");
     }
@@ -63,6 +61,9 @@ export const fetchUserChats = async (userId, token) => {
         return response.data;
     } catch (error) {
         console.log("Error from fetchUserChats:", error.response?.data || error.message);
+        if(error.response.status === 401){
+            logout();
+        }
         throw error; // Re-throw to let the component handle it
     }
 };
@@ -73,9 +74,9 @@ export const fetchUserChats = async (userId, token) => {
  * @param {string} token - Authorization token
  * @returns {Object} Object containing chats array and chatNames object
  */
-export const fetchUserChatsWithNames = async (userId, token) => {
+export const fetchUserChatsWithNames = async (userId, token,router,logout) => {
     try {
-        const chats = await fetchUserChats(userId, token);
+        const chats = await fetchUserChats(userId, token,router,logout);
         const chatNames = await fetchChatNames(chats, userId, token);
 
         return {

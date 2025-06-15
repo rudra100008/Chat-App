@@ -23,7 +23,10 @@ export default function LogInPage() {
 
     // Check if user is already authenticated
     useEffect(() => {
-        if (!isLoading && isAuthenticated && isInitialized) {
+        if(isLoading || !isInitialized){
+            router.push("/")
+        }
+        if (isAuthenticated) {
             router.push("/chat");
         }
     }, [isLoading, isAuthenticated, router,isInitialized]);
@@ -31,7 +34,6 @@ export default function LogInPage() {
     const handleLoginForm = async () => {
         setLocalLoading(true);
         setLoginError('');
-        
         try {
             const response = await axiosInterceptor.post(
                 `${baseUrl}/auth/login`, 
@@ -42,6 +44,7 @@ export default function LogInPage() {
             if (response?.data) {
                 const { token, user: { userId }, isTokenValid } = response.data;
                 login(userId, token);
+                console.log("userId:",userId)
                 localStorage.setItem("isTokenValid", isTokenValid);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
@@ -50,7 +53,7 @@ export default function LogInPage() {
                 setLoginError("No data received from the server");
             }
         } catch (error) {
-            const message = error.response?.data || "Unknown Error";
+            const message = error.response?.data?.message || "Unknown Error";
             if (error.response?.status === 401) {
                 setLoginError("Invalid username or password");
             } else if (error.response?.status === 500) {
@@ -68,7 +71,8 @@ export default function LogInPage() {
         handleLoginForm();
     }
 
-    // // Show loading while checking authentication status
+
+
     if (!isInitialized || isLoading ) {
         return (<div className={Style.Container}>Checking authentication status...</div>);
     }

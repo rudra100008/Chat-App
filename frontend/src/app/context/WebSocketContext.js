@@ -17,37 +17,13 @@ export const WebSocketProvider = ({ children }) => {
 
     const connectWebSocket = useCallback(() => {
         if (!token || !userId) return;
-
-        //     const socket = new SockJS(`${baseUrl}/server`);
-        //     const stomp = Stomp.over(socket);
-        //     stompClientRef.current = stomp;
-
-        //     stomp.connect(
-        //         { Authorization: `Bearer ${token}`, userId }, // headers for connect
-        //         () => {
-        //             console.log(" WebSocket connected");
-        //             stomp.subscribe("/topic/user-status", (message) => {
-        //                 const userStatusPayload = JSON.parse(message.body);
-        //                 if (userStatusPayload.userId === userId) {
-        //                     setUserLastSeen(new Date(userStatusPayload.lastSeen).toISOString());
-        //                     setUserStatus(userStatusPayload.status);
-        //                 }
-        //             });
-        //         },
-        //         (error) => {
-        //             console.error(" WebSocket connection error:", error);
-        //         }
-        //     );
         const client = new Client({
             webSocketFactory: () => new SockJS(`${baseUrl}/server`),
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
             connectHeaders: {
                 Authorization: `Bearer ${token}`
             },
             onConnect: () => {
-                console.log("WebSocket connected");
+                console.log("WebSocket connected in WebSocket ");
                 client.subscribe('/topic/user-status', (message) => {
                     const userUpdate = JSON.parse(message.body);
                     if (userUpdate.userId === userId) {

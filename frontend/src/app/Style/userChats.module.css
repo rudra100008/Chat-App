@@ -213,3 +213,14 @@
     opacity: 1;
     color:#0050b3;
 }
+
+.lastMessage{
+    margin-left: 16px;
+    font-size: 0.75rem;
+    color: rgb(175, 173, 173);
+}
+.active .lastMessage{
+    margin-left: 16px;
+    font-size: 0.75rem;
+    color: #0050b3;
+}

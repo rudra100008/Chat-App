@@ -9,12 +9,12 @@ import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 import useUserStatus from "../hooks/useUserStatus";
 import { useWebSocket } from "../context/WebSocketContext";
+import SingleChat from "./ChatInfoDisplay/SingleChat";
 
-const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
+
+const ChatInfoDisplay = ({ userId, token, chatData, onClose,checkOtherUserStatus,lastSeen,status,setUserStatusMap }) => {
     const [activeTab, setActiveTab] = useState("overview");
     const [otherUserData,setOtherUserData] = useState({});
-    const [lastSeen,setLastSeen] = useState(null);
-    const [status,setStatus] = useState(null);
     const {stompClientRef} = useWebSocket();
 
     const handleOverView = () => {
@@ -37,7 +37,13 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
                 headers:{Authorization:`Bearer ${token}`}
             })
             console.log(response.data);
-            setLastSeen(response.data.lastSeen);
+            setUserStatusMap(prev=>({
+                ...prev,
+                [otherUserId]:{
+                    lastSeen: response.data.lastSeen,
+                    status:response.data.status
+                }
+            }))
             setOtherUserData(response.data);
         }catch(error){
             const errorMessage = error?.response?.data;
@@ -46,6 +52,7 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
     }
 
     const formatLastSeen = (lastSeen) => {
+        if(!lastSeen) return;
         const lastSeenDate = new Date(lastSeen);
         const today = new Date();
 
@@ -66,23 +73,14 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
         }
     }
     useEffect(()=>{
-        if(chatData.chatType !== "SINGLE") return
+        if(chatData.chatType !== "SINGLE") return;
             fetchOtherUser();
-            const stompClient = stompClientRef.current;
-             const otherId = chatData.participantIds.find(pId => pId !== userId);
-             let subscription;
-             if(stompClient && stompClient.connected){
-                subscription = stompClient.subscribe("/topic/user-status",(message)=>{
-                    const payload = JSON.parse(message.body);
-                    if(payload.userId ===  otherId){
-                        setLastSeen(new Date(payload.lastSeen).toISOString())
-                        setStatus(payload.status);
-                    }
-                })
-             }
-             return ()=>{
-                if(subscription) subscription.unsubscribe();
-             }
+             const otherId = chatData.participantIds.find(pid => pid !== userId);
+            console.log("LastSeen:\n",lastSeen,"\nStatus:\n",status)
+            const unsubscribe = checkOtherUserStatus(otherId);
+           return ()=>{
+            unsubscribe && unsubscribe();
+           }
     },[chatData,token,userId,stompClientRef])
     return (
         <div className={style.chatInfoContainer}>
@@ -107,26 +105,14 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose }) => {
                         {
                             chatData.chatType === "SINGLE" ?
                             (
-                                <div className={style.infoDisplayContainer}>
-                                    <div>
-                                         <GetUserImage userId={otherUserId(chatData)} size={140} />
-                                    </div>
-                                    <p className={style.chatName}>{chatData.chatName}</p>
-                                    <div className={style.chatInfoDisplay}>
-                                        <FontAwesomeIcon icon={faPhone}/>
-                                        <p>{otherUserData?.phoneNumber || "Unkown PhoneNumber"}</p>
-                                    </div>
-                                    <div className={style.chatInfoDisplay}>
-                                        <FontAwesomeIcon icon={faEnvelope}/>
-                                        <p>{otherUserData?.email || "Unkown email"}</p>
-                                    </div>
-
-                                    <div className={style.chatInfoDisplay}>
-                                        {/* <FontAwesomeIcon icon={}/> */}
-                                        <p>{formatLastSeen(lastSeen)}</p>
-                                    </div>
-
-                                </div>
+                                <SingleChat 
+                                otherUserId={otherUserId}
+                                otherUserData={otherUserData}
+                                lastSeen={lastSeen}
+                                status={status}
+                                formatLastSeen={formatLastSeen}
+                                chatData ={chatData}
+                                />
                             ):
                             (
                                 <div className={style.infoDisplayContainer}>

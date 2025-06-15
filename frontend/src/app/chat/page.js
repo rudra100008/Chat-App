@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import style from '../Style/chat.module.css'
 import baseUrl from '../baseUrl';
 import axiosInterceptor from '../Component/Interceptor';
@@ -15,7 +15,7 @@ import { useWebSocket } from '../context/WebSocketContext';
 
 export default function Chat() {
     const route = useRouter();
-    const { token, userId, logout, isLoading } = useAuth()
+    const { token, userId, logout, isLoading,isInitialized } = useAuth()
     const [error, setError] = useState(null);
     const [chatName, setChatName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -23,7 +23,8 @@ export default function Chat() {
     const [showChatInfoBox, setShowChatInfoBox] = useState(false);
     const [selectedChatInfo, setSelectedChatInfo] = useState(null);
     const [otherUserDetails, setOtherUserDetails] = useState([]);
-    const { userLastSeen, userStatus,stompClientRef } = useWebSocket();
+    const [userStatusMap,setUserStatusMap] = useState({});
+    const {stompClientRef} = useWebSocket();
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -32,7 +33,36 @@ export default function Chat() {
     })
     const [chatId, setChatId] = useState('');
 
-    
+    // from selectedChatInfo  which is set during when clicked in the image of the chat
+    const otherUserId = () =>{
+        return selectedChatInfo.participantIds.find(pId=> pId !== userId);
+    }
+    const checkOtherUserStatus = useCallback((otherId) => {
+        if(!selectedChatInfo && !selectedChatInfo.participantIds) return;
+        const stompClient = stompClientRef.current;
+        // const otherId = selectedChatInfo.participantIds.find(pid => pid !== userId);
+        console.log("OtherUserId:\n",otherId)
+        let subscription;
+        if (stompClient && stompClient.connected) {
+            subscription = stompClient.subscribe('/topic/user-status', (message) => {
+                const payload = JSON.parse(message.body);
+                console.log("Payload:\n",payload);
+                if (payload.userId === otherId) {
+                   setUserStatusMap(prev=>({
+                    ...prev,
+                    [otherId]:{
+                        status:payload.status,
+                        lastSeen:payload.lastSeen
+                    }
+                   }))
+                }
+            })
+        }
+        return () => {
+            if (subscription) subscription.unsubscribe();
+        }
+    }, [selectedChatInfo, userId, stompClientRef])
+
     const handleChatSelect = (selectedChat, selectedChatName) => {
         setChatId(selectedChat);
         setChatName(selectedChatName);
@@ -112,7 +142,7 @@ export default function Chat() {
         setErrorMessage(message);
     }
 
-    if (isLoading) {
+    if (!isInitialized || isLoading ) {
         return <div className={style.loading}>Loading authentication....</div>
     }
     if (error) {
@@ -123,7 +153,14 @@ export default function Chat() {
         <div className={style.body}>
             <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage} />
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
-            {showChatInfoBox && <ChatInfoDisplay userId={userId} chatData={selectedChatInfo} onClose={() => setShowChatInfoBox(false)} />}
+            {showChatInfoBox && <ChatInfoDisplay
+                lastSeen ={userStatusMap[otherUserId()]?.lastSeen || null}
+                status = {userStatusMap[otherUserId()]?.status || null}
+                setUserStatusMap = {setUserStatusMap}
+                userId={userId}
+                checkOtherUserStatus={checkOtherUserStatus}
+                chatData={selectedChatInfo}
+                onClose={() => setShowChatInfoBox(false)} />}
             <div className={style.UserChat}>
                 {/* display chat  */}
                 <UserChats

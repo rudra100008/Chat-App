@@ -1,44 +1,99 @@
 "use client"
-import { Stomp } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
 import baseUrl from "../baseUrl";
 
-const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
+const useWebSocket = ({ userId, chatId, token, messages, setMessages,router }) => {
     const [connected, setConnected] = useState(false);
-    const [stompClient, setStompClient] = useState(null);
     const [error, setError] = useState('');
     const currentChatIdRef = useRef(null);
+    const subscriptionRef = useRef(null);
+    const chatStompClientRef = useRef(null); // Separate ref for chat client
 
-    const disconnectWebSocket = useCallback(()=>{
-         if (stompClient && stompClient.connected) {
-                stompClient.disconnect()
-            }
-        setStompClient(null);
-        setConnected(false);
-    },[])
+    const disconnectWebSocket = useCallback(() => {
+        // Unsubscribe first
+        if (subscriptionRef.current) {
+            subscriptionRef.current.unsubscribe();
+            subscriptionRef.current = null;
+        }
+        
+        // Disconnect using modern Client
+        if (chatStompClientRef.current && chatStompClientRef.current.active) {
+            chatStompClientRef.current.deactivate(() => {
+                chatStompClientRef.current = null;
+                setConnected(false);
+            });
+        } else {
+            setConnected(false);
+        }
+    }, []);
+
+       const handleTokenExpired = useCallback(() => {
+        console.log("Token expired, logging out...");
+        // Clear token and user data
+        localStorage.clear();
+        // Disconnect websocket
+        disconnectWebSocket();
+        // Redirect to login
+        if (router && router.push) {
+            router.push("/");
+        } else {
+            // Fallback if router is not available
+            window.location.href = "/";
+        }
+    }, [router, disconnectWebSocket]);
+
     const connectWebSocket = useCallback(() => {
-        if(!userId || !chatId || !token) return;
-            const client = Stomp.over(() => new SockJS(`${baseUrl}/server`));
-            const headers = { 'Authorization': `Bearer ${token}`,'userId':userId }
-            client.connect(headers, () => {
+        if (!userId || !chatId || !token) {
+            console.log("Missing params:", { userId, chatId, token: !!token });
+            return;
+        }
+        
+        console.log("Connecting chat WebSocket for chatId:", chatId);
+        
+        const client = new Client({
+            webSocketFactory: () => new SockJS(`${baseUrl}/server`),
+            connectHeaders: {
+                Authorization: `Bearer ${token}`,
+                userId: userId
+            },
+            onConnect: () => {
+                console.log("Chat WebSocket connected for chat:", chatId);
+                console.log("Current chatId ref:", currentChatIdRef.current);
+                
+                // Check if we're still connecting to the right chat
                 if (currentChatIdRef.current !== chatId) {
-                client.disconnect();
-                return;
-            }
+                    console.log("Chat changed during connection, disconnecting");
+                    client.deactivate();
+                    return;
+                }
+                
                 setConnected(true);
-                setStompClient(client);
-                client.subscribe(`/private/chat/${chatId}`, (message) => {
-                    console.log("Received message:", message.body); // More detailed logging
+                chatStompClientRef.current = client;
+                
+                console.log("Chat client set and active:", client.active);
+                
+                subscriptionRef.current = client.subscribe(`/private/chat/${chatId}`, (message) => {
+                    console.log("=== CHAT MESSAGE RECEIVED ===");
+                    console.log("Raw message:", message);
+                    console.log("Message body:", message.body);
+                    console.log("================================");
+                    
                     try {
                         const receivedMessage = JSON.parse(message.body);
+                        console.log("Parsed message:", receivedMessage);
+                        
                         setMessages((prevMessages) => {
-                            // Check if message already exists
-                            const exists = prevMessages.some(msg => msg.messageId === receivedMessage.messageId);
+                            const exists = prevMessages.some(msg => 
+                                msg.messageId === receivedMessage.messageId
+                            );
+                            
                             if (exists) {
                                 console.log("Message already exists, not adding duplicate");
                                 return prevMessages;
                             }
+                            
                             console.log("Adding new message to state");
                             return [...prevMessages, receivedMessage];
                         });
@@ -46,18 +101,46 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
                         console.error("Error processing received message:", error);
                     }
                 });
-
-            }, (error) => {
-               if (currentChatIdRef.current === chatId) {
-                console.error("useWebSocket: Connection error for chatId:", chatId, error);
+                
+                console.log("Subscribed to chat:", chatId);
+            },
+            onStompError: (frame) => {
+                console.error("Chat STOMP Error for chatId:", chatId, frame);
+                 const errorMessage = frame.headers?.message || '';
+                
+                // Check for various JWT expired patterns
+                if (errorMessage.includes("JWT") && 
+                    (errorMessage.includes("expired") || 
+                     errorMessage.includes("Jwt expired") ||
+                     errorMessage.includes("JWT expired"))) {
+                    console.log("JWT token expired, handling logout...");
+                    handleTokenExpired();
+                    return;
+                }
+                
+                // Check for other authentication errors
+                if (errorMessage.includes("Unauthorized") || 
+                    errorMessage.includes("Authentication") ||
+                    errorMessage.includes("Invalid token")) {
+                    console.log("Authentication error, handling logout...");
+                    handleTokenExpired();
+                    return;
+                }
                 setConnected(false);
-                setError("Failed to connect to server");
+                setError("Failed to connect to chat server");
+            },
+            onWebSocketError: (error) => {
+                console.error("Chat WebSocket Error:", error);
+                setConnected(false);
+                setError("Chat WebSocket connection failed");
             }
-            })
-            return client;
-        },[userId,token,chatId,setMessages])
+        });
+        
+        client.activate();
 
-   useEffect(() => {
+    }, [userId, token, chatId, setMessages]);
+
+    useEffect(() => {
         if (!chatId) {
             disconnectWebSocket();
             currentChatIdRef.current = null;
@@ -65,7 +148,7 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
         }
 
         if (chatId !== currentChatIdRef.current) {
-            console.log("useWebSocket: ChatId changed from", currentChatIdRef.current, "to", chatId);
+            console.log("ChatId changed from", currentChatIdRef.current, "to", chatId);
             
             // Disconnect from previous chat
             disconnectWebSocket();
@@ -81,7 +164,13 @@ const useWebSocket = ({ userId, chatId, token, messages, setMessages }) => {
             disconnectWebSocket();
         };
     }, [chatId, connectWebSocket, disconnectWebSocket]);
-    return { connected, stompClient, error }
+
+    return { 
+        connected, 
+        stompClient: chatStompClientRef.current, 
+        error,
+        chatStompClientRef // Return the ref for sending messages
+    };
 }
 
 export default useWebSocket;
