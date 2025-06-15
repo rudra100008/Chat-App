@@ -1,11 +1,13 @@
 package com.ChatApplication.Config;
 
 import com.ChatApplication.Security.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -70,7 +72,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                     logger.warn("Failed to extract username from JWT token" );
                     throw new AccessDeniedException("Unauthorized WebSocket connection" );
                 }
-            } catch (Exception e) {
+            }catch (ExpiredJwtException e){
+                throw new MessagingException("Jwt expired: "+e.getMessage());
+            }
+            catch (Exception e) {
                 logger.error("Error during WebSocket authentication", e);
                 throw new AccessDeniedException("WebSocket authentication failed" );
             }

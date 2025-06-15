@@ -1,5 +1,6 @@
 package com.ChatApplication.ServiceImpl;
 
+import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.Message;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class MessageServiceImpl implements MessageService {
     private final UserRepository userRepository;
     private final ChatRepository chatRepository;
     private final AuthUtils authUtils;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     private void validateChatAccess(String chatId,User user){
@@ -128,7 +131,14 @@ public class MessageServiceImpl implements MessageService {
 
         chat.setLastMessage(content);
         chat.setLastMessageTime(LocalDateTime.now());
-        chatRepository.save(chat);
+        Chat updatedChat = chatRepository.save(chat);
+        for(User participant : chat.getParticipants()){
+            messagingTemplate.convertAndSendToUser(
+                    participant.getUserId(),
+                    "/queue/chat-update",
+                    modelMapper.map(updatedChat, ChatDTO.class)
+            );
+        }
         return modelMapper.map(savedMessage, MessageDTO.class);
     }
 
@@ -186,10 +196,10 @@ public class MessageServiceImpl implements MessageService {
 
     private void validateBlockStatus(Chat chat,String senderId){
         String userId = getOtherUserId(chat.getParticipants(),senderId);
-        if(chat.getBlockedBy().contains(senderId)){
+        if(chat.getBlockedBy() != null && chat.getBlockedBy().contains(senderId)){
             throw new ForbiddenException("You have blocked this user.Unblock to send message");
         }
-        if(chat.getBlockedBy().contains(userId)){
+        if(chat.getBlockedBy() != null && chat.getBlockedBy().contains(userId)){
             throw new ForbiddenException("You are blocked by the user. You cannot send messages");
         }
     }

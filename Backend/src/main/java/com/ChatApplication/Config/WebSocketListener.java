@@ -85,7 +85,7 @@ public class WebSocketListener {
         }
     }
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 10000)
     public void updateActiveUser(){
         for(String userId:userSessionMap.keySet()){
             try{
