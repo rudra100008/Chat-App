@@ -40,13 +40,10 @@ export default function Chat() {
     const checkOtherUserStatus = useCallback((otherId) => {
         if(!selectedChatInfo && !selectedChatInfo.participantIds) return;
         const stompClient = stompClientRef.current;
-        // const otherId = selectedChatInfo.participantIds.find(pid => pid !== userId);
-        console.log("OtherUserId:\n",otherId)
         let subscription;
         if (stompClient && stompClient.connected) {
             subscription = stompClient.subscribe('/topic/user-status', (message) => {
                 const payload = JSON.parse(message.body);
-                console.log("Payload:\n",payload);
                 if (payload.userId === otherId) {
                    setUserStatusMap(prev=>({
                     ...prev,
@@ -153,7 +150,8 @@ export default function Chat() {
         <div className={style.body}>
             <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage} />
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
-            {showChatInfoBox && <ChatInfoDisplay
+            {showChatInfoBox && selectedChatInfo &&
+            <ChatInfoDisplay
                 lastSeen ={userStatusMap[otherUserId()]?.lastSeen || null}
                 status = {userStatusMap[otherUserId()]?.status || null}
                 setUserStatusMap = {setUserStatusMap}
@@ -171,6 +169,7 @@ export default function Chat() {
                     setShowSearchBox={setShowSearchBox}
                     setShowChatInfoBox={setShowChatInfoBox}
                     setSelectedChatInfo={setSelectedChatInfo}
+                    selectedChatInfo ={selectedChatInfo}
                     chatId={chatId} />
             </div>
             <ChatContainer

@@ -15,19 +15,27 @@ import baseUrl from "../baseUrl";
 import { useAuth } from "../context/AuthContext";
 
 
-export default function UserChats({ userId, token, onChatSelect, otherUserId, setShowSearchBox, setShowChatInfoBox, setSelectedChatInfo }) {
+export default function UserChats({
+    userId,
+    token,
+    onChatSelect,
+    otherUserId,
+    setShowSearchBox,
+    setShowChatInfoBox,
+     selectedChatInfo,
+    setSelectedChatInfo }) {
     const router = useRouter();
-    const {logout} = useAuth();
+    const { logout } = useAuth();
     const [chatInfo, setChatInfo] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
     const [chatNames, setChatNames] = useState({});
 
-    const loadUserChats =  async () => {
+    const loadUserChats = async () => {
         if (!userId || !token) return;
 
         try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, router,logout);
+            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, router, logout);
             setChatInfo(chats);
             setChatNames(chatNames);
         } catch (error) {
@@ -56,34 +64,36 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
     }
 
     const handleChatContainerClick = (chatDetails) => {
-        setSelectedChatInfo(prevChatDetails => {
-            const isSame = prevChatDetails?.chatId === chatDetails;
-            if (isSame) {
-                setShowChatInfoBox(false);
-                return null;
-            } else {
-                setShowChatInfoBox(true);
-                return { ...chatDetails, chatName: chatNames[chatDetails.chatId] };
-            }
-        });
+        console.log("handleChatContainerClicked in UserChats.js");
+        console.log("ChatDetails from UserChats:\n",chatDetails)
+        const isSame =  selectedChatInfo?.chatId === chatDetails.chatId;
+        if(isSame){
+            setSelectedChatInfo(null);
+            setShowChatInfoBox(false);
+        }else{
+            setShowChatInfoBox(true);
+            setSelectedChatInfo({
+                ...chatDetails, chatName:chatNames[chatDetails.chatId]
+            })
+        }
     }
     const handleSearchClick = () => {
         setShowSearchBox(prev => !prev);
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         const client = new Client({
-            webSocketFactory : ()=> new SockJS(`${baseUrl}/server`),
+            webSocketFactory: () => new SockJS(`${baseUrl}/server`),
             connectHeaders: {
-                Authorization:  `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             },
-            onConnect : ()=>{
+            onConnect: () => {
                 console.log("WebSocketed connected for chat updates");
-                client.subscribe(`/user/${userId}/queue/chat-update`,(message)=>{
+                client.subscribe(`/user/${userId}/queue/chat-update`, (message) => {
                     const payload = JSON.parse(message.body);
-                    setChatInfo(prev =>(
-                        prev.map(chat=>
-                            chat.chatId === payload.chatId ? {...chat,...payload} : chat
+                    setChatInfo(prev => (
+                        prev.map(chat =>
+                            chat.chatId === payload.chatId ? { ...chat, ...payload } : chat
                         )
                     ))
                 })
@@ -91,13 +101,13 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
         });
         client.activate();
 
-        return ()=>{
-            if(client && client.active){
+        return () => {
+            if (client && client.active) {
                 client.deactivate();
                 console.log("WebSocket disconnected.");
             }
         }
-    },[userId,token])
+    }, [userId, token])
     useEffect(() => {
         if (!userId || !token) {
             router.push("/")
@@ -155,10 +165,10 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                                             <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
                                             {
                                                 chat.lastMessage &&
-                                               ( <p className={style.lastMessage}>
+                                                (<p className={style.lastMessage}>
                                                     {chat.lastMessage.length <= 20 ?
-                                                     chat.lastMessage
-                                                    : chat.lastMessage.slice(0,20) + "...."
+                                                        chat.lastMessage
+                                                        : chat.lastMessage.slice(0, 20) + "...."
                                                     }
                                                 </p>)
                                             }
@@ -180,10 +190,10 @@ export default function UserChats({ userId, token, onChatSelect, otherUserId, se
                                             <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
                                             {
                                                 chat.lastMessage &&
-                                               ( <p className={style.lastMessage}>
+                                                (<p className={style.lastMessage}>
                                                     {chat.lastMessage.length < 50 ?
-                                                     chat.lastMessage
-                                                    : chat.lastMessage.slice(0,50) + "...."
+                                                        chat.lastMessage
+                                                        : chat.lastMessage.slice(0, 50) + "...."
                                                     }
                                                 </p>)
                                             }
