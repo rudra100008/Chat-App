@@ -40,9 +40,8 @@ export default function Chat() {
     const checkOtherUserStatus = useCallback((otherId) => {
         if(!selectedChatInfo && !selectedChatInfo.participantIds) return;
         const stompClient = stompClientRef.current;
-        let subscription;
         if (stompClient && stompClient.connected) {
-            subscription = stompClient.subscribe('/topic/user-status', (message) => {
+            return stompClient.subscribe('/topic/user-status', (message) => {
                 const payload = JSON.parse(message.body);
                 if (payload.userId === otherId) {
                    setUserStatusMap(prev=>({
@@ -55,9 +54,7 @@ export default function Chat() {
                 }
             })
         }
-        return () => {
-            if (subscription) subscription.unsubscribe();
-        }
+        return null;
     }, [selectedChatInfo, userId, stompClientRef])
 
     const handleChatSelect = (selectedChat, selectedChatName) => {
@@ -70,7 +67,7 @@ export default function Chat() {
             const response = await axiosInterceptor.get(`${baseUrl}/api/chats/chatDetails/${chatId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
-            console.log("Data in /chat: ", response.data);
+            // console.log("Data in /chat: ", response.data);
             const chatDetails = response.data
             setUserChat(chatDetails);
         } catch (error) {

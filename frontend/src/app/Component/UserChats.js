@@ -13,6 +13,7 @@ import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import baseUrl from "../baseUrl";
 import { useAuth } from "../context/AuthContext";
+import { useWebSocket } from "../context/WebSocketContext";
 
 
 export default function UserChats({
@@ -26,7 +27,7 @@ export default function UserChats({
     setSelectedChatInfo }) {
     const router = useRouter();
     const { logout } = useAuth();
-    const [chatInfo, setChatInfo] = useState([]);
+    const { chatInfo, setChatInfo } = useWebSocket();
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
     const [chatNames, setChatNames] = useState({});
@@ -40,9 +41,7 @@ export default function UserChats({
             setChatNames(chatNames);
         } catch (error) {
             if (error.response && error.response.status === 403) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('userId');
-                router.push("/");
+                logout();
             } else {
                 console.log("ERROR from UserChats:", error.response?.message || error.message);
             }
@@ -81,33 +80,35 @@ export default function UserChats({
         setShowSearchBox(prev => !prev);
     }
 
-    useEffect(() => {
-        const client = new Client({
-            webSocketFactory: () => new SockJS(`${baseUrl}/server`),
-            connectHeaders: {
-                Authorization: `Bearer ${token}`
-            },
-            onConnect: () => {
-                console.log("WebSocketed connected for chat updates");
-                client.subscribe(`/user/${userId}/queue/chat-update`, (message) => {
-                    const payload = JSON.parse(message.body);
-                    setChatInfo(prev => (
-                        prev.map(chat =>
-                            chat.chatId === payload.chatId ? { ...chat, ...payload } : chat
-                        )
-                    ))
-                })
-            }
-        });
-        client.activate();
+    // useEffect(() => {
+    //     const client = new Client({
+    //         webSocketFactory: () => new SockJS(`${baseUrl}/server`),
+    //         connectHeaders: {
+    //             Authorization: `Bearer ${token}`
+    //         },
+    //         onConnect: () => {
+    //             console.log("WebSocketed connected for chat updates");
+    //             client.subscribe(`/user/${userId}/queue/chat-update`, (message) => {
+    //                 const payload = JSON.parse(message.body);
+    //                 setChatInfo(prev => (
+    //                     prev.map(chat =>
+    //                         chat.chatId === payload.chatId ? { ...chat, ...payload } : chat
+    //                     )
+    //                 ))
+    //             })
+    //         }
+    //     });
+    //     client.activate();
 
-        return () => {
-            if (client && client.active) {
-                client.deactivate();
-                console.log("WebSocket disconnected.");
-            }
-        }
-    }, [userId, token])
+    //     return () => {
+    //         if (client && client.active) {
+    //             client.deactivate();
+    //             console.log("WebSocket disconnected.");
+    //         }
+    //     }
+    // }, [userId, token])
+
+    
     useEffect(() => {
         if (!userId || !token) {
             router.push("/")

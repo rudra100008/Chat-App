@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
     const [userId, setUserId] = useState('');
     const [token, setToken] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const [isInitialized, setIsIntialized] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             }
         }
         setIsLoading(false);
-        setIsIntialized(true);
+        setIsInitialized(true);
 
     }, [])
 

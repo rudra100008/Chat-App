@@ -23,11 +23,9 @@ export default function LogInPage() {
 
     // Check if user is already authenticated
     useEffect(() => {
-        if(isLoading || !isInitialized){
-            router.push("/")
-        }
+        if(!isInitialized)return
         if (isAuthenticated) {
-            router.push("/chat");
+            router.replace("/chat");
         }
     }, [isLoading, isAuthenticated, router,isInitialized]);
 
@@ -73,14 +71,17 @@ export default function LogInPage() {
 
 
 
-    if (!isInitialized || isLoading ) {
-        return (<div className={Style.Container}>Checking authentication status...</div>);
+    if (!isInitialized) {
+        return (
+        <div className={Style.Container }>
+            <p className={Style.loading}>Initializing...</p>
+        </div>);
     }
 
      if (isAuthenticated && isInitialized) {
         return (
             <div className={Style.Container}>
-                <div>Redirecting to chat...</div>
+                <p className={Style.loading}> Redirecting to chat...</p>
             </div>
         );
     }
@@ -115,7 +116,7 @@ export default function LogInPage() {
                         id='password'
                         placeholder='Enter password..'
                         className={Style.InputForm}
-                        value={user.password.trim()}
+                        value={user.password}
                         onChange={newUser}
                         required
                     />

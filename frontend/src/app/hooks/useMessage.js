@@ -59,7 +59,7 @@ const useMessages = ({userId,token,chatId})=>{
                 Authorization:`Bearer ${token}`
             }
         })
-        console.log("Message from useMessage:\n",response.data)
+        // console.log("Message from useMessage:\n",response.data)
         const {data,totalPage} = response.data
         setMessages(data || []);
         setTotalPage(totalPage);
@@ -116,6 +116,8 @@ const useMessages = ({userId,token,chatId})=>{
             if(typeof window !== 'undefined'){
                 observer.current = new IntersectionObserver(
                     (entries)=>{
+                        // const messageContent = entries[0].target.querySelector('.MessageContent');
+                        // console.log("MessageContent observed:\n",messageContent);
                         if(entries[0].isIntersecting && !loading && hasMore && page>=0 ){
                             fetchOlderMessages();
                         }

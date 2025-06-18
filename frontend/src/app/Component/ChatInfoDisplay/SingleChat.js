@@ -9,7 +9,7 @@ const SingleChat = ({otherUserId,otherUserData,lastSeen,status,formatLastSeen ,c
     return (
         <div className={style.infoDisplayContainer}>
             <div className={style.image}>
-                <GetUserImage userId={otherUserId(chatData)} size={140} />
+                <GetUserImage userId={otherUserId(chatData)} size={120} />
             </div>
             <p className={style.chatName}>{chatData.chatName}</p>
             <div className={style.chatInfoDisplay}>

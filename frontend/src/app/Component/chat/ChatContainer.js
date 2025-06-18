@@ -4,17 +4,17 @@ import style from '../../Style/chat.module.css'
 import ChatHeader from './ChatHeader'
 import Message from './Message';
 import ChatInput from './ChatInput';
-import useWebSocket from '@/app/hooks/useWebSocket';
 import useMessages from '@/app/hooks/useMessage';
 import useChatDetails from '@/app/hooks/useChatDetails';
 import { useRouter } from 'next/navigation';
+import useChatWebSocket from '@/app/hooks/useChatWebSocket';
 
 export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout, chatName }) {
     const router = useRouter();
     const [value, setValue] = useState('');
     const [currentChatId, setCurrentChatId] = useState(null);
     const { messages, setMessages, loading, firstMessageElementRef, resetState } = useMessages({ userId, token, chatId });
-    const { connected, stompClient, error, chatStompClientRef } = useWebSocket({ userId, chatId, token, messages, setMessages ,router});
+    const { connected, stompClient, error,} = useChatWebSocket({ userId, chatId, token, messages, setMessages ,router});
     const { userChat } = useChatDetails({ chatId, token, userId, setOtherUserDetails })
     const onChange = (e) => {
         setValue(e.target.value);
@@ -44,9 +44,7 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
             chatId: chatId,
             content: value.trim()
         };
-
-        // Use the chat client ref from the hook
-        const chatClient = chatStompClientRef.current;
+        const chatClient = stompClient;
 
         console.log("Chat client details:", {
             exists: !!chatClient,
@@ -74,7 +72,7 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
         } catch (error) {
             console.error("Failed to send message:", error);
         }
-    }, [value, connected, chatId, userId, token, chatStompClientRef]);
+    }, [value, connected, chatId, userId, token, stompClient]);
 
 
     if (error) {
@@ -94,6 +92,8 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
                         message={messages}
                         userId={userId}
                         firstPostElementRef={firstMessageElementRef}
+                        userChat = {userChat}
+                        token ={token}
                         loading={loading} />
 
                     <ChatInput

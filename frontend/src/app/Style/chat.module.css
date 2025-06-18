@@ -114,6 +114,17 @@
     background: transparent;
 }
 
+.MessageRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.MessageRow.SentRow {
+    flex-direction: row-reverse; /* This reverses the order for sent messages */
+}
+
 .Message {
     padding: 14px 18px;
     border-radius: 16px;
@@ -125,18 +136,23 @@
 }
 
 .MessageContent {
-    margin-bottom: 6px;
+    margin-bottom: 2px;
     line-height: 1.6;
     font-size: 0.95rem;
 }
 
-.MessageTime {
+.MessageTimestamp {
     font-size: 0.75rem;
     opacity: 0.6;
     text-align: right;
 }
 
+.MessageUsername{
+    color: rgb(131, 130, 130);
+    font-weight: 700;
+}
 .SentMessage {
+    margin-left: auto;
     background-color: #1890ff;
     color: white;
     align-self: flex-end;
@@ -144,6 +160,7 @@
 }
 
 .ReceivedMessage {
+    margin-right: auto;
     background-color: #ffffff;
     color: #333;
     align-self: flex-start;
@@ -151,6 +168,10 @@
     border: 1px solid #eaeaea;
 }
 
+.SentImage, .ReceivedImage {
+    display: flex;
+    flex-shrink: 0; /* Prevents image container from shrinking */
+}
 .ChatHeader {
     display: flex;
     align-items: center;

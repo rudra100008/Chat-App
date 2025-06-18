@@ -1,11 +1,17 @@
 "use client"
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import style from '../../Style/chat.module.css'
+import SingleChatMessage from './SingleChatMessage';
+import GroupChatMessage from './GroupChatMessage';
+import axiosInterceptor from '../Interceptor';
+import baseUrl from '@/app/baseUrl';
 
-export default function Message({ message, userId , firstPostElementRef,loading}) {
+export default function Message({ message, userId , loading,firstPostElementRef,userChat,token}) {
     const messageEndRef = useRef(null);
     const containerRef = useRef(null);
     const prevScrollHeight = useRef(0);
+    const [userName,setUsername] = useState([]);
+    // const [loading,setLoading] = useState(true);
     const scrollToBottom=()=>{
         messageEndRef.current?.scrollIntoView({behavior : "smooth"})
     }
@@ -20,6 +26,22 @@ export default function Message({ message, userId , firstPostElementRef,loading}
         }
     }
 
+    const fetchUser = async(userId) => {
+        try{
+            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${userId}`,{
+                headers:{
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            const userData = response.data;
+            console.log("Message: UserData:\n",userData);
+            return userData;
+        }catch(error){
+            console.log("Message: error:\n",error.response.data.message)
+        }finally{
+            
+        }
+    }
     useEffect(()=>{
         if(containerRef.current && !loading){
             prevScrollHeight.current = containerRef.current.scrollHeight;
@@ -44,17 +66,17 @@ export default function Message({ message, userId , firstPostElementRef,loading}
         return new Date(timestamp).toLocaleDateString();
     };
 
-    // Scroll to bottom whenever messages change
     useEffect(() => {
         scrollToBottom()
     }, [message]);
-
+    
+    // console.log("Message.js: UserChat:\n",userChat);
     return (
         <div ref={containerRef} className={style.MessageContainer}>
              {loading && (
                 <div className={style.LoadingIndicator}>Loading older messages...</div>
             )}
-            {message.length === 0 ? (
+            {/* {message.length === 0 ? (
                 <div className={style.EmptyState}>Start messaging </div>
             ) : (
                 message.map((msg,index) => (
@@ -71,7 +93,27 @@ export default function Message({ message, userId , firstPostElementRef,loading}
                         </div>
                     </div>
                 ))
-            )}
+            )} */}
+
+            {
+                userChat.chatType === "SINGLE" ? (
+                    <SingleChatMessage 
+                      message={message}
+                      userId={userId}
+                      firstPostElementRef={firstPostElementRef}
+                      formatTimestamp={formatTimestamp}
+                    />
+                ) : (
+                    <GroupChatMessage
+                    message={message}
+                    userId={userId}
+                    firstPostElementRef= {firstPostElementRef}
+                    formatTimestamp = {formatTimestamp}
+                    userChat={userChat}
+                    fetchUser={fetchUser}
+                    />
+                )
+            }
             <div ref={messageEndRef} />
         </div>
     );

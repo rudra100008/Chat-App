@@ -79,11 +79,13 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose, checkOtherUserStatu
         fetchOtherUser();
         const otherId = chatData.participantIds.find(pid => pid !== userId);
         console.log("LastSeen:\n", lastSeen, "\nStatus:\n", status)
-        const unsubscribe = checkOtherUserStatus(otherId);
+        const subscription = checkOtherUserStatus(otherId);
         return () => {
-            unsubscribe && unsubscribe();
+            if(subscription){
+                subscription.unsubscribe();
+            };
         }
-    }, [chatData, token, userId, stompClientRef])
+    }, [chatData, token, userId, checkOtherUserStatus])
     return (
         <div className={style.chatInfoContainer}>
             <div className={style.leftContainer}>
@@ -103,7 +105,7 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose, checkOtherUserStatu
             </div>
             <div className={style.rightContainer}>
                 <div className={style.closeButton}>
-                    <FontAwesomeIcon icon={faClose} onClick={onClose} />
+                    <FontAwesomeIcon icon={faClose} size="lg" onClick={onClose} />
                 </div>
                 {
                     activeTab === "overview" &&
