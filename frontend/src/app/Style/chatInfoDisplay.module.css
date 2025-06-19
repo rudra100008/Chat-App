@@ -229,3 +229,30 @@
 .faEdit :active{
   transform: scale(0.95);
 }
+
+.InputStyle[type="text"]{
+  border: 1px solid white;
+  border-radius: 12px;
+  padding: 0.25rem;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.InputStyle[type="text"]:focus{
+  outline: none;
+  border-color: #2b89d6;
+  box-shadow: 0 0 0 3px rgba(71, 147, 209, 0.2);
+}
+
+.hiddenSpan{
+  visibility: hidden;
+  position: absolute;
+  font-family: inherit;
+  white-space: pre;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
