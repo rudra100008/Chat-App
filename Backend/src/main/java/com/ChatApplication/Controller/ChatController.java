@@ -11,6 +11,7 @@ import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -163,15 +164,36 @@ public class ChatController {
         }
     }
 
-    @PostMapping(value = "/uploadGroupImage/{chatId}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/uploadChatImage/{chatId}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> uploadGroupImage(
             @PathVariable("chatId") String chatId,
             @RequestParam(value = "image",required = false)MultipartFile imageFile){
+        User currentUser = authUtils.getLoggedInUsername();
         String uploadDir = baseUploadDir + File.separator + "groupChat";
         String imageName = "";
         ChatDTO  chatDTO = chatService.fetchUserChat(chatId);
-        if(imageFile != null && !imageFile.isEmpty()){
+        if(!chatDTO.getAdminIds().contains(currentUser.getUserId())){
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","Only group admin can remove group Image."));
+        }
+        if(chatDTO.getChatType() != ChatType.GROUP){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error", "Image upload is allowed for only Group Chat"));
+        }
+        if(imageFile == null || imageFile.isEmpty()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","Image file is required"));
+        }
+
             try{
+                String currentChatImageUrl = chatDTO.getChatImageUrl();
+                if(chatDTO.getChatImageUrl() != null && !currentChatImageUrl.trim().isEmpty()){
+                    imageService.deleteImage(uploadDir,currentChatImageUrl);
+                }
                 imageName = imageService.uploadImage(uploadDir,imageFile);
             }catch (IOException e){
                 return ResponseEntity
@@ -184,9 +206,79 @@ public class ChatController {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(Map.of("Error","Unexcepted error occurred: "+e.getMessage()));
             }
-        }
+
         chatDTO.setChatImageUrl(imageName);
         ChatDTO  updatedChat = chatService.updateGroupChat(chatDTO);
         return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(updatedChat);
+    }
+
+    @DeleteMapping(value = "/removeChatImage/{chatId}")
+    public ResponseEntity<?> removeChatImage(@PathVariable("chatId")String chatId){
+        try {
+            User currentUser = authUtils.getLoggedInUsername();
+            String uploadDir = baseUploadDir + File.separator + "groupChat";
+            ChatDTO chatDTO = chatService.fetchUserChat(chatId);
+            if(chatDTO.getAdminIds().contains(currentUser.getUserId())){
+                return ResponseEntity
+                        .status(HttpStatus.FORBIDDEN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("Error","Only group admin can remove group Image."));
+            }
+            if(chatDTO.getChatType() != ChatType.GROUP){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("Error", "Image removal is allowed for only Group Chat"));
+            }
+            if(chatDTO.getChatImageUrl() == null || chatDTO.getChatImageUrl().isEmpty()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Map.of("Error","Image file is null"));
+            }
+            this.imageService.deleteImage(uploadDir,chatDTO.getChatImageUrl());
+            chatDTO.setChatImageUrl(null);
+            ChatDTO updatedChat = chatService.updateGroupChat(chatDTO);
+            return  ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(updatedChat);
+
+        }catch (Exception e){
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","Unexcepted error occurred: "+e.getMessage()));
+        }
+    }
+
+    @PutMapping(value = "/updateGroupChat/{chatId}")
+    public ResponseEntity<?> updateGroupChat(
+            @PathVariable("chatId")String chatId,
+            @RequestParam("chatName")String chatName
+    ){
+        ChatDTO databaseChat = chatService.fetchUserChat(chatId);
+        User currentUser = authUtils.getLoggedInUsername();
+        if(databaseChat.getChatType() != ChatType.GROUP){
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","This is allowed for only Group Chat."));
+        }
+        if (chatName == null || chatName.trim().isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error", "Chat name cannot be empty"));
+        }
+        if(!databaseChat.getAdminIds().contains(currentUser.getUserId())){
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("Error","Only group Admin can update the chat"));
+        }
+        databaseChat.setChatName(chatName);
+        ChatDTO updatedChat = chatService.updateGroupChat(databaseChat);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(updatedChat);
     }
 }

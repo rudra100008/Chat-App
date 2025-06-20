@@ -11,7 +11,10 @@ spring:
       database: chatApplication
       host: localhost
       port: 27017
-
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
 security:
   jwt:
     security-key: 4bbf5ef641e95aa5474f6f9e000b80e83e7c2e441cff743658aafd16a08234c6

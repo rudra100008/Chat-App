@@ -16,6 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -32,7 +33,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("timeStamp", LocalDateTime.now());
         response.put("status", status.value());
-        response.put("error", status.getReasonPhrase());
+        response.put("Error", status.getReasonPhrase());
         response.put("message", message);
         response.put("path", request.getDescription(false));
         return new ResponseEntity<>(response, status);
@@ -107,6 +108,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ImageInvalidException.class)
     public  ResponseEntity<?> handleImageInvalidException(ImageInvalidException e,WebRequest request){
+        return  createErrorResponse((HttpStatus.BAD_REQUEST),e.getMessage(),request);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<?> handleMaxUploadSizeException(MaxUploadSizeExceededException e, WebRequest request){
         return  createErrorResponse((HttpStatus.BAD_REQUEST),e.getMessage(),request);
     }
 

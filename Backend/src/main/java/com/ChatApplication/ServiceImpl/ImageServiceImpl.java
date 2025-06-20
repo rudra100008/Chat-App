@@ -16,8 +16,8 @@ import java.util.UUID;
 
 @Service
 public class ImageServiceImpl implements ImageService {
-    private final List<String> extensions = List.of("jpg","jpeg","png","gif","jfif");
-    private final  int MAX_SIZE = 20* 1024 *1024; //20MB from 20971520 bytes
+    private static  final List<String> extensions = List.of("jpg","jpeg","png","gif","jfif");
+    private static final  int MAX_SIZE = 20* 1024 *1024; // 20971520 bytes into 20MB
 
     @Override
     public String uploadImage(String uploadDir, MultipartFile file) throws IOException {
@@ -37,14 +37,14 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private void validateImage(MultipartFile file){
-        if(file.isEmpty()){
+        if( file == null ||file.isEmpty()){
             throw new ImageInvalidException("Image cannot be empty");
         }
         if(file.getSize()>MAX_SIZE){
             throw new ImageInvalidException("Image cannot be large cannot than 20MB");
         }
         String imageName = file.getOriginalFilename();
-        if(imageName == null){
+        if(imageName == null || imageName.trim().isEmpty()){
             throw new ImageInvalidException("Image name cannot be empty");
         }
         String extension = imageName.substring(imageName.lastIndexOf(".")+1).toLowerCase();
