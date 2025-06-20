@@ -8,10 +8,6 @@ import GetUserImage from "./GetUserImage";
 import { useRouter } from "next/navigation";
 import { fetchUserChatsWithNames } from "../services/chatServices";
 import GetGroupImage from "./GetGroupImage";
-import ChatInfoDisplay from "./ChatInfoDisplay";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import baseUrl from "../baseUrl";
 import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../context/WebSocketContext";
 
@@ -23,30 +19,18 @@ export default function UserChats({
     otherUserId,
     setShowSearchBox,
     setShowChatInfoBox,
-     selectedChatInfo,
-    setSelectedChatInfo }) {
+    selectedChatInfo,
+    setSelectedChatInfo,
+    loadUserChats,
+    chatNames,
+    setChatNames,
+ }) {
     const router = useRouter();
     const { logout } = useAuth();
-    const { chatInfo, setChatInfo } = useWebSocket();
+    const { chatInfo} = useWebSocket();
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
-    const [chatNames, setChatNames] = useState({});
 
-    const loadUserChats = async () => {
-        if (!userId || !token) return;
-
-        try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, router, logout);
-            setChatInfo(chats);
-            setChatNames(chatNames);
-        } catch (error) {
-            if (error.response && error.response.status === 403) {
-                logout();
-            } else {
-                console.log("ERROR from UserChats:", error.response?.message || error.message);
-            }
-        }
-    };
 
     const getOtherUser = (chat) => {
         return chat.participantIds.filter(pIds => pIds !== userId)[0];
@@ -80,35 +64,6 @@ export default function UserChats({
         setShowSearchBox(prev => !prev);
     }
 
-    // useEffect(() => {
-    //     const client = new Client({
-    //         webSocketFactory: () => new SockJS(`${baseUrl}/server`),
-    //         connectHeaders: {
-    //             Authorization: `Bearer ${token}`
-    //         },
-    //         onConnect: () => {
-    //             console.log("WebSocketed connected for chat updates");
-    //             client.subscribe(`/user/${userId}/queue/chat-update`, (message) => {
-    //                 const payload = JSON.parse(message.body);
-    //                 setChatInfo(prev => (
-    //                     prev.map(chat =>
-    //                         chat.chatId === payload.chatId ? { ...chat, ...payload } : chat
-    //                     )
-    //                 ))
-    //             })
-    //         }
-    //     });
-    //     client.activate();
-
-    //     return () => {
-    //         if (client && client.active) {
-    //             client.deactivate();
-    //             console.log("WebSocket disconnected.");
-    //         }
-    //     }
-    // }, [userId, token])
-
-    
     useEffect(() => {
         if (!userId || !token) {
             router.push("/")

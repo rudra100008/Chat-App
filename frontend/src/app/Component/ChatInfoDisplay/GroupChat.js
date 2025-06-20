@@ -2,14 +2,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import style from "../../Style/chatInfoDisplay.module.css";
 import GetGroupImage from "../GetGroupImage";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import { useEffect, useRef, useState } from "react";
-const GroupChat = ({ chatData }) => {
+import { useCallback, useEffect, useRef, useState } from "react";
+import axiosInterceptor from "../Interceptor";
+import baseUrl from "@/app/baseUrl";
+import { useWebSocket } from "@/app/context/WebSocketContext";
+const GroupChat = ({ chatData , setChatData, token, loadUserChats}) => {
     const [showEditChat,setShowEditChat] = useState(false);
     const [showEditChatName,setShowEditChatName] = useState(false);
     const [localChatData,setLocalChatData] = useState(chatData);
     const [inputWidth,setInputWidth] = useState(100);
     const inputRef = useRef(null);
     const spanRef = useRef(null);
+    const {setChatInfo} = useWebSocket();
 
     const handleEditChat = ()=>{
         setShowEditChat(prev=> !prev);
@@ -24,6 +28,31 @@ const GroupChat = ({ chatData }) => {
             [name]:value
         }))
     }
+
+    const handleUpdateGroupChat = useCallback( async() =>{
+        axiosInterceptor.put(`${baseUrl}/api/chats/updateGroupChat/${chatData.chatId}?chatName=${encodeURIComponent(localChatData.chatName)}`
+        ,{},{
+            headers :{
+                Authorization : `Bearer ${token}`
+            }
+        }).then((response)=>{
+            const newChatData = response.data;
+            console.log("Chat updated")
+            console.log(newChatData);
+            setLocalChatData(prev=>(
+                prev.chatId === newChatData.chatId ? newChatData : prev
+            ))
+            setChatData(prev=>
+               ( prev.chatId === newChatData.chatId ? newChatData : prev)
+            )
+            loadUserChats();
+            
+        }).catch((error)=>{
+            console.log(error.response)
+        }).finally({
+
+        })
+    },[chatData,localChatData])
 
     useEffect(()=>{
         const handleClickOutSide = (event) =>{
@@ -65,6 +94,11 @@ const GroupChat = ({ chatData }) => {
                 value={localChatData.chatName}
                 className={style.InputStyle}
                 onChange={handleValueChange}
+                onKeyDown={(e)=>{
+                    if(e.key === 'Enter'){
+                        handleUpdateGroupChat()
+                    }
+                }}
                 style={{width:inputWidth}}
                 />
                 </div> :

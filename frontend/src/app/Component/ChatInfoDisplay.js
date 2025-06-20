@@ -11,7 +11,7 @@ import GroupChat from "./ChatInfoDisplay/GroupChat";
 import ShowGroupMembers from "./ChatInfoDisplay/ShowGroupMembers";
 
 
-const ChatInfoDisplay = ({ userId, token, chatData, onClose, checkOtherUserStatus, lastSeen, status, setUserStatusMap }) => {
+const ChatInfoDisplay = ({ userId, token, chatData,setChatData, onClose, checkOtherUserStatus, lastSeen, status, setUserStatusMap,loadUserChats }) => {
     const [activeTab, setActiveTab] = useState("overview");
     const [otherUserData, setOtherUserData] = useState({});
     const { stompClientRef } = useWebSocket();
@@ -125,6 +125,9 @@ const ChatInfoDisplay = ({ userId, token, chatData, onClose, checkOtherUserStatu
                                 (
                                     <GroupChat
                                         chatData={chatData}
+                                        token={token}
+                                        setChatData={setChatData}
+                                        loadUserChats={loadUserChats}
                                     />
                                 )
                         }
