@@ -56,24 +56,51 @@ export default function Chat() {
         return selectedChatInfo.participantIds.find(pId=> pId !== userId);
     }
     const checkOtherUserStatus = useCallback((otherId) => {
-        if(!selectedChatInfo && !selectedChatInfo.participantIds) return;
-        const stompClient = stompClientRef.current;
-        if (stompClient && stompClient.connected) {
-            return stompClient.subscribe('/topic/user-status', (message) => {
-                const payload = JSON.parse(message.body);
-                if (payload.userId === otherId) {
-                   setUserStatusMap(prev=>({
-                    ...prev,
-                    [otherId]:{
-                        status:payload.status,
-                        lastSeen:payload.lastSeen
-                    }
-                   }))
-                }
-            })
-        }
+    console.log("checkOtherUserStatus called for:", otherId);
+    console.log("selectedChatInfo:", selectedChatInfo);
+    console.log("selectedChatInfo.participantIds:", selectedChatInfo?.participantIds);
+    
+    if(!selectedChatInfo || !selectedChatInfo.participantIds) {
+        console.log("Returning null - no selectedChatInfo or participantIds");
         return null;
-    }, [selectedChatInfo, userId, stompClientRef])
+    }
+    
+    const stompClient = stompClientRef.current;
+    console.log("stompClient:", stompClient);
+    console.log("stompClient.connected:", stompClient?.connected);
+    
+    if (stompClient && stompClient.connected) {
+        console.log("Creating subscription for user:", otherId);
+        const subscription = stompClient.subscribe('/topic/user-status', (message) => {
+            console.log("Received message on /topic/user-status:", message.body);
+            const payload = JSON.parse(message.body);
+            console.log("Parsed payload:", payload);
+            console.log("Checking if payload.userId === otherId:", payload.userId, "===", otherId);
+            
+            if (payload.userId === otherId) {
+                console.log("Match found! Updating userStatusMap for:", otherId);
+                setUserStatusMap(prev => {
+                    const newMap = {
+                        ...prev,
+                        [otherId]: {
+                            status: payload.status,
+                            lastSeen: payload.lastSeen
+                        }
+                    };
+                    console.log("New userStatusMap:", newMap);
+                    return newMap;
+                });
+            } else {
+                console.log("No match - different user ID");
+            }
+        });
+        console.log("Subscription created:", subscription);
+        return subscription;
+    }
+    
+    console.log("Returning null - no stompClient or not connected");
+    return null;
+}, [selectedChatInfo, setUserStatusMap]);
 
     const handleChatSelect = (selectedChat, selectedChatName) => {
         setChatId(selectedChat);
@@ -169,6 +196,7 @@ export default function Chat() {
             <ChatInfoDisplay
                 lastSeen ={userStatusMap[otherUserId()]?.lastSeen || null}
                 status = {userStatusMap[otherUserId()]?.status || null}
+                userStatusMap ={userStatusMap}
                 setUserStatusMap = {setUserStatusMap}
                 userId={userId}
                 checkOtherUserStatus={checkOtherUserStatus}
