@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
 import GetUserImage from "../GetUserImage";
-const ShowGroupMembers = ({ chatData, checkOtherUserStatus, userStatusMap }) => {
+const ShowGroupMembers = ({ chatData, userStatusMap }) => {
     const { userId, token, logout } = useAuth();
     const [participantIds, setParticipantIds] = useState([]);
     const [groupMembers, setGroupMembers] = useState([]);
@@ -46,34 +46,15 @@ const ShowGroupMembers = ({ chatData, checkOtherUserStatus, userStatusMap }) => 
             fetchParticipants();
         }
     }, [chatData, participantIds, token])
-
-    useEffect(() => {
-        if (chatData.chatType !== "GROUP") return;
-        const subscriptions = [];
-        for (const id of participantIds) {
-            console.log("ShowGroupMembers: called checkOtherUserStatus()")
-            const subscription = checkOtherUserStatus(id);
-            if (subscription) {
-                subscriptions.push(subscription);
-            }
-        }
-        return (() => {
-            subscriptions.forEach(sub => {
-                if (sub && sub.unsubscribe) {
-                    sub.unsubscribe();
-                }
-            })
-        })
-    }, [checkOtherUserStatus, participantIds])
     return (
         <div className={style.groupContainer}>
-            <h3 className={style.title}>Group Members</h3>
+            <h3 className={style.title}>Participants ({chatData.participantIds.length})</h3>
             <div className={style.membersList}>
                 {groupMembers.length > 0 &&
                     groupMembers.map((user) => {
                         console.log("ShowGroupMember: UserId\n", user.userId)
                         const statusInfo = userStatusMap[user.userId];
-                        console.log(statusInfo);
+                        console.log("User->",user.username, "===", statusInfo);
                         return (
                             <div key={user.userId} className={style.memberCard}>
                                 <div className={`${style.imageContainer} ${statusInfo?.status === 'ONLINE' ? style.online: style.offline}`} >

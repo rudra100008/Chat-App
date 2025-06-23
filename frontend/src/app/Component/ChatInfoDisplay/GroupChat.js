@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
 import { useWebSocket } from "@/app/context/WebSocketContext";
+import ErrorPrompt from "../ErrorPrompt";
 const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
     const [showEditChat, setShowEditChat] = useState(false);
     const [showEditChatName, setShowEditChatName] = useState(false);
@@ -14,16 +15,34 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
     const inputRef = useRef(null);
     const spanRef = useRef(null);
     const fileRef = useRef(null);
+    const [errorMessage,setErrorMessage] = useState('');
     const { setChatInfo } = useWebSocket();
 
     const handleEditChat = () => {
         fileRef.current.click();
     }
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async(event) => {
         const file  = event.target.files[0];
         if(file){
-            
+            const formData = new FormData();
+            formData.append("image",file);
+           await axiosInterceptor.post(`${baseUrl}/api/chats/uploadChatImage/${chatData.chatId}`,formData,{
+                headers :{
+                    Authorization : `Bearer ${token}`,
+                    'Content-Type':'multipart/form-data'
+                }
+            }).then((res)=>{
+                console.log("File upload Successful");
+                const newChatData = res.data;
+                console.log("Backend Response: ",newChatData);
+                setChatData(prev=>
+                (prev.chatId === newChatData.chatId ? newChatData : prev)
+                );
+            }).catch((error)=>{
+                console.log("GroupChat:\nerror:",error.response.data)
+                setErrorMessage(error.response?.data?.Error || "Something Unexpected Occurred");
+            })
         }
     }
     const handleChatName = () => {
@@ -56,7 +75,8 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
             loadUserChats();
             setShowEditChatName(false);
         }).catch((error) => {
-            console.log(error.response)
+            console.log("GroupChat:\n Error",error.response);
+            setErrorMessage(error.response?.data?.Error || "Something Unexpected Occurred")
         }).finally({
 
         })
@@ -83,8 +103,9 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
     }, [localChatData.chatName])
     return (
         <div className={style.infoDisplayContainer}>
+            <ErrorPrompt errorMessage={errorMessage} setErrorMessage={setErrorMessage} />
             <div className={style.image}>
-                <GetGroupImage chatId={chatData.chatId} size={120} />
+                <GetGroupImage chatId={chatData.chatId} selectedChatInfo={chatData} size={120} />
                 <div className={style.faEdit}>
                     <FontAwesomeIcon icon={faEdit} size="sm" onClick={handleEditChat} />
                 </div>

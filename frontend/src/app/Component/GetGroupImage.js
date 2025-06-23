@@ -5,47 +5,49 @@ import { useEffect, useState } from "react";
 import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 import { useAuth } from "../context/AuthContext";
-const GetGroupImage = ({chatId, size= 40}) => {
-    const [imageUrl,setImageUrl] = useState("");
-    const [loading,setLoading] = useState(false);
-    const {token} = useAuth();
-    useEffect(()=>{
+const GetGroupImage = ({ chatId, selectedChatInfo, size = 40 }) => {
+    const [imageUrl, setImageUrl] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [isImageLoaded,setIsImageLoaded] = useState(false);
+    const { token } = useAuth();
+    useEffect(() => {
 
-        const fetchGroupImage = async () =>{
+        const fetchGroupImage = async () => {
             setLoading(true);
-        try{
-        const response = await axiosInterceptor.get(`${baseUrl}/api/chats/groupImage?chatId=${chatId}`,{
-            headers:{Authorization:`Bearer ${token}`},
-            responseType : "blob"
-        })
-        const url = URL.createObjectURL(response.data);
-        setImageUrl(url);
-        }catch(error){
-            console.log(error.response)
-        }finally{
-            setLoading(false);
+            try {
+                const response = await axiosInterceptor.get(`${baseUrl}/api/chats/groupImage?chatId=${chatId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: "blob"
+                })
+                const url = URL.createObjectURL(response.data);
+                setImageUrl(url);
+            } catch (error) {
+                console.log(error.response)
+            } finally {
+                setLoading(false);
+            }
         }
-    }
-    if(chatId) fetchGroupImage();
-    },[chatId])
+        if (chatId) fetchGroupImage();
+    }, [chatId,selectedChatInfo])
 
-    if(loading){
-        return(
+    if (loading) {
+        return (
             <div className='font-semibold text-xs'>
                 Loading...
             </div>
         )
     }
-    return(
+    return (
         <>
             {imageUrl && (
-                <div className={style.imageWrapper} style={{height:size,width:size}}>
-                     <Image
-                    src={imageUrl}
-                    alt="Group"
-                    fill
-                    className={style.imageresponsive}
-                />
+                <div className={`${style.imageWrapper} ${isImageLoaded ? style.loaded : ""}`} style={{ height: size, width: size }}>
+                    <Image
+                        src={imageUrl}
+                        alt="Group"
+                        fill
+                        className={style.imageresponsive}
+                        onLoad={()=> setIsImageLoaded(true)}
+                    />
                 </div>
             )}
         </>

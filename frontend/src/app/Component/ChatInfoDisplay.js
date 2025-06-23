@@ -11,7 +11,7 @@ import GroupChat from "./ChatInfoDisplay/GroupChat";
 import ShowGroupMembers from "./ChatInfoDisplay/ShowGroupMembers";
 
 
-const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, checkOtherUserStatus, lastSeen, status, userStatusMap, setUserStatusMap, loadUserChats }) => {
+const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, lastSeen, status, userStatusMap, setUserStatusMap, loadUserChats }) => {
     const [activeTab, setActiveTab] = useState("overview");
     const [otherUserData, setOtherUserData] = useState({});
     const { stompClientRef } = useWebSocket();
@@ -77,15 +77,8 @@ const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, checkO
     useEffect(() => {
         if (chatData.chatType !== "SINGLE") return;
         fetchOtherUser();
-        const otherId = chatData.participantIds.find(pid => pid !== userId);
         console.log("LastSeen:\n", lastSeen, "\nStatus:\n", status)
-        const subscription = checkOtherUserStatus(otherId);
-        return () => {
-            if (subscription) {
-                subscription.unsubscribe();
-            };
-        }
-    }, [chatData, token, userId, checkOtherUserStatus])
+    }, [chatData, token, userId])
     return (
         <div className={style.chatInfoContainer}>
             <div className={style.leftContainer}>
@@ -150,7 +143,6 @@ const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, checkO
                     chatData.chatType === "GROUP" && activeTab === "members" && (
                         <ShowGroupMembers
                             chatData={chatData}
-                            checkOtherUserStatus={checkOtherUserStatus}
                             userStatusMap ={userStatusMap}
                         />
                     )

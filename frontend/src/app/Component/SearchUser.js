@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
+import ErrorPrompt from "./ErrorPrompt";
 
 export default function SearchUser({onError}) {
     const [userName, setUserName] = useState("");
@@ -24,7 +25,7 @@ export default function SearchUser({onError}) {
             setUser(response.data)
         }).catch((error)=>{
             console.error('Error in SearchUser:\n',error.response?.data);
-            onError(error.response?.data.message);
+            setErrorMessage(error.response?.data.message);
         })
     }
     const handleSubmit =(e)=>{
@@ -33,6 +34,7 @@ export default function SearchUser({onError}) {
     }
     return (
         <div  className={style.searchcontainer}>
+            <ErrorPrompt errorMessage={errorMessage} setErrorMessage={setErrorMessage}  />
             <div className={style.searchbox}>
             <FontAwesomeIcon className={style.searchicon}  icon={faSearch} onClick={handleSubmit}/>
                 <input

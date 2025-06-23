@@ -27,9 +27,10 @@ export default function UserChats({
  }) {
     const router = useRouter();
     const { logout } = useAuth();
-    const { chatInfo} = useWebSocket();
+    const { chatInfo,userStatusMap} = useWebSocket();
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
+    const [isReload,setIsReload] = useState(false);
 
 
     const getOtherUser = (chat) => {
@@ -104,7 +105,9 @@ export default function UserChats({
                 </div>
                 {chatInfo.length === 0 ? <p className={style.errorMessage}>No chats available</p> : (
                     <div>
-                        {chatInfo.map((chat) => (
+                        {chatInfo.map((chat) => {
+                            const userStatus = userStatusMap[getOtherUser(chat)]
+                            return(
                             chat.chatType === "SINGLE" ?
                                 (
                                     <div
@@ -115,7 +118,9 @@ export default function UserChats({
                                             e.stopPropagation();
                                             handleChatContainerClick(chat);
                                         }}>
-                                            <GetUserImage userId={getOtherUser(chat)} />
+                                            <div className={`${style.imageContainer} ${userStatus?.status === 'ONLINE'?style.online :""}`}>
+                                                 <GetUserImage userId={getOtherUser(chat)} />
+                                            </div>
                                         </div>
                                         <div>
                                             <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
@@ -140,7 +145,7 @@ export default function UserChats({
                                             e.stopPropagation();
                                             handleChatContainerClick(chat);
                                         }}>
-                                            <GetGroupImage chatId={chat.chatId} />
+                                            <GetGroupImage chatId={chat.chatId} selectedChatInfo={selectedChatInfo} />
                                         </div>
                                         <div>
                                             <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
@@ -156,7 +161,7 @@ export default function UserChats({
                                         </div>
                                     </div>
                                 )
-                        ))}
+                        )})}
                     </div>
                 )}
             </div>

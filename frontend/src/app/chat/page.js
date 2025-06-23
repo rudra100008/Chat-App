@@ -16,7 +16,7 @@ import { fetchUserChatsWithNames } from '../services/chatServices';
 
 export default function Chat() {
     const route = useRouter();
-    const { token, userId, logout, isLoading,isInitialized } = useAuth()
+    const { token, userId, logout, isLoading, isInitialized } = useAuth()
     const [error, setError] = useState(null);
     const [chatName, setChatName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -24,8 +24,7 @@ export default function Chat() {
     const [showChatInfoBox, setShowChatInfoBox] = useState(false);
     const [selectedChatInfo, setSelectedChatInfo] = useState(null);
     const [otherUserDetails, setOtherUserDetails] = useState([]);
-    const [userStatusMap,setUserStatusMap] = useState({});
-    const {stompClientRef,chatInfo,setChatInfo} = useWebSocket();
+    const { stompClientRef, chatInfo, setChatInfo , userStatusMap,setUserStatusMap} = useWebSocket();
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -34,78 +33,34 @@ export default function Chat() {
     })
     const [chatId, setChatId] = useState('');
     const [chatNames, setChatNames] = useState({});
-    
-        const loadUserChats = async () => {
-            if (!userId || !token) return;
-    
-            try {
-                const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, route, logout);
-                setChatInfo(chats);
-                setChatNames(chatNames);
-            } catch (error) {
-                if (error.response && error.response.status === 403) {
-                    logout();
-                } else {
-                    console.log("ERROR from UserChats:", error.response?.message || error.message);
-                }
+
+    const loadUserChats = async () => {
+        if (!userId || !token) return;
+
+        try {
+            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, route, logout);
+            setChatInfo(chats);
+            setChatNames(chatNames);
+        } catch (error) {
+            if (error.response && error.response.status === 403) {
+                logout();
+            } else {
+                console.log("ERROR from UserChats:", error.response?.message || error.message);
             }
-        };
+        }
+    };
 
     // from selectedChatInfo  which is set during when clicked in the image of the chat
-    const otherUserId = () =>{
-        return selectedChatInfo.participantIds.find(pId=> pId !== userId);
+    const otherUserId = () => {
+        return selectedChatInfo.participantIds.find(pId => pId !== userId);
     }
-    const checkOtherUserStatus = useCallback((otherId) => {
-    console.log("checkOtherUserStatus called for:", otherId);
-    console.log("selectedChatInfo:", selectedChatInfo);
-    console.log("selectedChatInfo.participantIds:", selectedChatInfo?.participantIds);
-    
-    if(!selectedChatInfo || !selectedChatInfo.participantIds) {
-        console.log("Returning null - no selectedChatInfo or participantIds");
-        return null;
-    }
-    
-    const stompClient = stompClientRef.current;
-    console.log("stompClient:", stompClient);
-    console.log("stompClient.connected:", stompClient?.connected);
-    
-    if (stompClient && stompClient.connected) {
-        console.log("Creating subscription for user:", otherId);
-        const subscription = stompClient.subscribe('/topic/user-status', (message) => {
-            console.log("Received message on /topic/user-status:", message.body);
-            const payload = JSON.parse(message.body);
-            console.log("Parsed payload:", payload);
-            console.log("Checking if payload.userId === otherId:", payload.userId, "===", otherId);
-            
-            if (payload.userId === otherId) {
-                console.log("Match found! Updating userStatusMap for:", otherId);
-                setUserStatusMap(prev => {
-                    const newMap = {
-                        ...prev,
-                        [otherId]: {
-                            status: payload.status,
-                            lastSeen: payload.lastSeen
-                        }
-                    };
-                    console.log("New userStatusMap:", newMap);
-                    return newMap;
-                });
-            } else {
-                console.log("No match - different user ID");
-            }
-        });
-        console.log("Subscription created:", subscription);
-        return subscription;
-    }
-    
-    console.log("Returning null - no stompClient or not connected");
-    return null;
-}, [selectedChatInfo, setUserStatusMap]);
+
 
     const handleChatSelect = (selectedChat, selectedChatName) => {
         setChatId(selectedChat);
         setChatName(selectedChatName);
     }
+    
     const fetchUserChatDetails = async () => {
         if (!chatId && !token) return;
         try {
@@ -174,14 +129,14 @@ export default function Chat() {
         }
     }, [userChat]);
 
-    const closeErrorMessage = () => {
-        setErrorMessage("");
-    }
+    // const closeErrorMessage = () => {
+    //     setErrorMessage("");
+    // }
     const handleErrorMessage = (message) => {
         setErrorMessage(message);
     }
 
-    if (!isInitialized || isLoading ) {
+    if (!isInitialized || isLoading) {
         return <div className={style.loading}>Loading authentication....</div>
     }
     if (error) {
@@ -190,20 +145,18 @@ export default function Chat() {
 
     return (
         <div className={style.body}>
-            <ErrorPrompt errorMessage={errorMessage} onClose={closeErrorMessage} />
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
             {showChatInfoBox && selectedChatInfo &&
-            <ChatInfoDisplay
-                lastSeen ={userStatusMap[otherUserId()]?.lastSeen || null}
-                status = {userStatusMap[otherUserId()]?.status || null}
-                userStatusMap ={userStatusMap}
-                setUserStatusMap = {setUserStatusMap}
-                userId={userId}
-                checkOtherUserStatus={checkOtherUserStatus}
-                chatData={selectedChatInfo}
-                setChatData = {setSelectedChatInfo}
-                loadUserChats={loadUserChats}
-                onClose={() => setShowChatInfoBox(false)} />}
+                <ChatInfoDisplay
+                    lastSeen={userStatusMap[otherUserId()]?.lastSeen || null}
+                    status={userStatusMap[otherUserId()]?.status || null}
+                    userStatusMap={userStatusMap}
+                    setUserStatusMap={setUserStatusMap}
+                    userId={userId}
+                    chatData={selectedChatInfo}
+                    setChatData={setSelectedChatInfo}
+                    loadUserChats={loadUserChats}
+                    onClose={() => setShowChatInfoBox(false)} />}
             <div className={style.UserChat}>
                 {/* display chat  */}
                 <UserChats
@@ -214,12 +167,13 @@ export default function Chat() {
                     setShowSearchBox={setShowSearchBox}
                     setShowChatInfoBox={setShowChatInfoBox}
                     setSelectedChatInfo={setSelectedChatInfo}
-                    selectedChatInfo ={selectedChatInfo}
+                    selectedChatInfo={selectedChatInfo}
                     chatId={chatId}
+                    userStatusMap={userStatusMap}
                     loadUserChats={loadUserChats}
                     chatNames={chatNames}
                     setChatNames={setChatNames}
-                    />
+                />
             </div>
             <ChatContainer
                 chatId={chatId}

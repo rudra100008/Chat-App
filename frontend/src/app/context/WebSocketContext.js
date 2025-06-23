@@ -16,7 +16,8 @@ export const WebSocketProvider = ({ children }) => {
     const [userLastSeen, setUserLastSeen] = useState(null);
     const [userStatus, setUserStatus] = useState(null);
     const [chatInfo,setChatInfo] = useState([]);
-    const stompClientRef = useRef(null); // store client across renders
+    const stompClientRef = useRef(null); 
+    const [userStatusMap,setUserStatusMap] = useState({});
 
     const connectWebSocket = useCallback(() => {
         if (!token || !userId) return;
@@ -33,6 +34,14 @@ export const WebSocketProvider = ({ children }) => {
                 setIsWebSocketConnected(true);
                 client.subscribe('/topic/user-status', (message) => {
                     const userUpdate = JSON.parse(message.body);
+
+                    setUserStatusMap(prev=> ({
+                        ...prev,
+                        [userUpdate.userId]:{
+                            status : userUpdate.status,
+                            lastSeen : userUpdate.lastSeen
+                        }
+                    }))
                     if (userUpdate.userId === userId) {
                         setUserLastSeen(new Date(userUpdate.lastSeen).toISOString());
                         setUserStatus(userUpdate.status)
@@ -82,7 +91,7 @@ export const WebSocketProvider = ({ children }) => {
         };
     }, [connectWebSocket,disconnectWebSocket]);
 
-    const value = { userLastSeen, userStatus, stompClientRef,isWebSocketConnected,chatInfo,setChatInfo };
+    const value = { userLastSeen, userStatus, stompClientRef,isWebSocketConnected,chatInfo,setChatInfo,userStatusMap,setUserStatusMap };
 
     return (
         <WebSocketContext.Provider value={value} >

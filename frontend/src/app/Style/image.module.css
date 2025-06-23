@@ -5,4 +5,5 @@
 }
 .imageresponsive{
     object-fit:cover;
+    image-rendering: optimizeSpeed;
 }

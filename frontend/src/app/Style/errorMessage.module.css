@@ -1,46 +1,62 @@
-/* Top-centered error box overlay */
+
 .errorOverlay {
   position: fixed;
-  top: 20px; /* Distance from top */
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10000;
+  z-index: 1000000000;
   display: flex;
   justify-content: center;
   width: 100%;
-  pointer-events: none; /* Allow clicks to go through except on error box */
+  pointer-events: none; 
+  animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown {
+  from{
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to{
+    opacity: 1;
+    transform: translateX(-50%) translateY(-20px);
+  }
 }
 
 .errorBox {
-  background-color: white;
+  background-color: whitesmoke;
+  border-left: 4px solid #dc3545;
   border-radius: 8px;
   padding: 20px;
   max-width: 400px;
   width: 90%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
-  pointer-events: auto; /* Allow interaction with close button */
+  pointer-events: auto; 
 }
 
   
   .errorMessage {
-    color: #dc3545;
-    font-weight: 500;
-    margin: 0;
+    color: #721c24;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.4;
+    margin: 0 0 16px 0;
     padding: 10px;
   }
   
   .closeButton {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 8px 16px;
+    background-color:  #dc3545;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 10px 20px;
     margin-top: 15px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
+    font-weight: 500;
+    transition: all 0.2s ease;
   }
   
   .closeButton:hover {
-    background-color: #e2e6ea;
+    background-color:  #c82333;
+    transform: translateY(-1px);
   }
