@@ -2,6 +2,7 @@ package com.ChatApplication.Entity;
 
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Message {
     @MongoId
     private String messageId;
@@ -23,6 +25,6 @@ public class Message {
     private User sender;
     @DBRef
     private Chat chat;
-
-
+    @DBRef
+    private Attachment attachment;
 }

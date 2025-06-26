@@ -2,13 +2,11 @@ package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.ChatDTO;
 import com.ChatApplication.DTO.MessageDTO;
-import com.ChatApplication.Entity.Chat;
-import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.PageInfo;
-import com.ChatApplication.Entity.User;
+import com.ChatApplication.Entity.*;
 import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Exception.ForbiddenException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
+import com.ChatApplication.Mapper.MessageMapper;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
 import com.ChatApplication.Repository.UserRepository;
@@ -25,6 +23,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,6 +38,7 @@ public class MessageServiceImpl implements MessageService {
     private final ChatRepository chatRepository;
     private final AuthUtils authUtils;
     private final SimpMessagingTemplate messagingTemplate;
+//    private final MessageMapper messageMapper;
 
 
     private void validateChatAccess(String chatId,User user){
@@ -103,6 +104,11 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageDTO postMessage(String senderId, String chatId, String content, StompHeaderAccessor headerAccessor) {
+        return postMessage(senderId,chatId,content,null,headerAccessor);
+    }
+    @Override
+    @Transactional
+    public MessageDTO postMessage(String senderId, String chatId, String content, Attachment attachment, StompHeaderAccessor headerAccessor) {
         if(senderId == null || senderId.trim().isEmpty() || chatId == null || chatId.trim().isEmpty()){
             throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
         }
@@ -122,14 +128,19 @@ public class MessageServiceImpl implements MessageService {
         if(chat.getParticipants().stream().noneMatch(user -> user.getUserId().equals(sender.getUserId()))){
             throw new IllegalArgumentException(sender.getUsername() + " is not a participant of "+chat.getChatName());
         }
-        Message message = new Message();
-        message.setSender(sender);
-        message.setChat(chat);
-        message.setContent(content);
-        message.setTimestamp(LocalDateTime.now());
+        Message message = Message.builder()
+                .sender(sender)
+                .chat(chat)
+                .content(content)
+                .timestamp(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        if(attachment != null){
+            message.setAttachment(attachment);
+        }
         Message savedMessage = this.messageRepository.save(message);
 
-        chat.setLastMessage(content);
+        chat.setLastMessage(savedMessage.getContent());
         chat.setLastMessageTime(LocalDateTime.now());
         Chat updatedChat = chatRepository.save(chat);
         for(User participant : chat.getParticipants()){
@@ -139,7 +150,7 @@ public class MessageServiceImpl implements MessageService {
                     modelMapper.map(updatedChat, ChatDTO.class)
             );
         }
-        return modelMapper.map(savedMessage, MessageDTO.class);
+       return modelMapper.map(savedMessage, MessageDTO.class);
     }
 
     @Override
@@ -202,5 +213,16 @@ public class MessageServiceImpl implements MessageService {
         if(chat.getBlockedBy() != null && chat.getBlockedBy().contains(userId)){
             throw new ForbiddenException("You are blocked by the user. You cannot send messages");
         }
+    }
+
+    //helper method to determine last message is text or file
+    private String determineLastMessage(Message message){
+        if(message.getAttachment() != null){
+            if(message.getContent() != null && !message.getContent().trim().isEmpty()){
+                return "\nAttachment: "  + message.getAttachment().getFileName() +"\nMessage: "+ message.getContent();
+            }
+            return  message.getAttachment().getFileName();
+        }
+        return message.getContent();
     }
 }

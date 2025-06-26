@@ -29,10 +29,13 @@ twilio:
     service:
       sid: VAfecdde761bf37fc26e69e8cd5d677879
 
-file:
+image:
   upload:
     dir: E:\Chat-App\Backend\Images
 
+file:
+  upload:
+    dir:  E:\\Chat-App\\Backend
 logging:
   level:
     org.mongodb.driver: WARN

@@ -36,7 +36,7 @@ public class UserController {
     private final AuthUtils authUtils;
     private final SimpMessagingTemplate messagingTemplate;
     private final ImageService imageService;
-    @Value(("${file.upload.dir}"))
+    @Value(("${image.upload.dir}"))
     private String baseUploadDir;
 
     Logger logger  = LoggerFactory.getLogger(UserController.class);

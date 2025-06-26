@@ -33,7 +33,7 @@ public class AuthenticationController {
     private final TwoFactorAuthService twoFactorAuthService;
     private final UserDetailsService userDetailsService;
     private final ImageService imageService;
-    @Value("${file.upload.dir}")
+    @Value("${image.upload.dir}")
     private String baseUploadDir;
 
 

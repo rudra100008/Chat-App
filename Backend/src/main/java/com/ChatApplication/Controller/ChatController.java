@@ -35,7 +35,7 @@ public class ChatController {
     private final UserService userService;
     private final AuthUtils authUtils;
     private final ImageService imageService;
-    @Value("${file.upload.dir}")
+    @Value("${image.upload.dir}")
     private String baseUploadDir;
 
 
