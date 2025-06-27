@@ -1,5 +1,5 @@
 "use client"
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import style from '../../Style/chat.module.css'
 import ChatHeader from './ChatHeader'
 import Message from './Message';
@@ -8,6 +8,8 @@ import useMessages from '@/app/hooks/useMessage';
 import useChatDetails from '@/app/hooks/useChatDetails';
 import { useRouter } from 'next/navigation';
 import useChatWebSocket from '@/app/hooks/useChatWebSocket';
+import axiosInterceptor from '../Interceptor';
+import baseUrl from '@/app/baseUrl';
 
 export default function ChatContainer({ chatId, userId, token, setOtherUserDetails, otherUserDetails, onLogout, chatName }) {
     const router = useRouter();
@@ -16,8 +18,37 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
     const { messages, setMessages, loading, firstMessageElementRef, resetState } = useMessages({ userId, token, chatId });
     const { connected, stompClient, error,} = useChatWebSocket({ userId, chatId, token, messages, setMessages ,router});
     const { userChat } = useChatDetails({ chatId, token, userId, setOtherUserDetails })
+      const fileRef = useRef(null);
+
+
     const onChange = (e) => {
         setValue(e.target.value);
+    }
+
+    const handleAttachmentClick = () => {
+        fileRef.current.click();
+    }
+
+    const handleAttachmentChange = async(e) => {
+        const file  = e.target.files[0];
+
+        const formData = new FormData();
+        formData.append("senderId", userId);
+        formData.append("chatId",chatId);
+        formData.append("file",file);
+
+        if(file){
+            await axiosInterceptor.post(`${baseUrl}/api/attachments/upload`,formData,{
+                headers :{
+                    Authorization : `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then((response)=>{
+                console.log(response.data);
+            }).catch((error)=>{
+                console.log(error.response.data)
+            })
+        }
     }
 
     useEffect(() => {
@@ -100,6 +131,9 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
                         value={value}
                         onSend={onSend}
                         onChange={onChange}
+                        fileRef={fileRef}
+                        handleAttachmentChange={handleAttachmentChange}
+                        handleAttachmentClick={handleAttachmentClick}
                         connected={connected} />
                 </>
             ) :

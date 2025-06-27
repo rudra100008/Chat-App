@@ -1,9 +1,27 @@
 "use client"
-import style from '../../Style/chat.module.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import style from '../../Style/chatInput.module.css'
+import { faPaperclip } from '@fortawesome/free-solid-svg-icons';
+import { useRef } from 'react';
+import axiosInterceptor from '../Interceptor';
+import baseUrl from '@/app/baseUrl';
+import { useAuth } from '@/app/context/AuthContext';
 
-const ChatInput = ({ value, onSend, onChange, connected }) => {
+const ChatInput = ({ value, onSend, onChange, fileRef, handleAttachmentChange, handleAttachmentClick, connected }) => {
+  
+
+    
     return (
         <div className={style.inputWrapper}>
+            <div className={style.FieldGroup}>
+                <FontAwesomeIcon className={style.faPaperclip} onClick={handleAttachmentClick} icon={faPaperclip}/>
+                <input 
+                type='file'
+                ref={fileRef}
+                style={{display: "none"}}
+                onChange={handleAttachmentChange}
+                />
+            </div>
             <div className={style.FieldGroup}>
                 <input
                     type="text"

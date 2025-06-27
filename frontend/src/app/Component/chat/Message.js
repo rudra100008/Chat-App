@@ -76,25 +76,6 @@ export default function Message({ message, userId , loading,firstPostElementRef,
              {loading && (
                 <div className={style.LoadingIndicator}>Loading older messages...</div>
             )}
-            {/* {message.length === 0 ? (
-                <div className={style.EmptyState}>Start messaging </div>
-            ) : (
-                message.map((msg,index) => (
-                    <div 
-                        ref={index === 0 ? firstPostElementRef : null}
-                        key={msg.messageId}
-                        className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
-                    >
-                        <div className={style.MessageContent}>
-                            {msg.content}
-                        </div>
-                        <div className={style.MessageTimestamp}>
-                            {formatTimestamp(msg.timestamp)}
-                        </div>
-                    </div>
-                ))
-            )} */}
-
             {
                 userChat.chatType === "SINGLE" ? (
                     <SingleChatMessage 
