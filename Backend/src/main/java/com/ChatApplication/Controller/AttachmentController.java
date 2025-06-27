@@ -2,7 +2,6 @@ package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.Attachment;
-import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.AttachmentRepository;
 import com.ChatApplication.Service.AttachmentService;
 import com.ChatApplication.Service.MessageService;
@@ -13,13 +12,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/attachment")
+@RequestMapping("/api/attachments")
 public class AttachmentController {
     private final AttachmentRepository attachmentRepository;
     private final AttachmentService attachmentService;
@@ -54,9 +56,7 @@ public class AttachmentController {
     public ResponseEntity<?> downloadAttachment(
             @PathVariable("attachmentId")String attachmentId
     ){
-       Attachment fetchAttachment = attachmentRepository.findById(attachmentId)
-               .orElseThrow(()-> new ResourceNotFoundException("File not found."));
-        Resource resource = this.attachmentService.downloadAttachment(fetchAttachment.getFileName());
+        Resource resource = this.attachmentService.downloadAttachment(attachmentId);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header("Content-Disposition","attachment: fileName=\""+ resource.getFilename()+"\"")
@@ -64,10 +64,14 @@ public class AttachmentController {
     }
 
     private StompHeaderAccessor createHeaderAccessorFromHttp(HttpServletRequest request){
-        StompHeaderAccessor headerAccessor = (StompHeaderAccessor) StompHeaderAccessor.create();
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.create(StompCommand.SEND);
         String authToken  = request.getHeader("Authorization");
         if(authToken != null){
             headerAccessor.addNativeHeader("Authorization",authToken);
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication != null  && authentication.isAuthenticated()){
+            headerAccessor.setUser(authentication);
         }
         return headerAccessor;
     }

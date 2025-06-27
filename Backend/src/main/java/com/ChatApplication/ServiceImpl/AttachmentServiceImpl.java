@@ -1,6 +1,7 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.Entity.Attachment;
+import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.AttachmentRepository;
 import com.ChatApplication.Service.AttachmentService;
 import lombok.RequiredArgsConstructor;
@@ -82,13 +83,15 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     }
     @Override
-    public Resource downloadAttachment(String fileName) {
+    public Resource downloadAttachment(String attachmentId) {
         try{
-            String cleanFileName = cleanFileName(fileName);
-            if(cleanFileName == null){
+            Attachment attachment = attachmentRepository.findById(attachmentId)
+                    .orElseThrow(()-> new ResourceNotFoundException("Download attachment not found."));
+            String originalFileName = cleanFileName(attachment.getFileName());
+            if(originalFileName == null){
                 throw new IllegalArgumentException("Invalid file Name.");
             }
-            String extension = getExtension(cleanFileName);
+            String extension = getExtension(originalFileName);
             if(!isExtensionAllowed(extension)){
                 throw new IllegalArgumentException("Oops! This file type isn't allowed. Please choose a supported format.");
             }
@@ -101,7 +104,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             if(!Files.exists(categoryPath)){
                 throw new FileNotFoundException("File not found: " + categoryPath);
             }
-            Path filePath = categoryPath.resolve(cleanFileName);
+            Path filePath = categoryPath.resolve(originalFileName);
 
             Resource resource =  new  UrlResource(filePath.toUri());
             if(!resource.exists() || !resource.isReadable()){

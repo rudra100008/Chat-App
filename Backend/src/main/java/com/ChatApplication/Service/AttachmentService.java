@@ -8,6 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface AttachmentService {
     Attachment uploadAttachment( MultipartFile file);
-    Resource downloadAttachment(String fileName);
+    Resource downloadAttachment(String attachmentId);
     void deleteAttachment(Attachment attachment);
 }
