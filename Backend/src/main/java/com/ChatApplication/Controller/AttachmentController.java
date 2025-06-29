@@ -59,7 +59,7 @@ public class AttachmentController {
         Resource resource = this.attachmentService.downloadAttachment(attachmentId);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header("Content-Disposition","attachment: fileName=\""+ resource.getFilename()+"\"")
+                .header("Content-Disposition","attachment; fileName=\""+ resource.getFilename()+"\"")
                 .body(resource);
     }
 

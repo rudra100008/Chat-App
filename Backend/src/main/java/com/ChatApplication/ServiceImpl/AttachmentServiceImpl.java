@@ -13,8 +13,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
@@ -67,9 +69,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                    .fileName(uniqueFileName)
                    .fileType(file.getContentType())
                    .build();
-            Attachment savedAttachment = this.attachmentRepository.save(attachment);
-            savedAttachment.setUrl("/api/attachments/download/" + savedAttachment.getAttachmentId());
-            return this.attachmentRepository.save(savedAttachment);
+           return this.attachmentRepository.save(attachment);
        }catch (FileNotFoundException e){
           throw new RuntimeException("error: "+e.getMessage());
        }catch (Exception e){
@@ -78,24 +78,49 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
-    public void deleteAttachment(Attachment attachment) {
+    public void deleteAttachment(String attachmentId) {
+        if (!StringUtils.hasText(attachmentId)) {
+            throw new IllegalArgumentException("Attachment ID cannot be null or empty");
+        }
 
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(()-> new ResourceNotFoundException("Delete attachment not found."));
+        String uniqueFileName = attachment.getFileName();
+        String extension = getExtension(uniqueFileName);
+        String category = getFileCategories(extension);
+        if(category == null){
+            throw new IllegalArgumentException("Unsupported file type. Upload a valid format.");
+        }
+        try{
+            Path basePath = Path.of(uploadDir).normalize();
+            Path categoryPath = basePath.resolve(category).normalize();
+            Path originalPath = categoryPath.resolve(uniqueFileName);
+            if(Files.exists(originalPath)){
+                Files.delete(originalPath);
+            }
+            attachmentRepository.delete(attachment);
+        }catch (IOException e){
+            throw new RuntimeException("Could not delete file "+ attachment.getAttachmentId() + ". Please try again",e);
+        }
     }
     @Override
     public Resource downloadAttachment(String attachmentId) {
+        if(!StringUtils.hasText(attachmentId)){
+            throw  new IllegalArgumentException("Attachment ID cannot be null or empty");
+        }
         try{
             Attachment attachment = attachmentRepository.findById(attachmentId)
                     .orElseThrow(()-> new ResourceNotFoundException("Download attachment not found."));
-            String originalFileName = cleanFileName(attachment.getFileName());
-            if(originalFileName == null){
+            String fileName  = attachment.getFileName();
+            if(!StringUtils.hasText(fileName)){
                 throw new IllegalArgumentException("Invalid file Name.");
             }
-            String extension = getExtension(originalFileName);
+            String extension = getExtension(fileName);
             if(!isExtensionAllowed(extension)){
                 throw new IllegalArgumentException("Oops! This file type isn't allowed. Please choose a supported format.");
             }
             String category = getFileCategories(extension);
-            if(category == null){
+            if(!StringUtils.hasText(category)){
                 throw new IllegalArgumentException("Unsupported file type. Upload a valid format.");
             }
             Path baseDirPath = Path.of(uploadDir).normalize();
@@ -103,7 +128,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             if(!Files.exists(categoryPath)){
                 throw new FileNotFoundException("File not found: " + categoryPath);
             }
-            Path filePath = categoryPath.resolve(originalFileName);
+            Path filePath = categoryPath.resolve(fileName);
 
             Resource resource =  new  UrlResource(filePath.toUri());
             if(!resource.exists() || !resource.isReadable()){
