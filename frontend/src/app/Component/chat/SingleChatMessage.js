@@ -1,5 +1,6 @@
 
 import style from "../../Style/chat.module.css";
+import AttachmentDisplay from "./AttachmentDisplay";
 
 
 const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp ,userId}) => {
@@ -16,7 +17,13 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp ,user
                             className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
                         >
                             <div className={style.MessageContent}>
-                                {msg.content}
+                                {msg.content && msg.content !== "" ?(
+                                    msg.content
+                                ):(
+                                    <AttachmentDisplay
+                                     message={msg}
+                                     />
+                                )}
                             </div>
                             <div className={style.MessageTimestamp}>
                                 {formatTimestamp(msg.timestamp)}

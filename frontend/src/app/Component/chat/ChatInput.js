@@ -19,6 +19,7 @@ const ChatInput = ({ value, onSend, onChange, fileRef, handleAttachmentChange, h
                 type='file'
                 ref={fileRef}
                 style={{display: "none"}}
+                 accept=".pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp3,.wav,.aac,.flac,.mp4,.avi,.mkv,.mov,.wmv"
                 onChange={handleAttachmentChange}
                 />
             </div>
