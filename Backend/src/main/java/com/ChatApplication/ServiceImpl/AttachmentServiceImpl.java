@@ -40,8 +40,6 @@ public class AttachmentServiceImpl implements AttachmentService {
     public Attachment uploadAttachment(MultipartFile file){
        try{
          validateAttachment(file);
-         String attachmentId = UUID.randomUUID().toString();
-
 
          String originalFileName = cleanFileName(file.getOriginalFilename());
          if(originalFileName == null){
@@ -57,7 +55,7 @@ public class AttachmentServiceImpl implements AttachmentService {
              throw new IllegalArgumentException("Unsupported file type. Upload a valid format.");
          }
 
-          String uniqueFileName = attachmentId + "_" + originalFileName;
+           String uniqueFileName = UUID.randomUUID() + "_" + originalFileName;
            Path baseUploadPath  = Path.of(uploadDir).normalize();
            Path categoryPath = baseUploadPath.resolve(fileCategory).normalize();
            Path filePath = categoryPath.resolve(uniqueFileName);
@@ -66,11 +64,12 @@ public class AttachmentServiceImpl implements AttachmentService {
            }
            Files.copy(file.getInputStream(),filePath, StandardCopyOption.REPLACE_EXISTING);
            Attachment attachment = Attachment.builder()
-                   .fileName(originalFileName)
+                   .fileName(uniqueFileName)
                    .fileType(file.getContentType())
-                   .url("/api/attachments/download/" + attachmentId)
                    .build();
-            return this.attachmentRepository.save(attachment);
+            Attachment savedAttachment = this.attachmentRepository.save(attachment);
+            savedAttachment.setUrl("/api/attachments/download/" + savedAttachment.getAttachmentId());
+            return this.attachmentRepository.save(savedAttachment);
        }catch (FileNotFoundException e){
           throw new RuntimeException("error: "+e.getMessage());
        }catch (Exception e){
