@@ -3,7 +3,7 @@ import style from "../../Style/chat.module.css";
 import AttachmentDisplay from "./AttachmentDisplay";
 
 
-const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp ,userId}) => {
+const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId }) => {
     return (
         <>
             {
@@ -16,19 +16,25 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp ,user
                             key={msg.messageId}
                             className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
                         >
-                            <div className={style.MessageContent}>
-                                {msg.content && msg.content !== "" ?(
-                                    msg.content
-                                ):(
+                            <div >
+                                {msg.content && msg.content !== "" ? (
+                                    <>
+                                        <div className={style.MessageContent}>
+                                            {msg.content}
+                                        </div>
+                                        <div className={style.MessageTimestamp}>
+                                            {formatTimestamp(msg.timestamp)}
+                                        </div>
+                                    </>
+
+                                ) : (
                                     <AttachmentDisplay
-                                     message={msg}
-                                     />
+                                        message={msg}
+                                    />
                                 )}
                             </div>
-                            <div className={style.MessageTimestamp}>
-                                {formatTimestamp(msg.timestamp)}
-                            </div>
-                        </div>
+
+                        </div >
                     ))
                 )
             }
