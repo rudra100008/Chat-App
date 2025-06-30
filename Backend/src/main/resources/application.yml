@@ -15,6 +15,18 @@ spring:
     multipart:
       max-file-size: 25MB
       max-request-size: 25MB
+      enabled: true
+server:
+  tomcat:
+    max-http-form-post-size: 25MB
+    max-swallow-size: 25MB
+  error:
+    whitelabel:
+      enabled: false
+    include-exception: true
+    include-stacktrace: NEVER
+    include-message: ALWAYS
+
 security:
   jwt:
     security-key: 4bbf5ef641e95aa5474f6f9e000b80e83e7c2e441cff743658aafd16a08234c6

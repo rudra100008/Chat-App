@@ -113,7 +113,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<?> handleMaxUploadSizeException(MaxUploadSizeExceededException e, WebRequest request){
-        return  createErrorResponse((HttpStatus.BAD_REQUEST),e.getMessage(),request);
+        return  createErrorResponse((HttpStatus.PAYLOAD_TOO_LARGE),e.getMessage(),request);
     }
 
     @MessageExceptionHandler(MethodArgumentNotValidException.class)
