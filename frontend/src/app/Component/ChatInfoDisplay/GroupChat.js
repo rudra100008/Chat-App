@@ -7,7 +7,10 @@ import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
 import { useWebSocket } from "@/app/context/WebSocketContext";
 import ErrorPrompt from "../ErrorPrompt";
+import { useAuth } from "@/app/context/AuthContext";
+import { fetchUserData } from "@/app/services/userService";
 const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
+    const { logout } = useAuth();
     const [showEditChat, setShowEditChat] = useState(false);
     const [showEditChatName, setShowEditChatName] = useState(false);
     const [localChatData, setLocalChatData] = useState(chatData);
@@ -15,32 +18,33 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
     const inputRef = useRef(null);
     const spanRef = useRef(null);
     const fileRef = useRef(null);
-    const [errorMessage,setErrorMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const { setChatInfo } = useWebSocket();
+    const [adminUsernames, setAdminUsernames] = useState([]);
 
     const handleEditChat = () => {
         fileRef.current.click();
     }
 
-    const handleFileChange = async(event) => {
-        const file  = event.target.files[0];
-        if(file){
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (file) {
             const formData = new FormData();
-            formData.append("image",file);
-           await axiosInterceptor.post(`${baseUrl}/api/chats/uploadChatImage/${chatData.chatId}`,formData,{
-                headers :{
-                    Authorization : `Bearer ${token}`,
-                    'Content-Type':'multipart/form-data'
+            formData.append("image", file);
+            await axiosInterceptor.post(`${baseUrl}/api/chats/uploadChatImage/${chatData.chatId}`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
                 }
-            }).then((res)=>{
+            }).then((res) => {
                 console.log("File upload Successful");
                 const newChatData = res.data;
-                console.log("Backend Response: ",newChatData);
-                setChatData(prev=>
-                (prev.chatId === newChatData.chatId ? newChatData : prev)
+                console.log("Backend Response: ", newChatData);
+                setChatData(prev =>
+                    (prev.chatId === newChatData.chatId ? newChatData : prev)
                 );
-            }).catch((error)=>{
-                console.log("GroupChat:\nerror:",error.response.data)
+            }).catch((error) => {
+                console.log("GroupChat:\nerror:", error.response.data)
                 setErrorMessage(error.response?.data?.Error || "Something Unexpected Occurred");
             })
         }
@@ -75,12 +79,32 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
             loadUserChats();
             setShowEditChatName(false);
         }).catch((error) => {
-            console.log("GroupChat:\n Error",error.response);
+            console.log("GroupChat:\n Error", error.response);
             setErrorMessage(error.response?.data?.Error || "Something Unexpected Occurred")
         }).finally({
 
         })
     }, [chatData, localChatData])
+
+    useEffect(() => {
+        console.log("chatData: ", chatData)
+        if (!chatData) return;
+        const fetchAdminUsername = async () => {
+            const promises = chatData.adminIds.map((admin) => (
+                fetchUserData(admin, token, logout)
+            ))
+            const users = await Promise.all(promises);
+            console.log("Users",users)
+            const usernames = users
+                .filter(user => user != null)
+                .map(user => user.username)
+
+            setAdminUsernames(usernames);
+        }
+        if (chatData?.adminIds?.length > 0) {
+            fetchAdminUsername();
+        }
+    }, [chatData.adminIds, token, logout])
 
     useEffect(() => {
         const handleClickOutSide = (event) => {
@@ -110,11 +134,11 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
                     <FontAwesomeIcon icon={faEdit} size="sm" onClick={handleEditChat} />
                 </div>
                 <input
-                 type="file"
-                 ref={fileRef}
-                 style={{display: "none"}}
-                 onChange={handleFileChange}
-                 />
+                    type="file"
+                    ref={fileRef}
+                    style={{ display: "none" }}
+                    onChange={handleFileChange}
+                />
             </div>
             {
                 showEditChatName ?
@@ -150,6 +174,14 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
                     }) || "unknown time"
                 }
                 </p>
+            </div>
+            <div className={style.chatInfoDisplay}>
+                <p>Admin</p>
+                {
+                    adminUsernames.map((username, index) => (
+                        <p key={index}>{username}</p>
+                    ))
+                }
             </div>
         </div>
     )

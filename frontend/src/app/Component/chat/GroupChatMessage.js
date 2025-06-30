@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import style from "../../Style/chat.module.css"
 import GetGroupImage from "../GetGroupImage";
 import GetUserImage from "../GetUserImage";
+import AttachmentDisplay from "./AttachmentDisplay";
 
 const GroupChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId, userChat,fetchUser }) => {
     const [userName,setUsername] = useState({});
@@ -47,9 +48,21 @@ const GroupChatMessage = ({ message, firstPostElementRef, formatTimestamp, userI
                                         {userName[msg.senderId] || "Loading..."}
                                     </div>)
                                 }
-                                <div className={style.MessageContent}>
-                                    {msg.content}
-                                </div>
+                                <div >
+                                {msg.content && msg.content !== "" ? (
+                                    <>
+                                        <div className={style.MessageContent}>
+                                            {msg.content}
+                                        </div>
+
+                                    </>
+
+                                ) : (
+                                    <AttachmentDisplay
+                                        message={msg}
+                                    />
+                                )}
+                            </div>
                                 <div className={style.MessageTimestamp}>
                                     {formatTimestamp(msg.timestamp)}
                                 </div>

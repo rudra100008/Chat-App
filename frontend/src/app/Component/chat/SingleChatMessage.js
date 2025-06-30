@@ -22,9 +22,7 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, user
                                         <div className={style.MessageContent}>
                                             {msg.content}
                                         </div>
-                                        <div className={style.MessageTimestamp}>
-                                            {formatTimestamp(msg.timestamp)}
-                                        </div>
+
                                     </>
 
                                 ) : (
@@ -32,6 +30,9 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, user
                                         message={msg}
                                     />
                                 )}
+                            </div>
+                            <div className={style.MessageTimestamp}>
+                                {formatTimestamp(msg.timestamp)}
                             </div>
 
                         </div >

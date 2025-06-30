@@ -16,9 +16,9 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
     const [value, setValue] = useState('');
     const [currentChatId, setCurrentChatId] = useState(null);
     const { messages, setMessages, loading, firstMessageElementRef, resetState } = useMessages({ userId, token, chatId });
-    const { connected, stompClient, error,} = useChatWebSocket({ userId, chatId, token, messages, setMessages ,router});
+    const { connected, stompClient, error, } = useChatWebSocket({ userId, chatId, token, messages, setMessages, router });
     const { userChat } = useChatDetails({ chatId, token, userId, setOtherUserDetails })
-      const fileRef = useRef(null);
+    const fileRef = useRef(null);
 
 
     const onChange = (e) => {
@@ -29,25 +29,36 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
         fileRef.current.click();
     }
 
-    const handleAttachmentChange = async(e) => {
-        const file  = e.target.files[0];
+    const handleAttachmentChange = async (e) => {
+        const file = e.target.files[0];
 
         const formData = new FormData();
         formData.append("senderId", userId);
-        formData.append("chatId",chatId);
-        formData.append("file",file);
+        formData.append("chatId", chatId);
+        formData.append("file", file);
 
-        if(file){
-            await axiosInterceptor.post(`${baseUrl}/api/attachments/upload`,formData,{
-                headers :{
-                    Authorization : `Bearer ${token}`,
+        if (file) {
+            await axiosInterceptor.post(`${baseUrl}/api/attachments/upload`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
-            }).then((response)=>{
+            }).then((response) => {
                 console.log(response.data);
-            }).catch((error)=>{
-                console.log(error.response.data)
-            })
+            }).catch((error) => {
+                if (error.response) {
+                    // Server responded with error status (4xx, 5xx)
+                    console.log("Backend error:", error.response.data);
+                } else if (error.request) {
+                    // Request was made, no response (connection lost or dropped)
+                    alert("Upload failed: File may be larger than 25MB or server did not respond.");
+                    console.error("No response received:", error.message);
+                } else {
+                    // Something went wrong before sending request
+                    console.error("Error in setting up the request:", error.message);
+                }
+            });
+
         }
     }
 
@@ -123,8 +134,8 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
                         message={messages}
                         userId={userId}
                         firstPostElementRef={firstMessageElementRef}
-                        userChat = {userChat}
-                        token ={token}
+                        userChat={userChat}
+                        token={token}
                         loading={loading} />
 
                     <ChatInput
