@@ -3,6 +3,7 @@ package com.ChatApplication.DTO;
 
 import com.ChatApplication.Enum.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -33,6 +34,7 @@ public class UserDTO {
     @Size(min = 8, max = 64, message = "Password must be between 8 and 64 characters")
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
             message = "Password must contain at least one letter, one number, and one special character")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String profilePicture;
 
@@ -42,8 +44,8 @@ public class UserDTO {
     private UserStatus status;
     private LocalDateTime lastSeen;
 
-    @JsonIgnore
-    public String getPassword(){
-        return password;
-    }
+//    @JsonIgnore
+//    public String getPassword(){
+//        return password;
+//    }
 }

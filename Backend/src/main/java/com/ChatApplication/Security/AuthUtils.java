@@ -38,7 +38,9 @@ public class AuthUtils {
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             throw new IllegalArgumentException("No authenticated user found.");
         }
-
+//        System.out.println("User: " + authentication.getName());
+//        System.out.println("Authentication: " + authentication);
+//        System.out.println("Header: " + stompHeaderAccessor.toNativeHeaderMap() );
         return userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         authentication.getName() + " not found in the server."));

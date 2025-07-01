@@ -7,4 +7,5 @@ import org.springframework.stereotype.Service;
 public interface ChatDisplayNameService {
     ChatDisplayNameDTO fetchChatName(String chatId,String userId);
     ChatDisplayNameDTO saveChatName(String chatId,String chatName,String userId);
+    ChatDisplayNameDTO updateChatName(String chatId,String chatName,String userId);
 }

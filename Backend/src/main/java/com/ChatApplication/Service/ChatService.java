@@ -28,4 +28,6 @@ public interface ChatService {
     //update the group chat
     ChatDTO updateGroupChat(ChatDTO chatDTO);
 
+    ChatDTO addAdminToChat(String chatId,String userId);
+
 }

@@ -11,11 +11,10 @@ import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,7 +52,10 @@ public class ChatController {
         chatDTO.setChatType(ChatType.SINGLE);
         ChatDTO savedChat = this.chatService.createChat(chatDTO);
 
-        String otherUserChatName =  loginUser.getPhoneNumber();
+        String otherUserChatName =  loginUser.getUsername();
+        if(!StringUtils.hasText(chatName)){
+            chatName = otherUser.getPhoneNumber();
+        }
         this.chatDisplayNameService.saveChatName(savedChat.getChatId(), chatName, loginUser.getUserId());
         chatDisplayNameService.saveChatName(savedChat.getChatId(),otherUserChatName,otherUser.getUserId());
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
@@ -170,7 +172,7 @@ public class ChatController {
             @RequestParam(value = "image",required = false)MultipartFile imageFile){
         User currentUser = authUtils.getLoggedInUsername();
         String uploadDir = baseUploadDir + File.separator + "groupChat";
-        String imageName = "";
+        String imageName = null;
         ChatDTO  chatDTO = chatService.fetchUserChat(chatId);
         if(!chatDTO.getAdminIds().contains(currentUser.getUserId())){
             return ResponseEntity
@@ -280,5 +282,14 @@ public class ChatController {
                 .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(updatedChat);
+    }
+
+    @PostMapping("/promoteUserToAdmin")
+    public ResponseEntity<?> promoteUserToAdmin(
+            @RequestParam("chatId")String chatId,
+            @RequestParam("userId") String userId
+    ){
+        ChatDTO chat = this.chatService.addAdminToChat(chatId,userId);
+        return ResponseEntity.ok(chat);
     }
 }

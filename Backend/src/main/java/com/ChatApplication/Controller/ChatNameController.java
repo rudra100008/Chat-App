@@ -7,7 +7,6 @@ import com.ChatApplication.Service.ChatDisplayNameService;
 import com.ChatApplication.Service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,5 +27,19 @@ public class ChatNameController {
             throw  new IllegalArgumentException("");
         }
         return ResponseEntity.ok(chatName);
+    }
+
+    @PutMapping("/updateChatName/{userId}/chat/{chatId}")
+    public ResponseEntity<?> updateChatName(
+            @PathVariable("userId")String userId,
+            @PathVariable("chatId")String chatId,
+            @RequestParam("chatName")String chatName
+    ){
+        ChatDisplayNameDTO chatDisplayNameDTO = this.chatDisplayNameService.saveChatName(chatId,chatName,userId);
+        ChatDTO  fetchChat =  chatService.fetchUserChat(chatId);
+        if(fetchChat.getChatType() == ChatType.GROUP){
+            throw  new IllegalArgumentException("Group chat has no chatName.");
+        }
+        return ResponseEntity.ok(chatDisplayNameDTO);
     }
 }
