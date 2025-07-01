@@ -174,11 +174,16 @@
   padding: 1rem;
   max-height: 300px;
   overflow-y: auto;
+  scrollbar-width: none; /*fire fox */
+  -ms-overflow-style: none;
 }
 .membersList {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.groupContainer::-webkit-scrollbar{
+  display: none;
 }
 .memberCard {
   display: flex;

@@ -127,6 +127,7 @@ export default function UserChats({
                                             {
                                                 chat.lastMessage &&
                                                 (<p className={style.lastMessage}>
+                                                    
                                                     {chat.lastMessage.length <= 20 ?
                                                         chat.lastMessage
                                                         : chat.lastMessage.slice(0, 20) + "...."

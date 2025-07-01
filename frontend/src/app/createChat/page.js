@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function CreateChat() {
   const router = useRouter();
-  const {token, userId} = useAuth();
+  const {token} = useAuth();
   const [chatName, setChatName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +71,7 @@ export default function CreateChat() {
             className={style.inputForm}
             onChange={handleChatNameChange}
             value={chatName}
-            required
+            
           />
         </div>
         <div className={style.FormGroup}>

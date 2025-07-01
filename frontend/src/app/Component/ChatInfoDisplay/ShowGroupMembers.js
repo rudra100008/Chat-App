@@ -11,7 +11,7 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
     const [groupMembers, setGroupMembers] = useState([]);
 
     const getParticipantIds = () => {
-        setParticipantIds(chatData.participantIds.filter(pIds => pIds !== userId))
+        setParticipantIds(chatData.participantIds);
     }
     const fetchParticipants = async () => {
         for (const id of participantIds) {
@@ -23,11 +23,11 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
                 })
                 const userData = response.data;
                 setGroupMembers((prev) => {
-                    const isSame = prev.find(member => member.userId === userData.userId);
-                    if (!isSame) {
-                        return [...prev, userData]
-                    }
-                    return prev;
+                    // const isSame = prev.find(member => member.userId === userData.userId);
+                    // if (!isSame) {
+                    //     return [...prev, userData]
+                    // }
+                    return [...prev,userData];
                 }
                 )
             } catch (error) {

@@ -113,6 +113,8 @@ const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, lastSe
                                         status={status}
                                         formatLastSeen={formatLastSeen}
                                         chatData={chatData}
+                                        setChatData ={setChatData}
+                                        loadUserChats={loadUserChats}
                                     />
                                 ) :
                                 (

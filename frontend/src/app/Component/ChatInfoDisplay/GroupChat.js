@@ -11,7 +11,6 @@ import { useAuth } from "@/app/context/AuthContext";
 import { fetchUserData } from "@/app/services/userService";
 const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
     const { logout } = useAuth();
-    const [showEditChat, setShowEditChat] = useState(false);
     const [showEditChatName, setShowEditChatName] = useState(false);
     const [localChatData, setLocalChatData] = useState(chatData);
     const [inputWidth, setInputWidth] = useState(100);
@@ -19,7 +18,6 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
     const spanRef = useRef(null);
     const fileRef = useRef(null);
     const [errorMessage, setErrorMessage] = useState('');
-    const { setChatInfo } = useWebSocket();
     const [adminUsernames, setAdminUsernames] = useState([]);
 
     const handleEditChat = () => {
