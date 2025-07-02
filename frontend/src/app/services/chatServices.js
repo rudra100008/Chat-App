@@ -2,13 +2,7 @@
 import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 
-/**
- * Fetches chat names for an array of chats
- * @param {Array} chats - Array of chat objects
- * @param {string} userId - Current user ID
- * @param {string} token - Authorization token
- * @returns {Object} Object with chatId as key and chatname as value
- */
+
 export const fetchChatNames = async (chats, userId, token) => {
     const chatNames = {};
 
@@ -39,13 +33,8 @@ export const fetchChatNames = async (chats, userId, token) => {
     return chatNames;
 };
 
-/**
- * Fetches all chats for a specific user
- * @param {string} userId - User ID
- * @param {string} token - Authorization token
- * @returns {Array} Array of chat objects
- */
-export const fetchUserChats = async (userId, token,router,logout) => {
+
+export const fetchUserChats = async (userId, token,logout) => {
     if (!userId || !token) {
         throw new Error("User ID and token are required");
     }
@@ -64,19 +53,13 @@ export const fetchUserChats = async (userId, token,router,logout) => {
         if(error.response.status === 401){
             logout();
         }
-        throw error; // Re-throw to let the component handle it
+        throw error;
     }
 };
 
-/**
- * Fetches user chats along with their names
- * @param {string} userId - User ID
- * @param {string} token - Authorization token
- * @returns {Object} Object containing chats array and chatNames object
- */
 export const fetchUserChatsWithNames = async (userId, token,router,logout) => {
     try {
-        const chats = await fetchUserChats(userId, token,router,logout);
+        const chats = await fetchUserChats(userId, token,logout);
         const chatNames = await fetchChatNames(chats, userId, token);
 
         return {

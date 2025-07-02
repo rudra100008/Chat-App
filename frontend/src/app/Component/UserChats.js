@@ -13,24 +13,23 @@ import { useWebSocket } from "../context/WebSocketContext";
 
 
 export default function UserChats({
-    userId,
-    token,
     onChatSelect,
-    otherUserId,
     setShowSearchBox,
     setShowChatInfoBox,
     selectedChatInfo,
     setSelectedChatInfo,
     loadUserChats,
     chatNames,
-    setChatNames,
- }) {
+    handleChatInfoToggle,
+    handleSearchToggle,
+    isChatInfosLoading
+
+}) {
     const router = useRouter();
-    const { logout } = useAuth();
-    const { chatInfo,userStatusMap} = useWebSocket();
+    const { userId, token } = useAuth();
+    const { chatInfos, userStatusMap } = useWebSocket();
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
-    const [isReload,setIsReload] = useState(false);
 
 
     const getOtherUser = (chat) => {
@@ -47,24 +46,6 @@ export default function UserChats({
         setShowBox((prevState) => !prevState);
     }
 
-    const handleChatContainerClick = (chatDetails) => {
-        console.log("handleChatContainerClicked in UserChats.js");
-        console.log("ChatDetails from UserChats:\n",chatDetails)
-        const isSame =  selectedChatInfo?.chatId === chatDetails.chatId;
-        if(isSame){
-            setSelectedChatInfo(null);
-            setShowChatInfoBox(false);
-        }else{
-            setShowChatInfoBox(true);
-            setSelectedChatInfo({
-                ...chatDetails, chatName:chatNames[chatDetails.chatId]
-            })
-        }
-    }
-    const handleSearchClick = () => {
-        setShowSearchBox(prev => !prev);
-    }
-
     useEffect(() => {
         if (!userId || !token) {
             router.push("/")
@@ -72,11 +53,24 @@ export default function UserChats({
         loadUserChats();
     }, [userId, token])
 
+    if (isChatInfosLoading) {
+        return (
+            <div className={style.Container}>
+                <div className={style.Section}>
+                    <FontAwesomeIcon icon={faSearch} className={style.searchButton} onClick={handleSearchToggle} />
+                    <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
+                        <FontAwesomeIcon icon={faEllipsisV} />
+                    </div>
+                </div>
+                <p className={style.errorMessage}>Loading Chats...</p>
+            </div>
+        )
+    }
     return (
         <div>
             <div className={style.Container}>
                 <div className={style.Section}>
-                    <FontAwesomeIcon icon={faSearch} className={style.searchButton} onClick={handleSearchClick} />
+                    <FontAwesomeIcon icon={faSearch} className={style.searchButton} onClick={handleSearchToggle} />
                     <div className={style.faEllipsisV} onClick={handleEllipseVClick}>
                         <FontAwesomeIcon icon={faEllipsisV} />
                     </div>
@@ -103,66 +97,67 @@ export default function UserChats({
                         </>
                     }
                 </div>
-                {chatInfo.length === 0 ? <p className={style.errorMessage}>No chats available</p> : (
+                {chatInfos.length === 0 ? <p className={style.errorMessage}>No chats available</p> : (
                     <div>
-                        {chatInfo.map((chat) => {
+                        {chatInfos.map((chat) => {
                             const userStatus = userStatusMap[getOtherUser(chat)]
-                            return(
-                            chat.chatType === "SINGLE" ?
-                                (
-                                    <div
-                                        className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
-                                        key={chat.chatId}
-                                        onClick={() => handleChatClick(chat.chatId)}>
-                                        <div onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleChatContainerClick(chat);
-                                        }}>
-                                            <div className={`${style.imageContainer} ${userStatus?.status === 'ONLINE'?style.online :""}`}>
-                                                 <GetUserImage userId={getOtherUser(chat)} />
+                            return (
+                                chat.chatType === "SINGLE" ?
+                                    (
+                                        <div
+                                            className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
+                                            key={chat.chatId}
+                                            onClick={() => handleChatClick(chat.chatId)}>
+                                            <div onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleChatInfoToggle(chat);
+                                            }}>
+                                                <div className={`${style.imageContainer} ${userStatus?.status === 'ONLINE' ? style.online : ""}`}>
+                                                    <GetUserImage userId={getOtherUser(chat)} />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                                {
+                                                    chat.lastMessage &&
+                                                    (<p className={style.lastMessage}>
+
+                                                        {chat.lastMessage.length <= 20 ?
+                                                            chat.lastMessage
+                                                            : chat.lastMessage.slice(0, 20) + "...."
+                                                        }
+                                                    </p>)
+                                                }
                                             </div>
                                         </div>
-                                        <div>
-                                            <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
-                                            {
-                                                chat.lastMessage &&
-                                                (<p className={style.lastMessage}>
-                                                    
-                                                    {chat.lastMessage.length <= 20 ?
-                                                        chat.lastMessage
-                                                        : chat.lastMessage.slice(0, 20) + "...."
-                                                    }
-                                                </p>)
-                                            }
+                                    ) :
+                                    (
+                                        <div className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
+                                            key={chat.chatId}
+                                            onClick={() => handleChatClick(chat.chatId)}
+                                        >
+                                            <div onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleChatInfoToggle(chat);
+                                            }}>
+                                                <GetGroupImage chatId={chat.chatId} selectedChatInfo={selectedChatInfo} />
+                                            </div>
+                                            <div>
+                                                <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
+                                                {
+                                                    chat.lastMessage &&
+                                                    (<p className={style.lastMessage}>
+                                                        {chat.lastMessage.length < 50 ?
+                                                            chat.lastMessage
+                                                            : chat.lastMessage.slice(0, 50) + "...."
+                                                        }
+                                                    </p>)
+                                                }
+                                            </div>
                                         </div>
-                                    </div>
-                                ) :
-                                (
-                                    <div className={`${style.ChatContainer} ${selectedChat === chat.chatId ? style.active : ''}`}
-                                        key={chat.chatId}
-                                        onClick={() => handleChatClick(chat.chatId)}
-                                    >
-                                        <div onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleChatContainerClick(chat);
-                                        }}>
-                                            <GetGroupImage chatId={chat.chatId} selectedChatInfo={selectedChatInfo} />
-                                        </div>
-                                        <div>
-                                            <p className={style.chatName}>{chatNames[chat.chatId] || "Loading..."}</p>
-                                            {
-                                                chat.lastMessage &&
-                                                (<p className={style.lastMessage}>
-                                                    {chat.lastMessage.length < 50 ?
-                                                        chat.lastMessage
-                                                        : chat.lastMessage.slice(0, 50) + "...."
-                                                    }
-                                                </p>)
-                                            }
-                                        </div>
-                                    </div>
-                                )
-                        )})}
+                                    )
+                            )
+                        })}
                     </div>
                 )}
             </div>

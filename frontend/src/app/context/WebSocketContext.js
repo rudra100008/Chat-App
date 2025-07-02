@@ -15,7 +15,7 @@ export const WebSocketProvider = ({ children }) => {
     const [isWebSocketConnected,setIsWebSocketConnected] = useState(false);
     const [userLastSeen, setUserLastSeen] = useState(null);
     const [userStatus, setUserStatus] = useState(null);
-    const [chatInfo,setChatInfo] = useState([]);
+    const [chatInfos,setChatInfos] = useState([]);
     const stompClientRef = useRef(null); 
     const [userStatusMap,setUserStatusMap] = useState({});
 
@@ -50,7 +50,7 @@ export const WebSocketProvider = ({ children }) => {
 
                 client.subscribe(`/user/${userId}/queue/chat-update`,(message)=>{
                     const payload = JSON.parse(message.body);
-                    setChatInfo(prev=>(
+                    setChatInfos(prev=>(
                         prev.map(chat=>
                             chat.chatId === payload.chatId ? {...chat,...payload} : chat
                         )
@@ -91,7 +91,7 @@ export const WebSocketProvider = ({ children }) => {
         };
     }, [connectWebSocket,disconnectWebSocket]);
 
-    const value = { userLastSeen, userStatus, stompClientRef,isWebSocketConnected,chatInfo,setChatInfo,userStatusMap,setUserStatusMap };
+    const value = { userLastSeen, userStatus, stompClientRef,isWebSocketConnected,chatInfos,setChatInfos,userStatusMap,setUserStatusMap };
 
     return (
         <WebSocketContext.Provider value={value} >

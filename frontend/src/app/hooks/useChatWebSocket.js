@@ -1,8 +1,5 @@
 "use client"
-import { Client } from "@stomp/stompjs";
 import { useCallback, useEffect, useRef, useState } from "react";
-import SockJS from "sockjs-client";
-import baseUrl from "../baseUrl";
 import { useWebSocket } from "../context/WebSocketContext";
 
 const useChatWebSocket = ({ userId, chatId, token, messages, setMessages, router }) => {
@@ -101,10 +98,10 @@ const useChatWebSocket = ({ userId, chatId, token, messages, setMessages, router
         if (chatId !== currentChatIdRef.current) {
             console.log("ChatId changed from", currentChatIdRef.current, "to", chatId);
 
-            // Disconnect from previous chat
+            
             disconnectWebSocket();
 
-            // Update current chat reference
+            
             currentChatIdRef.current = chatId;
 
             if (isWebSocketConnected && stompClientRef.current) {

@@ -47,14 +47,14 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
                 console.log(response.data);
             }).catch((error) => {
                 if (error.response) {
-                    // Server responded with error status (4xx, 5xx)
+                    
                     console.log("Backend error:", error.response.data);
                 } else if (error.request) {
-                    // Request was made, no response (connection lost or dropped)
+                    
                     alert("Upload failed: File may be larger than 25MB or server did not respond.");
                     console.error("No response received:", error.message);
                 } else {
-                    // Something went wrong before sending request
+                   
                     console.error("Error in setting up the request:", error.message);
                 }
             });

@@ -7,58 +7,60 @@ import { useRouter } from 'next/navigation';
 import UserChats from '../Component/UserChats';
 import ChatContainer from '../Component/chat/ChatContainer';
 import { useAuth } from '../context/AuthContext';
-import ErrorPrompt from '../Component/ErrorPrompt';
 import SearchUser from '../Component/SearchUser';
 import ChatInfoDisplay from '../Component/ChatInfoDisplay';
 import useUserStatus from '../hooks/useUserStatus';
 import { useWebSocket } from '../context/WebSocketContext';
 import { fetchUserChatsWithNames } from '../services/chatServices';
+import { useChatManager } from '../hooks/useChatManager';
 
 export default function Chat() {
     const route = useRouter();
     const { token, userId, logout, isLoading, isInitialized } = useAuth()
     const [error, setError] = useState(null);
-    const [chatName, setChatName] = useState('');
+    // const [chatName, setChatName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [showSearchBox, setShowSearchBox] = useState(false);
-    const [showChatInfoBox, setShowChatInfoBox] = useState(false);
-    const [selectedChatInfo, setSelectedChatInfo] = useState(null);
+    // const [showSearchBox, setShowSearchBox] = useState(false);
+    // const [showChatInfoBox, setShowChatInfoBox] = useState(false);
+    // const [selectedChatInfo, setSelectedChatInfo] = useState(null);
     const [otherUserDetails, setOtherUserDetails] = useState([]);
-    const { stompClientRef, chatInfo, setChatInfo , userStatusMap,setUserStatusMap} = useWebSocket();
+    const { userStatusMap,setUserStatusMap} = useWebSocket();
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
         chatType: "",
         participantIds: [],
     })
-    const [chatId, setChatId] = useState('');
-    const [chatNames, setChatNames] = useState({});
+    // const [chatId, setChatId] = useState('');
+    // const [chatNames, setChatNames] = useState({});
+    const { 
+        chatId,
+        chatName,
+        chatNames,
+        chatInfos,
+        showSearchBox,
+        showChatInfoBox,
+        selectedChatInfo,
+        isChatInfosLoading,
+       
 
-    const loadUserChats = async () => {
-        if (!userId || !token) return;
+        setChatId,
+        setChatName,
+        setChatNames,
+        setChatInfos,
+        setShowSearchBox,
+        setShowChatInfoBox,
+        setSelectedChatInfo,
+        setIsChatInfosLoading,
 
-        try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, route, logout);
-            setChatInfo(chats);
-            setChatNames(chatNames);
-        } catch (error) {
-            if (error.response && error.response.status === 403) {
-                logout();
-            } else {
-                console.log("ERROR from UserChats:", error.response?.message || error.message);
-            }
-        }
-    };
+        loadUserChats,
+        handleChatInfoToggle,
+        handleSearchToggle,
+        onChatSelect} = useChatManager();
 
     // from selectedChatInfo  which is set during when clicked in the image of the chat
     const otherUserId = () => {
         return selectedChatInfo.participantIds.find(pId => pId !== userId);
-    }
-
-
-    const handleChatSelect = (selectedChat, selectedChatName) => {
-        setChatId(selectedChat);
-        setChatName(selectedChatName);
     }
     
     const fetchUserChatDetails = async () => {
@@ -158,12 +160,9 @@ export default function Chat() {
                     loadUserChats={loadUserChats}
                     onClose={() => setShowChatInfoBox(false)} />}
             <div className={style.UserChat}>
-                {/* display chat  */}
+               
                 <UserChats
-                    userId={userId}
-                    otherUserId={getOtherUserId}
-                    token={token}
-                    onChatSelect={handleChatSelect}
+                    onChatSelect={onChatSelect}
                     setShowSearchBox={setShowSearchBox}
                     setShowChatInfoBox={setShowChatInfoBox}
                     setSelectedChatInfo={setSelectedChatInfo}
@@ -173,6 +172,10 @@ export default function Chat() {
                     loadUserChats={loadUserChats}
                     chatNames={chatNames}
                     setChatNames={setChatNames}
+                    handleChatInfoToggle = {handleChatInfoToggle}
+                    handleSearchToggle = {handleSearchToggle}
+                    chatInfos={chatInfos}
+                    isChatInfosLoading={isChatInfosLoading}
                 />
             </div>
             <ChatContainer
