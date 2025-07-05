@@ -1,9 +1,14 @@
 
+import { useWebSocket } from "@/app/context/WebSocketContext";
 import style from "../../Style/chat.module.css";
 import AttachmentDisplay from "./AttachmentDisplay";
+import { useRef } from "react";
+import useReadMessage from "@/app/hooks/useReadMessage";
 
 
-const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId }) => {
+const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId, userChat }) => {
+    const { stompClientRef } = useWebSocket();
+    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId });
     return (
         <>
             {
@@ -12,8 +17,13 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, user
                 ) : (
                     message.map((msg, index) => (
                         <div
-                            ref={index === 0 ? firstPostElementRef : null}
+                            ref={(node) => {
+                                if (index == 0) firstPostElementRef();
+                                registerMessage(node, msg.messageId)
+                            }}
                             key={msg.messageId}
+                            data-message-id={msg.messageId}
+                            data-sender-id={msg.senderId}
                             className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
                         >
                             <div >
@@ -44,3 +54,13 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, user
 }
 
 export default SingleChatMessage;
+
+// About entries
+// entries is an array of IntersectionObserverEntry objects, each containing:
+
+// target: The observed DOM element
+// isIntersecting: Boolean - whether element is visible
+// intersectionRatio: How much of the element is visible (0-1)
+// boundingClientRect: Element's bounding box
+// rootBounds: Root's bounding box
+// time: When the intersection occurred

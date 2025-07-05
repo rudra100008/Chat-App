@@ -83,6 +83,7 @@ export default function Message({ message, userId , loading,firstPostElementRef,
                       userId={userId}
                       firstPostElementRef={firstPostElementRef}
                       formatTimestamp={formatTimestamp}
+                      userChat = {userChat}
                     />
                 ) : (
                     <GroupChatMessage
