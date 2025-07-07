@@ -16,4 +16,5 @@ public interface MessageService {
     MessageDTO updateMessage(String messageId,String newContent);
     void deleteMessage(String messageId);
     int countMessageByChatId(String chatId);
+    MessageDTO isRead(String messageId, String chatId,String senderId,StompHeaderAccessor headerAccessor);
 }

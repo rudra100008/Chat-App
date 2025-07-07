@@ -23,6 +23,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -109,9 +110,9 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageDTO postMessage(String senderId, String chatId, String content, Attachment attachment, StompHeaderAccessor headerAccessor) {
-        if(senderId == null || senderId.trim().isEmpty() || chatId == null || chatId.trim().isEmpty()){
-            throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
-        }
+        validateChatIdAndSenderId(chatId,senderId);
+
+
         User loggedInUsername = this.authUtils.getLoggedInUserFromWebSocket(headerAccessor);
         validateChatAccess(chatId,loggedInUsername);
         User sender = this.userRepository.findById(senderId)
@@ -194,6 +195,34 @@ public class MessageServiceImpl implements MessageService {
         return this.messageRepository.countByChat(chat);
     }
 
+    // here senderId is own who read the message(receiver) not the sender
+    @Override
+    @Transactional
+    public MessageDTO isRead(String messageId, String chatId, String senderId,StompHeaderAccessor headerAccessor) {
+        validateChatIdAndSenderId(chatId,senderId);
+
+        // check if user can access read message
+        User loggedInUser = this.authUtils.getLoggedInUserFromWebSocket(headerAccessor);
+        validateChatAccess(chatId, loggedInUser);
+
+        if (!senderId.equals(loggedInUser.getUserId())) {
+            throw new IllegalArgumentException("Invalid user access");
+        }
+
+
+        Message message = findByMessageId(messageId);
+
+        if(!message.getChat().getChatId().equals(chatId)){
+            throw new IllegalArgumentException("Message does not belong to this chat.");
+        }
+
+        if(!message.getSender().getUserId().equals(senderId) && !message.isRead()) {
+            message.setRead(true);
+            messageRepository.save(message);
+        }
+        return modelMapper.map(message,MessageDTO.class);
+    }
+
 
     //helper function
     private String getOtherUserId(List<User> participantIds,String senderId){
@@ -224,5 +253,16 @@ public class MessageServiceImpl implements MessageService {
             return  message.getAttachment().getFileName();
         }
         return message.getContent();
+    }
+
+    private void validateChatIdAndSenderId(String chatId,String senderId){
+        if(!StringUtils.hasText(senderId) || !StringUtils.hasText(chatId)){
+            throw  new IllegalArgumentException("senderID and chatID cannot be null or empty");
+        }
+    }
+
+    private Message findByMessageId(String messageId){
+        return this.messageRepository.findById(messageId)
+                .orElseThrow(()-> new ResourceNotFoundException("Message not found."));
     }
 }

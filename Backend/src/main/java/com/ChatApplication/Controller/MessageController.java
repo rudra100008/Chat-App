@@ -1,6 +1,7 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.MessageDTO;
+import com.ChatApplication.Entity.MessageRead;
 import com.ChatApplication.Entity.PageInfo;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Security.AuthUtils;
@@ -47,7 +48,21 @@ public class MessageController {
         messagingTemplate.convertAndSend("/private/chat/" + savedMessage.getChatId(), savedMessage);
     }
 
+    // to check if message isRead(true or false)
+    @MessageMapping("/messageRead")
+    public void messageRead(
+            @Valid @Payload MessageRead messageRead,
+            StompHeaderAccessor headerAccessor)throws  ResourceNotFoundException{
 
+        MessageDTO readMessage = messageService.isRead(
+                messageRead.getMessageId(),
+                messageRead.getChatId(),
+                messageRead.getReaderId(),
+                headerAccessor
+        );
+
+        messagingTemplate.convertAndSend("/private/chat/" + readMessage.getChatId(),readMessage);
+    }
     // this post message in the chat
     @PostMapping
     public ResponseEntity<?> postMessage(
