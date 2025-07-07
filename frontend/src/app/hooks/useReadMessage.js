@@ -1,8 +1,8 @@
-import { headers } from "next/headers";
-import { useCallback, useEffect, useRef } from "react";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const useReadMessage = ({userId,stompClientRef,chatId}) => {
+const useReadMessage = ({userId,stompClientRef,chatId, setMessages}) => {
     const {token} = useAuth();
     const observerRef = useRef(null);
     const observeredMessage = useRef(new Set());
@@ -20,8 +20,8 @@ const useReadMessage = ({userId,stompClientRef,chatId}) => {
                 const senderId = entry.target.dataset.senderId;
                 if(entry.isIntersecting && !observeredMessage.current.has(msgId) && userId !== senderId ){
                     observeredMessage.current.add(msgId);
-                    const messageSend ={
-                        senderId:senderId,
+                    const messageRead ={
+                        readerId: userId,
                         messageId: msgId,
                         chatId: chatId
                     }
@@ -29,9 +29,28 @@ const useReadMessage = ({userId,stompClientRef,chatId}) => {
                     const client = stompClientRef.current;
                     client.publish({
                         destination : "/app/messageRead",
-                        headers :{ Authorization : `Bearer ${token}`},
-                        body : JSON.stringify(messageSend)
+                        headers :{ 
+                            Authorization : `Bearer ${token}`
+                        },
+                        body : JSON.stringify(messageRead)
                     })
+
+                    client.subscribe(`/private/chat/${chatId}`,(message)=>{
+                        const receivedMessage = JSON.parse(message.body);
+                        console.log("ReceivedMessage: ",receivedMessage)
+                          setMessages((prev)=>{
+                            return prev.map(msg=>{
+                                if(msg.messageId === receivedMessage.messageId){
+                                    return {
+                                        ...msg,
+                                        read: receivedMessage.read
+                                    };
+                                }
+                                return msg;
+                            })
+                          })
+                    })
+                    
                       console.log("Message read successfully");
                    }catch(error){
                     console.error("Failed to read message",error)

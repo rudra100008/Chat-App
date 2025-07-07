@@ -6,7 +6,7 @@ import GroupChatMessage from './GroupChatMessage';
 import axiosInterceptor from '../Interceptor';
 import baseUrl from '@/app/baseUrl';
 
-export default function Message({ message, userId , loading,firstPostElementRef,userChat,token}) {
+export default function Message({ messages, setMessages, userId , loading,firstPostElementRef,userChat,token}) {
     const messageEndRef = useRef(null);
     const containerRef = useRef(null);
     const prevScrollHeight = useRef(0);
@@ -46,7 +46,7 @@ export default function Message({ message, userId , loading,firstPostElementRef,
         if(containerRef.current && !loading){
             prevScrollHeight.current = containerRef.current.scrollHeight;
         }
-    },[message.length])
+    },[messages.length])
 
     useEffect(()=>{
         if(loading){
@@ -60,7 +60,7 @@ export default function Message({ message, userId , loading,firstPostElementRef,
                 }
             }
         }
-    },[message,loading])
+    },[messages,loading])
     // Format timestamp function to avoid repetition
     const formatTimestamp = (timestamp) => {
         return new Date(timestamp).toLocaleDateString();
@@ -68,7 +68,7 @@ export default function Message({ message, userId , loading,firstPostElementRef,
 
     useEffect(() => {
         scrollToBottom()
-    }, [message]);
+    }, [messages]);
     
     // console.log("Message.js: UserChat:\n",userChat);
     return (
@@ -79,7 +79,8 @@ export default function Message({ message, userId , loading,firstPostElementRef,
             {
                 userChat.chatType === "SINGLE" ? (
                     <SingleChatMessage 
-                      message={message}
+                      message={messages}
+                      setMessages = {setMessages}
                       userId={userId}
                       firstPostElementRef={firstPostElementRef}
                       formatTimestamp={formatTimestamp}
@@ -87,7 +88,8 @@ export default function Message({ message, userId , loading,firstPostElementRef,
                     />
                 ) : (
                     <GroupChatMessage
-                    message={message}
+                    message={messages}
+                    setMessages = {setMessages}
                     userId={userId}
                     firstPostElementRef= {firstPostElementRef}
                     formatTimestamp = {formatTimestamp}

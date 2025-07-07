@@ -131,7 +131,8 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
             {chatId ? (
                 <>
                     <Message
-                        message={messages}
+                        messages={messages}
+                        setMessages = {setMessages}
                         userId={userId}
                         firstPostElementRef={firstMessageElementRef}
                         userChat={userChat}

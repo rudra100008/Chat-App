@@ -263,3 +263,41 @@
     color: #666;
     font-size: 14px;
 }
+
+.DoubleCheck {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+.DoubleCheck svg {
+    width: 14px;
+    height: 14px;
+    color: #4CAF50; 
+}
+.SentMessage .DoubleCheck svg {
+    color: rgba(255, 255, 255, 0.8); 
+}
+
+.ReceivedMessage .DoubleCheck svg {
+    color: #4CAF50; 
+}
+.MessageFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+.MessageFooter .DoubleCheck {
+    margin: 0;
+    margin-left: 8px;
+}
+
+.MessageFooter .MessageTimestamp {
+    margin: 0;
+}

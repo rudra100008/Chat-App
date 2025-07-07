@@ -4,18 +4,22 @@ import style from "../../Style/chat.module.css";
 import AttachmentDisplay from "./AttachmentDisplay";
 import { useRef } from "react";
 import useReadMessage from "@/app/hooks/useReadMessage";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheckDouble } from "@fortawesome/free-solid-svg-icons";
 
 
-const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId, userChat }) => {
+const SingleChatMessage = ({ message,  setMessages, firstPostElementRef, formatTimestamp, userId, userChat }) => {
     const { stompClientRef } = useWebSocket();
-    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId });
+    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId,setMessages });
     return (
         <>
             {
                 message.length === 0 ? (
                     <div className={style.EmptyState}>Start messaging </div>
                 ) : (
-                    message.map((msg, index) => (
+                    message.map((msg, index) => {
+                        console.log("isRead: ",msg.read)
+                        return(
                         <div
                             ref={(node) => {
                                 if (index == 0) firstPostElementRef();
@@ -41,12 +45,18 @@ const SingleChatMessage = ({ message, firstPostElementRef, formatTimestamp, user
                                     />
                                 )}
                             </div>
+                            <div className={style.DoubleCheck}>
+                                {msg.read && 
+                                  <FontAwesomeIcon icon={faCheckDouble} />
+                                }
+                            </div>
                             <div className={style.MessageTimestamp}>
                                 {formatTimestamp(msg.timestamp)}
                             </div>
+                            
 
                         </div >
-                    ))
+                    )})
                 )
             }
         </>
