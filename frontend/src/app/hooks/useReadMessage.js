@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
-const useReadMessage = ({userId,stompClientRef,chatId, setMessages}) => {
+const useReadMessage = ({userId,stompClientRef,chatId}) => {
     const {token} = useAuth();
     const observerRef = useRef(null);
     const observeredMessage = useRef(new Set());
@@ -33,24 +33,7 @@ const useReadMessage = ({userId,stompClientRef,chatId, setMessages}) => {
                             Authorization : `Bearer ${token}`
                         },
                         body : JSON.stringify(messageRead)
-                    })
-
-                    client.subscribe(`/private/chat/${chatId}`,(message)=>{
-                        const receivedMessage = JSON.parse(message.body);
-                        console.log("ReceivedMessage: ",receivedMessage)
-                          setMessages((prev)=>{
-                            return prev.map(msg=>{
-                                if(msg.messageId === receivedMessage.messageId){
-                                    return {
-                                        ...msg,
-                                        read: receivedMessage.read
-                                    };
-                                }
-                                return msg;
-                            })
-                          })
-                    })
-                    
+                    }) 
                       console.log("Message read successfully");
                    }catch(error){
                     console.error("Failed to read message",error)

@@ -61,12 +61,12 @@ const useMessages = ({userId,token,chatId})=>{
         })
         // console.log("Message from useMessage:\n",response.data)
         const {data,totalPage} = response.data
+        console.log("All Messages: ", data);
+        console.log("totalPage: ",totalPage)
         setMessages(data || []);
         setTotalPage(totalPage);
-        setPage(totalPage > 1 ?totalPage - 2: -1 );
-        if(totalPage <= 1){
-            setHasMore(false);
-        }
+        setPage(totalPage > 0 ?totalPage - 1: 0 );
+        setHasMore(totalPage > 1);
         setInitialLoad(false);
 
         }catch(error){
@@ -77,28 +77,30 @@ const useMessages = ({userId,token,chatId})=>{
     },[userId,token,chatId])
 
     const fetchOlderMessages= useCallback(async()=>{
-        if(loading || page < 0) return ;
+        if(loading || page <= 0 || !hasMore) return ;
         setLoading(true);
-
+        console.log("\n--------fetching Older Messages----------\n")
         try{
+            const previousPage = page - 1;
             const response = await  axiosInterceptor.get(
-                `${baseUrl}/api/messages/chat/${chatId}?latest=false&pageNumber=${page}`,
+                `${baseUrl}/api/messages/chat/${chatId}?latest=false&pageNumber=${previousPage}`,
             {
                 headers:{
                     Authorization:`Bearer ${token}`
                 }
             })
-            if(page<=0){
-                setHasMore(false);
-            }
+            
             const {data} = response.data;
-            if(data &&  data.length >0 && page >=0){
-                setPage(prev=>prev-1);
+            if(data &&  data.length > 0){
                 setMessages(prev=>{
                    const messageArray =  [...data,...prev];
                    return removeDuplicateMessage(messageArray)
                 })
-            }else if(data && data.length === 0){
+                 setPage(previousPage);
+                if (previousPage === 0) {
+                    setHasMore(false);
+                }
+            }else{
                 setHasMore(false)
             }
         }catch(error){
@@ -106,11 +108,11 @@ const useMessages = ({userId,token,chatId})=>{
         }finally{
             setLoading(false)
         }
-    },[loading,page,chatId,token]);
+    },[loading,page,chatId,token,hasMore]);
 
     const firstMessageElementRef = useCallback(
         (node)=>{
-            if(loading) return;
+            if(loading || !hasMore) return;
             if(observer.current) observer.current.disconnect();
 
             if(typeof window !== 'undefined'){
@@ -142,7 +144,7 @@ const useMessages = ({userId,token,chatId})=>{
         if(initialLoad && chatId){
             intialFetch()
         }
-    },[initialLoad,chatId])
+    },[initialLoad,chatId,intialFetch])
     return { 
         messages, 
         setMessages, 

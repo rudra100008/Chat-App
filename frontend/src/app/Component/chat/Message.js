@@ -6,18 +6,18 @@ import GroupChatMessage from './GroupChatMessage';
 import axiosInterceptor from '../Interceptor';
 import baseUrl from '@/app/baseUrl';
 
-export default function Message({ messages, setMessages, userId , loading,firstPostElementRef,userChat,token}) {
+export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, token }) {
     const messageEndRef = useRef(null);
     const containerRef = useRef(null);
     const prevScrollHeight = useRef(0);
-    const [userName,setUsername] = useState([]);
+    const [userName, setUsername] = useState([]);
     // const [loading,setLoading] = useState(true);
-    const scrollToBottom=()=>{
-        messageEndRef.current?.scrollIntoView({behavior : "smooth"})
+    const scrollToBottom = () => {
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
-   
+
     const maintainScrollHeight = () => {
-        if(containerRef.current){
+        if (containerRef.current) {
             const container = containerRef.current;
             const newScrollHeight = container.scrollHeight;
             const scrollDiff = newScrollHeight - prevScrollHeight.current;
@@ -26,75 +26,84 @@ export default function Message({ messages, setMessages, userId , loading,firstP
         }
     }
 
-    const fetchUser = async(userId) => {
-        try{
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${userId}`,{
-                headers:{
+    const fetchUser = async (userId) => {
+        try {
+            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${userId}`, {
+                headers: {
                     Authorization: `Bearer ${token}`
                 }
             })
             const userData = response.data;
-            console.log("Message: UserData:\n",userData);
+            console.log("Message: UserData:\n", userData);
             return userData;
-        }catch(error){
-            console.log("Message: error:\n",error.response.data.message)
-        }finally{
-            
+        } catch (error) {
+            console.log("Message: error:\n", error.response.data.message)
+        } finally {
+
         }
     }
-    useEffect(()=>{
-        if(containerRef.current && !loading){
+    useEffect(() => {
+        if (containerRef.current && !loading) {
             prevScrollHeight.current = containerRef.current.scrollHeight;
         }
-    },[messages.length])
+    }, [messages.length])
 
-    useEffect(()=>{
-        if(loading){
+    useEffect(() => {
+        if (loading) {
             maintainScrollHeight();
-        }else{
-            if(containerRef.current){
-                const container  = containerRef.current;
+        } else {
+            if (containerRef.current) {
+                const container = containerRef.current;
                 const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-                if(isNearBottom){
+                if (isNearBottom) {
                     scrollToBottom();
                 }
             }
         }
-    },[messages,loading])
+    }, [messages, loading])
     // Format timestamp function to avoid repetition
     const formatTimestamp = (timestamp) => {
         return new Date(timestamp).toLocaleDateString();
     };
 
     useEffect(() => {
-        scrollToBottom()
+        if (!containerRef.current) return;
+
+        const container = containerRef.current;
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+
+        if (isNearBottom) {
+            scrollToBottom();
+        } else {
+            maintainScrollHeight();  
+        }
     }, [messages]);
-    
+
     // console.log("Message.js: UserChat:\n",userChat);
     return (
         <div ref={containerRef} className={style.MessageContainer}>
-             {loading && (
+            {loading && (
                 <div className={style.LoadingIndicator}>Loading older messages...</div>
             )}
             {
                 userChat.chatType === "SINGLE" ? (
-                    <SingleChatMessage 
-                      message={messages}
-                      setMessages = {setMessages}
-                      userId={userId}
-                      firstPostElementRef={firstPostElementRef}
-                      formatTimestamp={formatTimestamp}
-                      userChat = {userChat}
+                    <SingleChatMessage
+                        message={messages}
+                        setMessages={setMessages}
+                        userId={userId}
+                        firstPostElementRef={firstPostElementRef}
+                        formatTimestamp={formatTimestamp}
+                        userChat={userChat}
                     />
                 ) : (
                     <GroupChatMessage
-                    message={messages}
-                    setMessages = {setMessages}
-                    userId={userId}
-                    firstPostElementRef= {firstPostElementRef}
-                    formatTimestamp = {formatTimestamp}
-                    userChat={userChat}
-                    fetchUser={fetchUser}
+                        message={messages}
+                        setMessages={setMessages}
+                        userId={userId}
+                        firstPostElementRef={firstPostElementRef}
+                        formatTimestamp={formatTimestamp}
+                        userChat={userChat}
+                        fetchUser={fetchUser}
                     />
                 )
             }

@@ -8,9 +8,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckDouble } from "@fortawesome/free-solid-svg-icons";
 
 
-const SingleChatMessage = ({ message,  setMessages, firstPostElementRef, formatTimestamp, userId, userChat }) => {
+const SingleChatMessage = ({ message, setMessages, firstPostElementRef, formatTimestamp, userId, userChat }) => {
     const { stompClientRef } = useWebSocket();
-    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId,setMessages });
+    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId, setMessages });
     return (
         <>
             {
@@ -18,45 +18,48 @@ const SingleChatMessage = ({ message,  setMessages, firstPostElementRef, formatT
                     <div className={style.EmptyState}>Start messaging </div>
                 ) : (
                     message.map((msg, index) => {
-                        console.log("isRead: ",msg.read)
-                        return(
-                        <div
-                            ref={(node) => {
-                                if (index == 0) firstPostElementRef();
-                                registerMessage(node, msg.messageId)
-                            }}
-                            key={msg.messageId}
-                            data-message-id={msg.messageId}
-                            data-sender-id={msg.senderId}
-                            className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
-                        >
-                            <div >
-                                {msg.content && msg.content !== "" ? (
-                                    <>
-                                        <div className={style.MessageContent}>
-                                            {msg.content}
-                                        </div>
+                       
+                        return (
+                            <div
+                                ref={(node) => {
+                                    if (index == 0 && node) firstPostElementRef(node);
+                                    registerMessage(node, msg.messageId)
+                                }}
+                                key={msg.messageId}
+                                data-message-id={msg.messageId}
+                                data-sender-id={msg.senderId}
+                                className={`${style.Message} ${msg.senderId === userId ? style.SentMessage : style.ReceivedMessage}`}
+                            >
+                                <div >
+                                    {msg.content && msg.content !== "" ? (
+                                        <>
+                                            <div className={style.MessageContent}>
+                                                {msg.content}
+                                            </div>
 
-                                    </>
+                                        </>
 
-                                ) : (
-                                    <AttachmentDisplay
-                                        message={msg}
-                                    />
-                                )}
-                            </div>
-                            <div className={style.DoubleCheck}>
-                                {msg.read && 
-                                  <FontAwesomeIcon icon={faCheckDouble} />
-                                }
-                            </div>
-                            <div className={style.MessageTimestamp}>
-                                {formatTimestamp(msg.timestamp)}
-                            </div>
-                            
+                                    ) : (
+                                        <AttachmentDisplay
+                                            message={msg}
+                                        />
+                                    )}
+                                </div>
+                                <div className={style.MessageFooter}>
+                                    <div className={style.MessageTimestamp}>
+                                        {formatTimestamp(msg.timestamp)}
+                                    </div>
+                                    <div className={style.DoubleCheck}>
+                                        {msg.read &&
+                                            <FontAwesomeIcon icon={faCheckDouble} />
+                                        }
+                                    </div>
+                                </div>
 
-                        </div >
-                    )})
+
+                            </div >
+                        )
+                    })
                 )
             }
         </>

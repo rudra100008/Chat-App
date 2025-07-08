@@ -54,17 +54,20 @@ const useChatWebSocket = ({ userId, chatId, token, messages, setMessages, router
                     console.log("Parsed message:", receivedMessage);
 
                     setMessages((prevMessages) => {
-                        const exists = prevMessages.some(msg =>
+                        const index = prevMessages.findIndex(msg =>
                             msg.messageId === receivedMessage.messageId
                         );
 
-                        if (exists) {
-                            console.log("Message already exists, not adding duplicate");
-                            return prevMessages;
-                        }
+                        if(index !== -1){
+                            const updated = [...prevMessages];
 
-                        console.log("Adding new message to state");
-                        return [...prevMessages, receivedMessage];
+                            updated[index] ={
+                                ...updated[index],
+                                ...receivedMessage,
+                            }
+                            return updated
+                        }
+                        return [...prevMessages,receivedMessage]
                     });
                 } catch (error) {
                     console.error("Error processing received message:", error);
