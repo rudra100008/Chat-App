@@ -4,7 +4,6 @@ import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.MessageRead;
 import com.ChatApplication.Entity.PageInfo;
 import com.ChatApplication.Exception.ResourceNotFoundException;
-import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ public class MessageController {
     private static final Logger logger = LoggerFactory.getLogger(MessageController.class);
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final AuthUtils authUtils;
     private static final String PAGE_NUMBER = "0";
     private static final String PAGE_SIZE =   "10";
 
