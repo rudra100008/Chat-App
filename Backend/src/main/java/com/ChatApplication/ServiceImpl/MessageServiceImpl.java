@@ -254,6 +254,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private Message findByMessageId(String messageId){
+        if(!StringUtils.hasText(messageId)){
+            throw new IllegalArgumentException("Invalid input: messageId= " + messageId);
+        }
         return this.messageRepository.findById(messageId)
                 .orElseThrow(()-> new ResourceNotFoundException("Message not found."));
     }
