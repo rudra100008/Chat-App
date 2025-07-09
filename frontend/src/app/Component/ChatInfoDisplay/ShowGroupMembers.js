@@ -5,41 +5,55 @@ import { useEffect, useState } from "react";
 import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
 import GetUserImage from "../GetUserImage";
+import MemberDetail from "./MemberDetail";
 const ShowGroupMembers = ({ chatData, userStatusMap }) => {
     const { userId, token, logout } = useAuth();
-    const [participantIds, setParticipantIds] = useState([]);
+    const [participantIds, setParticipantIds] = useState(chatData?.participantIds);
     const [groupMembers, setGroupMembers] = useState([]);
+    const [showMember, setShowMember] = useState(false);
 
-    const getParticipantIds = () => {
-        setParticipantIds(chatData.participantIds);
-    }
+
+    const checkChatAdmin = (user) => chatData.adminIds.includes(user.userId);
+
+
     const fetchParticipants = async () => {
-        for (const id of participantIds) {
-            try {
-                const response = await axiosInterceptor.get(`${baseUrl}/api/users/${id}`, {
+        try {
+            const requests = participantIds.map((pId) =>
+                axiosInterceptor.get(`${baseUrl}/api/users/${pId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 })
-                const userData = response.data;
-                setGroupMembers((prev) => {
-                    // const isSame = prev.find(member => member.userId === userData.userId);
-                    // if (!isSame) {
-                    //     return [...prev, userData]
-                    // }
-                    return [...prev,userData];
+            )
+
+            const response = await Promise.all(requests);
+            // in here using Array.filter but it performance is good compared to set show i am using set below
+            // const uniqueMember = response.map(res => res.data)
+            //     .filter((user, index, self) => index === self.findIndex(u => u.userId === user.userId));
+            //  setGroupMembers(uniqueMember);   
+
+            const membersData = response.map(res => res.data);
+            const seen = new Set();
+            const uniqueMembers = [];
+
+            for (const user of membersData) {
+                if (!seen.has(user.userId)) {
+                    seen.add(user.userId);
+                    uniqueMembers.push(user);
                 }
-                )
-            } catch (error) {
-                console.log(error.response.data)
+            }
+            setGroupMembers(uniqueMembers);
+
+        } catch (error) {
+            console.error("Failed to fetch participants:", error.response?.data || error.message);
+            if (error.response?.status === 401) {
+                logout(); // Handle expired tokens
             }
         }
     }
-
-    useEffect(() => {
-        getParticipantIds();
-    }, [userId, chatData])
-
+    const onClose = () => {
+        setShowMember(false);
+    }
     useEffect(() => {
         if (!userId || !token) return;
         if (chatData) {
@@ -52,26 +66,54 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
             <div className={style.membersList}>
                 {groupMembers.length > 0 &&
                     groupMembers.map((user) => {
-                        console.log("ShowGroupMember: UserId\n", user.userId)
                         const statusInfo = userStatusMap[user.userId];
-                        console.log("User->",user.username, "===", statusInfo);
+                        // console.log("User->", user.username, "===", statusInfo);
                         return (
-                            <div key={user.userId} className={style.memberCard}>
-                                <div className={`${style.imageContainer} ${statusInfo?.status === 'ONLINE' ? style.online: style.offline}`} >
+                            <div
+                                key={user.userId}
+                                className={style.memberCard}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowMember(true);
+                                }}
+                            >
+                                <div
+                                    className={`${style.imageContainer} ${statusInfo?.status === 'ONLINE' ? style.online : style.offline}`}
+                                >
                                     <GetUserImage userId={user.userId} size={40} />
                                 </div>
                                 <div className={style.userContainer}>
-                                    <span className={style.username}>{user.username}</span>
-                                    <span className={style.userLastSeen}>{new Date(statusInfo?.lastSeen || user.lastSeen).toLocaleDateString(
-                                    "en-us",{
-                                        year:'numeric',
-                                        day:'2-digit',
-                                        month:'2-digit'
-                                    }
-                                )}</span>
+
+                                    <div className={style.nameSection}>
+                                        <span className={style.username}>{user.username}</span>
+                                        {checkChatAdmin(user) && (
+                                            <span className={style.adminLabel}>Admin</span>
+                                        )}
+                                    </div>
+                                    <span className={style.userLastSeen}>
+                                        {new Date(statusInfo?.lastSeen || user.lastSeen).toLocaleDateString(
+                                            "en-us",
+                                            {
+                                                year: "numeric",
+                                                day: "2-digit",
+                                                month: "2-digit",
+                                            }
+                                        )}
+                                    </span>
+
                                 </div>
+                                {
+                                    showMember &&
+
+                                    <MemberDetail
+                                        user={user}
+                                        onClose={onClose}
+                                    />
+                                }
+
                             </div>
                         )
+
                     })}
             </div>
         </div>

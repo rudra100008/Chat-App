@@ -11,6 +11,7 @@ export default function RootLayout({ children }) {
         <title>Chat App</title>
       </head>
       <body>
+        <div id="portal-root"/>  
         <AuthProvider>
           <WebSocketProvider>
             {children}

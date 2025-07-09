@@ -14,7 +14,7 @@
         0 24px 48px rgba(0, 0, 0, 0.15),
         0 8px 16px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    z-index: 1000000;
+    z-index: 100000;
     overflow: hidden;
     font-size: 0.85rem;
 }
@@ -205,11 +205,6 @@
   background: rgba(255, 255, 255, 1);
 }
 
-.username {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-}
 .title {
   font-size: 18px;
   font-weight: 600;
@@ -231,13 +226,34 @@
 .online{
   border: 3px solid rgb(62, 221, 62);
 }
-.userContainer{
+.userContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+}
+
+
+.userContainer  .nameSection {
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
-.userContainer .userLastSeen{
-  margin-left: 5px;
+
+.userContainer  .username {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.userContainer  .adminLabel {
+  font-size: 0.8rem;
+  color: #007bff; /* optional: give it a distinct color */
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.userContainer  .userLastSeen {
+  margin-left: auto;
   color: rgb(82, 81, 81);
 }
 

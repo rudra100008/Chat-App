@@ -10,7 +10,7 @@ import { faCheckDouble } from "@fortawesome/free-solid-svg-icons";
 
 const SingleChatMessage = ({ message, setMessages, firstPostElementRef, formatTimestamp, userId, userChat }) => {
     const { stompClientRef } = useWebSocket();
-    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId, setMessages });
+    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId });
     return (
         <>
             {

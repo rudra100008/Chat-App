@@ -4,26 +4,32 @@ import style from "../../Style/chat.module.css"
 import GetGroupImage from "../GetGroupImage";
 import GetUserImage from "../GetUserImage";
 import AttachmentDisplay from "./AttachmentDisplay";
+import { useWebSocket } from "@/app/context/WebSocketContext";
+import useReadMessage from "@/app/hooks/useReadMessage";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheckDouble } from "@fortawesome/free-solid-svg-icons";
 
-const GroupChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId, userChat,fetchUser }) => {
-    const [userName,setUsername] = useState({});
-    
-    const loadUser = async(senderId) =>{
-        const {username} =  await fetchUser(senderId);
-        setUsername(prev=>({
+const GroupChatMessage = ({ message, firstPostElementRef, formatTimestamp, userId, userChat, fetchUser }) => {
+    const [userName, setUsername] = useState({});
+    const { stompClientRef } = useWebSocket();
+    const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId })
+
+    const loadUser = async (senderId) => {
+        const { username } = await fetchUser(senderId);
+        setUsername(prev => ({
             ...prev,
             [senderId]: username
         }))
     }
-    useEffect(()=>{
+    useEffect(() => {
         const uniqueSender = [...new Set(message.map(msg => msg.senderId))]
-        uniqueSender.forEach(senderId=>{
-            if(userChat.participantIds.includes(senderId)){
+        uniqueSender.forEach(senderId => {
+            if (userChat.participantIds.includes(senderId)) {
                 loadUser(senderId);
             }
         }
         )
-    },[message,userChat.participantIds])
+    }, [message, userChat.participantIds])
     return (
         <>
             {
@@ -32,8 +38,14 @@ const GroupChatMessage = ({ message, firstPostElementRef, formatTimestamp, userI
                 ) : (
                     message.map((msg, index) => (
                         <div
-                            ref={index === 0 ? firstPostElementRef : null}
+                            ref={(node) => {
+                                if (index === 0 && node) firstPostElementRef(node);
+                                registerMessage(node, msg.messageId);
+                            }
+                            }
                             key={msg.messageId}
+                            data-message-id={msg.messageId}
+                            data-sender-id={msg.senderId}
                             className={`${style.MessageRow} ${msg.senderId === userId ? style.SentRow : ''}`}
                         >
                             {userChat.participantIds.includes(msg.senderId) && (
@@ -49,22 +61,29 @@ const GroupChatMessage = ({ message, firstPostElementRef, formatTimestamp, userI
                                     </div>)
                                 }
                                 <div >
-                                {msg.content && msg.content !== "" ? (
-                                    <>
-                                        <div className={style.MessageContent}>
-                                            {msg.content}
-                                        </div>
+                                    {msg.content && msg.content !== "" ? (
+                                        <>
+                                            <div className={style.MessageContent}>
+                                                {msg.content}
+                                            </div>
 
-                                    </>
+                                        </>
 
-                                ) : (
-                                    <AttachmentDisplay
-                                        message={msg}
-                                    />
-                                )}
-                            </div>
-                                <div className={style.MessageTimestamp}>
-                                    {formatTimestamp(msg.timestamp)}
+                                    ) : (
+                                        <AttachmentDisplay
+                                            message={msg}
+                                        />
+                                    )}
+                                </div>
+                                <div className={style.MessageFooter}>
+                                    <div className={style.MessageTimestamp}>
+                                        {formatTimestamp(msg.timestamp)}
+                                    </div>
+                                    <div className={style.DoubleCheck}>
+                                        {msg.read &&
+                                            <FontAwesomeIcon icon={faCheckDouble} />
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>

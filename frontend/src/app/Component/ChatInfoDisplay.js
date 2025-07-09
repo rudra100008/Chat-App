@@ -97,8 +97,8 @@ const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, lastSe
                     </button>}
             </div>
             <div className={style.rightContainer}>
-                <div className={style.closeButton}>
-                    <FontAwesomeIcon icon={faClose} size="lg" onClick={onClose} />
+                <div className={style.closeButton} onClick={onClose}>
+                    <FontAwesomeIcon icon={faClose} size="lg"  />
                 </div>
                 {
                     activeTab === "overview" &&
