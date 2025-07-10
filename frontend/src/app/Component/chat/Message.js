@@ -6,12 +6,14 @@ import GroupChatMessage from './GroupChatMessage';
 import axiosInterceptor from '../Interceptor';
 import baseUrl from '@/app/baseUrl';
 
-export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, token }) {
+export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, token, initialLoad }) {
     const messageEndRef = useRef(null);
     const containerRef = useRef(null);
     const prevScrollHeight = useRef(0);
     const [userName, setUsername] = useState([]);
-    // const [loading,setLoading] = useState(true);
+    const [isNearBottom, setIsNearBottom] = useState(true);
+    const prevMessagesLength = useRef(0);
+
     const scrollToBottom = () => {
         messageEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }
@@ -24,6 +26,14 @@ export default function Message({ messages, setMessages, userId, loading, firstP
             container.scrollTop = container.scrollTop + scrollDiff;
             prevScrollHeight.current = newScrollHeight;
         }
+    }
+
+    const checkIfNearBottom = () => {
+        if (!containerRef.current) return
+        const container = containerRef.current;
+        const threshold = 100;
+        const position = container.scrollHeight - container.scrollTop - container.clientHeight;
+        return position < threshold;
     }
 
     const fetchUser = async (userId) => {
@@ -48,38 +58,48 @@ export default function Message({ messages, setMessages, userId, loading, firstP
         }
     }, [messages.length])
 
-    useEffect(() => {
-        if (loading) {
-            maintainScrollHeight();
-        } else {
-            if (containerRef.current) {
-                const container = containerRef.current;
-                const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-                if (isNearBottom) {
-                    scrollToBottom();
-                }
-            }
-        }
-    }, [messages, loading])
     // Format timestamp function to avoid repetition
     const formatTimestamp = (timestamp) => {
         return new Date(timestamp).toLocaleDateString();
     };
 
     useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const handleScroll = () => {
+            setIsNearBottom(checkIfNearBottom());
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, []);
+
+
+    useEffect(() => {
         if (!containerRef.current) return;
 
         const container = containerRef.current;
-        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        // const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
 
-        if (isNearBottom) {
+        if (initialLoad && messages.length > 0) {
             scrollToBottom();
-        } else {
-            maintainScrollHeight();  
+            return;
         }
-    }, [messages]);
 
-    // console.log("Message.js: UserChat:\n",userChat);
+        if (messages.length > prevMessagesLength.current) {
+            if (isNearBottom) {
+                scrollToBottom();
+            }
+        }
+        else if (loading) {
+            maintainScrollHeight()
+        }
+        prevMessagesLength.current = messages.length;
+    }, [messages, initialLoad, loading, isNearBottom]);
+
+    // // console.log("Message.js: UserChat:\n",userChat);
+    // console.log("Scroll Top: ", containerRef?.current?.scrollTop || 0)
     return (
         <div ref={containerRef} className={style.MessageContainer}>
             {loading && (
@@ -111,16 +131,3 @@ export default function Message({ messages, setMessages, userId, loading, firstP
         </div>
     );
 }
-
-// // Add prop type validation
-// Message.propTypes = {
-//     message: PropTypes.arrayOf(
-//         PropTypes.shape({
-//             messageId: PropTypes.string.isRequired,
-//             content: PropTypes.string.isRequired,
-//             senderId: PropTypes.string.isRequired,
-//             timestamp: PropTypes.string.isRequired
-//         })
-//     ).isRequired,
-//     userId: PropTypes.string.isRequired
-// };

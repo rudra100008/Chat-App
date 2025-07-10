@@ -151,7 +151,8 @@ const useMessages = ({userId,token,chatId})=>{
         loading, 
         hasMore, 
         firstMessageElementRef,
-        resetState
+        resetState,
+        initialLoad
     }
 
 }

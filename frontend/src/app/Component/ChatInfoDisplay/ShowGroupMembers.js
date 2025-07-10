@@ -11,6 +11,7 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
     const [participantIds, setParticipantIds] = useState(chatData?.participantIds);
     const [groupMembers, setGroupMembers] = useState([]);
     const [showMember, setShowMember] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
 
     const checkChatAdmin = (user) => chatData.adminIds.includes(user.userId);
@@ -53,7 +54,9 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
     }
     const onClose = () => {
         setShowMember(false);
+        setSelectedUser(null);
     }
+
     useEffect(() => {
         if (!userId || !token) return;
         if (chatData) {
@@ -74,6 +77,7 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
                                 className={style.memberCard}
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    setSelectedUser(user);
                                     setShowMember(true);
                                 }}
                             >
@@ -102,20 +106,18 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
                                     </span>
 
                                 </div>
-                                {
-                                    showMember &&
-
-                                    <MemberDetail
-                                        user={user}
-                                        onClose={onClose}
-                                    />
-                                }
-
                             </div>
                         )
 
                     })}
             </div>
+            {
+                showMember && showMember &&
+                <MemberDetail
+                    user={selectedUser}
+                    onClose={onClose}
+                />
+            }
         </div>
     );
 

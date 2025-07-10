@@ -15,7 +15,7 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
     const router = useRouter();
     const [value, setValue] = useState('');
     const [currentChatId, setCurrentChatId] = useState(null);
-    const { messages, setMessages, loading, firstMessageElementRef, resetState } = useMessages({ userId, token, chatId });
+    const { messages, setMessages, loading, firstMessageElementRef, resetState, initialLoad } = useMessages({ userId, token, chatId });
     const { connected, stompClient, error, } = useChatWebSocket({ userId, chatId, token, messages, setMessages, router });
     const { userChat } = useChatDetails({ chatId, token, userId, setOtherUserDetails })
     const fileRef = useRef(null);
@@ -137,6 +137,7 @@ export default function ChatContainer({ chatId, userId, token, setOtherUserDetai
                         firstPostElementRef={firstMessageElementRef}
                         userChat={userChat}
                         token={token}
+                        initialLoad={initialLoad}
                         loading={loading} />
 
                     <ChatInput
