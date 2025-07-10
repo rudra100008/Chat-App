@@ -44,8 +44,4 @@ public class UserDTO {
     private UserStatus status;
     private LocalDateTime lastSeen;
 
-//    @JsonIgnore
-//    public String getPassword(){
-//        return password;
-//    }
 }
