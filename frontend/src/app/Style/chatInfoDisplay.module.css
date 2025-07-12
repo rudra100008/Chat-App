@@ -149,22 +149,69 @@
     position: relative;
 }
 
-.chatInfoDisplay{
+.chatInfoDisplay {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
-    padding: 0.9rem 1.5rem;
+    padding: 1rem;
     font-size: 0.9rem;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(15px);
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     width: 100%;
     max-width: 320px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 0.8rem;
+}
+
+.chatInfoDisplay:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.iconStyle {
+    margin-right: 8px;
+    color: #7c3aed; /* Purple accent color */
+    font-size: 1.1rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+.chatInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    width: 100%;
+}
+
+.chatInfo > p:first-child {
+    font-weight: 600;
+    color: #e2e8f0; 
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+}
+
+/* .chatInfo p:not(:first-child) {
+    color: #a5b4fc;
+    font-size: 0.9rem;
+    line-height: 1.4;
+} */
+
+.adminList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.adminList p {
+    background: rgba(124, 58, 237, 0.15);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    color: #e8e8eb;
+    font-size: 0.85rem;
 }
 
 .groupContainer {
@@ -247,7 +294,7 @@
 
 .userContainer  .adminLabel {
   font-size: 0.8rem;
-  color: #007bff; /* optional: give it a distinct color */
+  color: #007bff;
   font-weight: 500;
   margin-top: 2px;
 }

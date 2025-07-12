@@ -1,25 +1,24 @@
 "use client"
 import { useAuth } from "@/app/context/AuthContext";
 import style from "../../Style/chatInfoDisplay.module.css";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
 import GetUserImage from "../GetUserImage";
 import MemberDetail from "./MemberDetail";
-const ShowGroupMembers = ({ chatData, userStatusMap }) => {
+const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
     const { userId, token, logout } = useAuth();
-    const [participantIds, setParticipantIds] = useState(chatData?.participantIds);
     const [groupMembers, setGroupMembers] = useState([]);
     const [showMember, setShowMember] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
 
-    const checkChatAdmin = (user) => chatData.adminIds.includes(user.userId);
+   const checkChatAdmin = useCallback((user) => chatData?.adminIds?.includes(user.userId), [chatData?.adminIds])
 
 
     const fetchParticipants = async () => {
         try {
-            const requests = participantIds.map((pId) =>
+            const requests = chatData?.participantIds.map((pId) =>
                 axiosInterceptor.get(`${baseUrl}/api/users/${pId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -62,7 +61,7 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
         if (chatData) {
             fetchParticipants();
         }
-    }, [chatData, participantIds, token])
+    }, [chatData?.participantIds, token,userId])
     return (
         <div className={style.groupContainer}>
             <h3 className={style.title}>Participants ({chatData.participantIds.length})</h3>
@@ -116,6 +115,9 @@ const ShowGroupMembers = ({ chatData, userStatusMap }) => {
                 <MemberDetail
                     user={selectedUser}
                     onClose={onClose}
+                    checkChatAdmin={checkChatAdmin}
+                    chatData={chatData}
+                    setChatData = {setChatData}
                 />
             }
         </div>

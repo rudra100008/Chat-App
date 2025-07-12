@@ -1,11 +1,10 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import style from "../../Style/chatInfoDisplay.module.css";
 import GetGroupImage from "../GetGroupImage";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faCalendarAlt, faEdit, faUserShield } from "@fortawesome/free-solid-svg-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
-import { useWebSocket } from "@/app/context/WebSocketContext";
 import ErrorPrompt from "../ErrorPrompt";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchUserData } from "@/app/services/userService";
@@ -84,21 +83,20 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
         })
     }, [chatData, localChatData])
 
+    const fetchAdminUsername = async () => {
+        const promises = chatData.adminIds.map((admin) => (
+            fetchUserData(admin, token, logout)
+        ))
+        const users = await Promise.all(promises);
+        const usernames = users
+            .filter(user => user != null)
+            .map(user => user.username)
+
+        setAdminUsernames(usernames);
+    }
     useEffect(() => {
         console.log("chatData: ", chatData)
         if (!chatData) return;
-        const fetchAdminUsername = async () => {
-            const promises = chatData.adminIds.map((admin) => (
-                fetchUserData(admin, token, logout)
-            ))
-            const users = await Promise.all(promises);
-            console.log("Users",users)
-            const usernames = users
-                .filter(user => user != null)
-                .map(user => user.username)
-
-            setAdminUsernames(usernames);
-        }
         if (chatData?.adminIds?.length > 0) {
             fetchAdminUsername();
         }
@@ -162,24 +160,29 @@ const GroupChat = ({ chatData, setChatData, token, loadUserChats }) => {
                     <p className={style.chatName} onDoubleClick={handleChatName}>{chatData.chatName}</p>
             }
             <div className={style.chatInfoDisplay}>
-                {/* <FontAwesomeIcon icon={}/> */}
-                <p>CreatedAt</p>
-                <p>{
-                    new Date(chatData.createdAt).toLocaleDateString("en-us", {
-                        day: "2-digit",
-                        month: '2-digit',
-                        year: "numeric"
-                    }) || "unknown time"
-                }
-                </p>
+                <FontAwesomeIcon icon={faCalendarAlt} className={style.iconStyle} />
+                <div className={style.chatInfo}>
+                    <p>CreatedAt:</p>
+                    <p>{
+                        new Date(chatData.createdAt).toLocaleDateString("en-us", {
+                            day: "2-digit",
+                            month: '2-digit',
+                            year: "numeric"
+                        }) || "unknown time"
+                    }
+                    </p>
+                </div>
             </div>
             <div className={style.chatInfoDisplay}>
-                <p>Admin</p>
-                {
-                    adminUsernames.map((username, index) => (
-                        <p key={index}>{username}</p>
-                    ))
-                }
+                <FontAwesomeIcon icon={faUserShield} className={style.iconStyle} />
+                <div className={style.chatInfo}>
+                    <p>Admins</p>
+                    <div className={style.adminList}>
+                        {adminUsernames.map((username, index) => (
+                            <p key={index}>{username}</p>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     )

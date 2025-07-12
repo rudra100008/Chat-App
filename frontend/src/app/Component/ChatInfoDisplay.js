@@ -145,6 +145,7 @@ const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, lastSe
                     chatData.chatType === "GROUP" && activeTab === "members" && (
                         <ShowGroupMembers
                             chatData={chatData}
+                            setChatData={setChatData}
                             userStatusMap ={userStatusMap}
                         />
                     )

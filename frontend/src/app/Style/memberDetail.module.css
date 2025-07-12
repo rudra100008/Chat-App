@@ -117,7 +117,7 @@
     color: white;
 }
 
-/* Add these to your CSS */
+
 .removeButton {
     background: #ef4444 !important; 
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2) !important;
@@ -139,4 +139,17 @@
 }
 .buttonGroup:active {
     transform: translateY(0) scale(0.98);
+}
+
+.adminLabel{
+  font-size: 0.8rem;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.userInfo{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
