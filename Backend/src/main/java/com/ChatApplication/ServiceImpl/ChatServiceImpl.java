@@ -18,9 +18,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -81,7 +83,7 @@ public class ChatServiceImpl implements ChatService {
         }
 
         // Validate logged in user is a participant
-        User loggedInUsername = this.authUtils.getLoggedInUsername();
+        User loggedInUsername = getLoggedInUser();
         if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())) {
             throw new IllegalArgumentException("Logged in user must be a participant in the chat.");
         }
@@ -139,7 +141,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatDTO createGroupChat(ChatDTO chatDTO) {
-        User loggedInUsername = authUtils.getLoggedInUsername();
+        User loggedInUsername = getLoggedInUser();
         if(!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
             chatDTO.getParticipantIds().add(loggedInUsername.getUserId());
         }
@@ -186,7 +188,7 @@ public class ChatServiceImpl implements ChatService {
         if(chatId == null || chatId.trim().isEmpty() || userId == null || userId.trim().isEmpty()){
             throw new IllegalArgumentException("Chat Id and User Id must not be null or empty");
         }
-        User loggedUser = this.authUtils.getLoggedInUsername();
+        User loggedUser = getLoggedInUser();
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId+ NOT_FOUND));
         //Cannot add participants in the single chat
@@ -217,7 +219,7 @@ public class ChatServiceImpl implements ChatService {
         if(chatId == null || chatId.trim().isEmpty() ){
             throw new IllegalArgumentException("chatId  cannot be null or empty");
         }
-        User loggedUser = this.authUtils.getLoggedInUsername();
+        User loggedUser = getLoggedInUser();
         // Check if the loggedIn user has permission to access the chat
         validateChatAccess(chatId,loggedUser.getUserId());
 
@@ -229,14 +231,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public boolean isUserInChat(String chatId, String userId) {
-        if(chatId == null || chatId.trim().isEmpty()  || userId == null || userId.trim().isEmpty()){
+        if(!StringUtils.hasText(chatId) || !StringUtils.hasText(userId)){
             throw new IllegalArgumentException("ChatId and userId cannot be null or empty");
         }
-        this.userRepository.findById(userId)
-                .orElseThrow(()-> new ResourceNotFoundException(userId + NOT_FOUND));
-
-        this.chatRepository.findById(chatId)
-                .orElseThrow(()-> new ResourceNotFoundException(chatId + NOT_FOUND));
         return this.chatRepository.existsByChatIdAndParticipants_UserIdIn(chatId,userId);
     }
 
@@ -246,7 +243,7 @@ public class ChatServiceImpl implements ChatService {
         if(chatId == null || chatId.trim().isEmpty() || userId == null || userId.trim().isEmpty()){
             throw new IllegalArgumentException("chatId and userId cannot be null or empty");
         }
-        User loggedUser = this.authUtils.getLoggedInUsername();
+        User loggedUser = getLoggedInUser();
         // Check if the loggedIn user has permission to access the chat
         validateChatAccess(chatId,loggedUser.getUserId());
 
@@ -268,7 +265,7 @@ public class ChatServiceImpl implements ChatService {
         if(chatId == null || chatId.trim().isEmpty() ){
             throw new IllegalArgumentException("chatId  cannot be null or empty");
         }
-        User loggedUser = this.authUtils.getLoggedInUsername();
+        User loggedUser = getLoggedInUser();
         // Check if the loggedIn user has permission to access the chat
         validateChatAccess(chatId,loggedUser.getUserId());
 
@@ -287,7 +284,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDTO fetchUserChat(String chatId) {
-        User loggedInUser = this.authUtils.getLoggedInUsername();
+        User loggedInUser = getLoggedInUser();
         validateChatAccess(chatId, loggedInUser.getUserId());
 
         Chat chat = this.chatRepository.findById(chatId)
@@ -322,7 +319,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatDTO addAdminToChat(String chatId, String userId) {
-        validateChatAccess(chatId,userId);
+        User loggedInUser = getLoggedInUser();
+        validateChatAccess(chatId,loggedInUser.getUserId());
         Chat fetchChat = chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException("Chat not found: "+ chatId));
         List<String> admins = fetchChat.getAdminIds();
@@ -336,8 +334,30 @@ public class ChatServiceImpl implements ChatService {
         return modelMapper.map(saveChat,ChatDTO.class);
     }
 
+    @Override
+    public ChatDTO removeUser(String chatId, String userId) {
+        User loggedInUser = getLoggedInUser();
+        validateChatAccess(chatId,loggedInUser.getUserId());
+        if(!isUserAdmin(chatId,loggedInUser.getUserId())) {
+            throw new IllegalArgumentException("Insufficient permissions to remove user from chat.");
+        }
+            Chat chat = getChat(chatId);
+            User user = getUser(userId);
+            if(chat.getAdminIds().contains(user.getUserId())){
+                chat.getAdminIds().remove(user.getUserId());
+            }
+           chat.setParticipants(chat.getParticipants()
+                   .stream()
+                   .filter(p -> !p.getUserId().equals(user.getUserId()))
+                   .toList());
+            Chat updatedChat = chatRepository.save(chat);
+
+            return modelMapper.map(updatedChat,ChatDTO.class);
+
+    }
+
     //helper method
-    // only admin can delete ,promoteUsertoAdmin,remove User from Chat
+    // only admin can delete ,promote User to Admin,remove User from Chat
     // this method check if user is admin or not if chat is ChatType.GROUP
     private boolean isUserAdmin(String chatId,String userId){
         Chat fetchChat = chatRepository.findById(chatId)
@@ -347,4 +367,26 @@ public class ChatServiceImpl implements ChatService {
         }
         return false;
     }
+
+    private Chat getChat(String chatId){
+        if (!StringUtils.hasText(chatId)){
+            throw new IllegalArgumentException("ChatId is null or empty.");
+        }
+        return this.chatRepository.findById(chatId)
+                .orElseThrow(()-> new ResourceNotFoundException("Chat not found: chatId= "+ chatId));
+    }
+
+    private User getUser(String userId){
+        if(!StringUtils.hasText(userId)){
+            throw new IllegalArgumentException("UserId is null or empty.");
+        }
+        return this.userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException("User Not Found: userId= "+ userId));
+    }
+
+    private User getLoggedInUser(){
+        return authUtils.getLoggedInUsername();
+    }
+
+
 }

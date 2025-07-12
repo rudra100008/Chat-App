@@ -30,4 +30,6 @@ public interface ChatService {
 
     ChatDTO addAdminToChat(String chatId,String userId);
 
+    ChatDTO removeUser(String chatId, String userId);
+
 }
