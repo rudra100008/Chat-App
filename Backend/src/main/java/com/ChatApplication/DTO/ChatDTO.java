@@ -3,6 +3,7 @@ package com.ChatApplication.DTO;
 
 import com.ChatApplication.Enum.ChatType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ChatDTO {
     private String chatId;
     private String chatName;

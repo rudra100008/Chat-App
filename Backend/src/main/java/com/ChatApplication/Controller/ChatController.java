@@ -47,10 +47,15 @@ public class ChatController {
             @RequestParam String chatName){
         User loginUser = this.authUtils.getLoggedInUsername();
         User otherUser = this.userService.findByPhoneNumber(phoneNumber);
-        ChatDTO chatDTO = new ChatDTO();
+
         List<String> participantsIds = new ArrayList<>();
         participantsIds.add(otherUser.getUserId());
         participantsIds.add(loginUser.getUserId());
+
+        ChatDTO chatDTO = ChatDTO.builder()
+                .participantIds(participantsIds)
+                .chatType(ChatType.SINGLE)
+                .build();
         chatDTO.setParticipantIds(participantsIds);
         chatDTO.setChatType(ChatType.SINGLE);
         ChatDTO savedChat = this.chatService.createChat(chatDTO);
@@ -63,6 +68,7 @@ public class ChatController {
         chatDisplayNameService.saveChatName(savedChat.getChatId(),otherUserChatName,otherUser.getUserId());
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
+
     @PostMapping("/groupChat/{chatName}")
     public ResponseEntity<ChatDTO> createGroupChat(
             @PathVariable("chatName") String chatName,

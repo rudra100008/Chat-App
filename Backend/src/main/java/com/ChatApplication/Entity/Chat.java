@@ -3,6 +3,7 @@ package com.ChatApplication.Entity;
 
 import com.ChatApplication.Enum.ChatType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,6 +16,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Chat {
     @MongoId
     private String chatId;
