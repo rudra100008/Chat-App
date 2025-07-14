@@ -56,6 +56,17 @@ export const WebSocketProvider = ({ children }) => {
                         )
                     ))
                 })
+
+                client.subscribe(`/user/${userId}/queue/chats`,(message)=>{
+                    const payload = JSON.parse(message.body);
+                    if(payload.type === "NEW_CHAT"){
+                        setChatInfos(prev =>{
+                            const exits = prev.some(prev.chatId === payload.chat.chatId);
+                            return exits ? prev : [...prev,payload.chat]
+                        }
+                        )
+                    }
+                })
             },
 
             onDisconnect: () => {
