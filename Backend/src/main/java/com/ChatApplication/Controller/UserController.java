@@ -1,10 +1,12 @@
 package com.ChatApplication.Controller;
 
+import com.ChatApplication.DTO.FriendDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Security.AuthUtils;
+import com.ChatApplication.Service.FriendService;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import jakarta.validation.Valid;
@@ -34,8 +36,9 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
     private final AuthUtils authUtils;
-    private final SimpMessagingTemplate messagingTemplate;
     private final ImageService imageService;
+    private final FriendService friendService;
+
     @Value(("${image.upload.dir}"))
     private String baseUploadDir;
 
@@ -118,18 +121,24 @@ public class UserController {
             }
             System.out.println("\t\tConnected to the socket\t\t");
             String userId = user.getUserId();
-            // Update activity timestamp
 
-
-            // Update user status and last seen in database
             userService.updateUserStatus(userId, UserStatus.ONLINE);
             userService.updateLastSeen(userId);
 
-            // Broadcast updated status to all clients
             userService.broadCastUserStatus(userId, UserStatus.ONLINE, user.getUsername());
 
         } catch (Exception e) {
             System.out.println("Unexcepted error in WebSocketListener "+e.getMessage());
         }
     }
+
+    @GetMapping("/userFriends")
+    public ResponseEntity<Map<String,List<String>>> fetchUserFriend(
+    ){
+        User loggedInUser = authUtils.getLoggedInUsername();
+        List<String> friendIds = friendService.getFriends(loggedInUser.getUserId());
+
+        return ResponseEntity.ok(Map.of("friendIds", friendIds));
+    }
+
 }

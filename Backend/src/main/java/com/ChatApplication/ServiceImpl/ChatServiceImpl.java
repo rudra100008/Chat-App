@@ -19,6 +19,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
@@ -38,6 +39,7 @@ public class ChatServiceImpl implements ChatService {
     private final ModelMapper modelMapper;
     private final MongoTemplate mongoTemplate;
     private final AuthUtils authUtils;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static  final String NOT_FOUND = " not found.";
 
@@ -110,63 +112,59 @@ public class ChatServiceImpl implements ChatService {
 
         }
 
-        return ChatDTO.builder()
-                .chatId(savedChat.getChatId())
-                .chatName(savedChat.getChatName())
-                .chatImageUrl(savedChat.getChatImageUrl())
-                .chatType(savedChat.getChatType())
-                .participantIds(savedChat.getParticipants().stream().map(User::getUserId).toList())
-                .createdAt(savedChat.getCreatedAt())
-                .lastMessage(savedChat.getLastMessage())
-                .lastMessageTime(savedChat.getLastMessageTime())
-                .adminIds(savedChat.getAdminIds())
-                .blockedBy(savedChat.getBlockedBy())
-                .build();
+        messagingTemplate.convertAndSendToUser(
+                otherUser.getUserId(),
+                "/queue/chats",
+                Map.of(
+                        "type","NEW_CHAT",
+                        "chat", chatToDTO(savedChat)
+                )
+        );
+        return chatToDTO(savedChat);
     }
 
     @Override
     @Transactional
     public ChatDTO createGroupChat(ChatDTO chatDTO) {
         User loggedInUsername = getLoggedInUser();
-        if(!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
-            chatDTO.getParticipantIds().add(loggedInUsername.getUserId());
-        }
         if (chatDTO.getParticipantIds().size() < 3){
             throw new IllegalArgumentException("Group Chat must have at least 3 participants");
         }
-        if(chatDTO.getChatName() == null || chatDTO.getChatName().trim().isEmpty()){
+        if(!StringUtils.hasText(chatDTO.getChatName())){
             throw new IllegalArgumentException("Group Chat name cannot not be empty");
         }
         if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("Logged in user must be participants of the chat");
         }
-       Chat chat = new Chat();
        List<User> participants = chatDTO.getParticipantIds()
                .stream()
                .map(userId->this.userRepository.findById(userId)
                        .orElseThrow(()-> new ResourceNotFoundException(userId+" not found in server")))
                .toList();
         // saving the chat details in the database
-        chat.setChatType(ChatType.GROUP);
-        chat.setChatName(chatDTO.getChatName());
-        chat.setChatImageUrl(chatDTO.getChatImageUrl());
-        chat.setParticipants(participants);
-        chat.setCreatedAt(LocalDateTime.now());
-        chat.setAdminIds(new ArrayList<>(List.of(loggedInUsername.getUserId())));
+
+        Chat chat = Chat.builder()
+                .chatName(chatDTO.getChatName())
+                .chatType(chatDTO.getChatType())
+                .chatImageUrl(chatDTO.getChatImageUrl())
+                .participants(participants)
+                .adminIds(new ArrayList<>(List.of(loggedInUsername.getUserId())))
+                .createdAt(chatDTO.getCreatedAt())
+                .build();
+
         Chat savedChat = this.chatRepository.save(chat);
 
-        return new ChatDTO(
-                savedChat.getChatId(),
-                savedChat.getChatName(),
-                savedChat.getChatImageUrl(),
-                savedChat.getChatType(),
-                savedChat.getParticipants().stream().map(User::getUserId).toList(),
-                savedChat.getCreatedAt(),
-                savedChat.getLastMessage(),
-                savedChat.getLastMessageTime(),
-                savedChat.getAdminIds(),
-                savedChat.getBlockedBy()
-        );
+        for(User participant : chat.getParticipants()){
+            messagingTemplate.convertAndSendToUser(
+                    participant.getUserId(),
+                    "/queue/chats",
+                    Map.of(
+                            "type","NEW_CHAT",
+                            "chat", chatToDTO(savedChat)
+                    )
+            );
+        }
+        return chatToDTO(savedChat);
     }
 
     @Override
@@ -193,7 +191,7 @@ public class ChatServiceImpl implements ChatService {
         Update update = new Update().addToSet("participants",newUser);
         mongoTemplate.updateFirst(query,update,Chat.class);
         chat.getParticipants().add(newUser);
-        return  modelMapper.map(chat,ChatDTO.class);
+        return chatToDTO(chat);
     }
 
     @Override
@@ -203,7 +201,7 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("chatId  cannot be null or empty");
         }
         User loggedUser = getLoggedInUser();
-        // Check if the loggedIn user has permission to access the chat
+
         validateChatAccess(chatId,loggedUser.getUserId());
 
         Chat chat = this.chatRepository.findById(chatId)
@@ -227,7 +225,7 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("chatId and userId cannot be null or empty");
         }
         User loggedUser = getLoggedInUser();
-        // Check if the loggedIn user has permission to access the chat
+
         validateChatAccess(chatId,loggedUser.getUserId());
 
         Chat chat =  this.chatRepository.findById(chatId)
@@ -239,7 +237,7 @@ public class ChatServiceImpl implements ChatService {
         }
         chat.getParticipants().remove(user);
         Chat updatedChat = this.chatRepository.save(chat);
-        return modelMapper.map(updatedChat,ChatDTO.class);
+        return chatToDTO(updatedChat);
     }
 
     @Override
@@ -249,7 +247,7 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("chatId  cannot be null or empty");
         }
         User loggedUser = getLoggedInUser();
-        // Check if the loggedIn user has permission to access the chat
+
         validateChatAccess(chatId,loggedUser.getUserId());
 
         Chat chat = this.chatRepository.findById(chatId)
@@ -283,7 +281,7 @@ public class ChatServiceImpl implements ChatService {
             }
         }
 
-        return modelMapper.map(chat, ChatDTO.class);
+        return chatToDTO(chat);
     }
     @Override
     public ChatDTO updateGroupChat(ChatDTO chatDTO){
@@ -294,7 +292,7 @@ public class ChatServiceImpl implements ChatService {
             oldChat.setChatImageUrl(chatDTO.getChatImageUrl());
             Chat newChat = chatRepository.save(oldChat);
 
-            return modelMapper.map(newChat, ChatDTO.class);
+            return chatToDTO(newChat);
         }else{
             throw new IllegalArgumentException("Chat must be group chat");
         }
@@ -314,7 +312,7 @@ public class ChatServiceImpl implements ChatService {
         }
         fetchChat.setAdminIds(admins);
         Chat saveChat = this.chatRepository.save(modelMapper.map(fetchChat,Chat.class));
-        return modelMapper.map(saveChat,ChatDTO.class);
+        return chatToDTO(saveChat);
     }
 
     @Override
@@ -335,7 +333,7 @@ public class ChatServiceImpl implements ChatService {
                    .toList());
             Chat updatedChat = chatRepository.save(chat);
 
-            return modelMapper.map(updatedChat,ChatDTO.class);
+            return chatToDTO(updatedChat);
 
     }
 
@@ -390,5 +388,19 @@ public class ChatServiceImpl implements ChatService {
         ),Chat.class);
     }
 
+    private ChatDTO chatToDTO(Chat chat){
+        return ChatDTO.builder()
+                .chatId(chat.getChatId())
+                .chatName(chat.getChatName())
+                .chatImageUrl(chat.getChatImageUrl())
+                .chatType(chat.getChatType())
+                .participantIds(chat.getParticipants().stream().map(User::getUserId).toList())
+                .createdAt(chat.getCreatedAt())
+                .lastMessage(chat.getLastMessage())
+                .lastMessageTime(chat.getLastMessageTime())
+                .adminIds(chat.getAdminIds())
+                .blockedBy(chat.getBlockedBy())
+                .build();
+    }
 
 }

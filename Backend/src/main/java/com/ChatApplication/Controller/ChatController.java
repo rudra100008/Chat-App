@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,10 +74,14 @@ public class ChatController {
     public ResponseEntity<ChatDTO> createGroupChat(
             @PathVariable("chatName") String chatName,
             @RequestBody List<String> participantIds){
-        ChatDTO chatDTO = new ChatDTO();
-        chatDTO.setChatName(chatName);
-        chatDTO.setParticipantIds(participantIds);
-        chatDTO.setChatType(ChatType.GROUP);
+        User loggedInUser = authUtils.getLoggedInUsername();
+        participantIds.add(loggedInUser.getUserId());
+        ChatDTO chatDTO = ChatDTO.builder()
+                .chatName(chatName)
+                .participantIds(participantIds)
+                .chatType(ChatType.GROUP)
+                .createdAt(LocalDateTime.now())
+                .build();
         ChatDTO savedGroupChat = this.chatService.createGroupChat(chatDTO);
         return ResponseEntity.ok(savedGroupChat);
     }
