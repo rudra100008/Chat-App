@@ -1,9 +1,24 @@
-.imageWrapper{
-    position:relative;
-    overflow:hidden;
-    border-radius:50%;
+/* ============================================================
+   image.module.css  — Avatar wrapper (theme-agnostic)
+   ============================================================ */
+
+.imageWrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 50%;
 }
-.imageresponsive{
-    object-fit:cover;
+
+.imageresponsive {
+    object-fit: cover;
     image-rendering: optimizeSpeed;
+}
+
+/* Fade-in once loaded */
+.loaded {
+    animation: imgFade 0.3s ease;
+}
+
+@keyframes imgFade {
+    from { opacity: 0.4; }
+    to   { opacity: 1; }
 }

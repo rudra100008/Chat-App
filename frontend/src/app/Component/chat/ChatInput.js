@@ -2,15 +2,12 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import style from '../../Style/chatInput.module.css'
 import { faPaperclip } from '@fortawesome/free-solid-svg-icons';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import axiosInterceptor from '../Interceptor';
 import baseUrl from '@/app/baseUrl';
 import { useAuth } from '@/app/context/AuthContext';
 
 const ChatInput = ({ value, onSend, onChange, fileRef, handleAttachmentChange, handleAttachmentClick, connected }) => {
-  
-
-    
     return (
         <div className={style.inputWrapper}>
             <div className={style.FieldGroup}>
@@ -19,7 +16,7 @@ const ChatInput = ({ value, onSend, onChange, fileRef, handleAttachmentChange, h
                 type='file'
                 ref={fileRef}
                 style={{display: "none"}}
-                 accept=".pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp3,.wav,.aac,.flac,.mp4,.avi,.mkv,.mov,.wmv"
+                accept=".pdf,.doc,.docx,.txt,.rtf,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.bmp,.svg,.mp3,.wav,.aac,.flac,.mp4,.avi,.mkv,.mov,.wmv"
                 onChange={handleAttachmentChange}
                 />
             </div>

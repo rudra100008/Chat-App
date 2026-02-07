@@ -44,11 +44,6 @@ public class ChatServiceImpl implements ChatService {
     private static  final String NOT_FOUND = " not found.";
 
 
-    private void validateChatAccess(String chatId,String userId){
-        if(!isUserInChat(chatId,userId)){
-            throw new AccessDeniedException("User does not have access to this chat");
-        }
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -252,11 +247,16 @@ public class ChatServiceImpl implements ChatService {
 
         Chat chat = this.chatRepository.findById(chatId)
                 .orElseThrow(()->new ResourceNotFoundException(chatId + NOT_FOUND));
+        if(chat.getChatType() == ChatType.GROUP) {
+            if (!isUserAdmin(chat, loggedUser.getUserId())) {
+                throw new AccessDeniedException(loggedUser.getUsername() + " is not allowed to delete this group.");
+            }
+        }
         if(chat.getChatType() == ChatType.SINGLE) {
             this.messageRepository.deleteByChat(chat);
             this.chatRepository.delete(chat);
         }else{
-            if (isUserAdmin(chatId,loggedUser.getUserId())){
+            if (isUserAdmin(chat,loggedUser.getUserId())){
                 this.messageRepository.deleteByChat(chat);
                 this.chatRepository.delete(chat);
             }
@@ -305,7 +305,7 @@ public class ChatServiceImpl implements ChatService {
         Chat fetchChat = chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException("Chat not found: "+ chatId));
         List<String> admins = fetchChat.getAdminIds();
-        if(!isUserAdmin(chatId,userId)){
+        if(!isUserAdmin(fetchChat,userId)){
             admins.addLast(userId);
         }else{
             throw new IllegalArgumentException("User is already an admin in chat");
@@ -319,32 +319,31 @@ public class ChatServiceImpl implements ChatService {
     public ChatDTO removeUser(String chatId, String userId) {
         User loggedInUser = getLoggedInUser();
         validateChatAccess(chatId,loggedInUser.getUserId());
-        if(!isUserAdmin(chatId,loggedInUser.getUserId())) {
+        Chat chat = getChat(chatId);
+        User user = getUser(userId);
+        if(!isUserAdmin(chat,loggedInUser.getUserId())) {
             throw new IllegalArgumentException("Insufficient permissions to remove user from chat.");
         }
-            Chat chat = getChat(chatId);
-            User user = getUser(userId);
-            if(chat.getAdminIds().contains(user.getUserId())){
-                chat.getAdminIds().remove(user.getUserId());
-            }
-           chat.setParticipants(chat.getParticipants()
-                   .stream()
-                   .filter(p -> !p.getUserId().equals(user.getUserId()))
-                   .toList());
-            Chat updatedChat = chatRepository.save(chat);
+        if(chat.getAdminIds().contains(user.getUserId())){
+            chat.getAdminIds().remove(user.getUserId());
+        }
+        chat.setParticipants(chat.getParticipants()
+                .stream()
+                .filter(p -> !p.getUserId().equals(user.getUserId()))
+                .toList());
+        Chat updatedChat = chatRepository.save(chat);
 
-            return chatToDTO(updatedChat);
-
+        return chatToDTO(updatedChat);
     }
 
     //helper method
     // only admin can delete ,promote User to Admin,remove User from Chat
     // this method check if user is admin or not if chat is ChatType.GROUP
-    private boolean isUserAdmin(String chatId,String userId){
-        Chat fetchChat = chatRepository.findById(chatId)
-                .orElseThrow(()-> new ResourceNotFoundException("Chat not found: "+ chatId));
-        if(fetchChat.getChatType() == ChatType.GROUP) {
-            return fetchChat.getAdminIds().contains(userId);
+    private boolean isUserAdmin(Chat chat,String userId){
+//        Chat fetchChat = chatRepository.findById(chatId)
+//                .orElseThrow(()-> new ResourceNotFoundException("Chat not found: "+ chatId));
+        if(chat.getChatType() == ChatType.GROUP) {
+            return chat.getAdminIds().contains(userId);
         }
         return false;
     }
@@ -401,6 +400,12 @@ public class ChatServiceImpl implements ChatService {
                 .adminIds(chat.getAdminIds())
                 .blockedBy(chat.getBlockedBy())
                 .build();
+    }
+
+    private void validateChatAccess(String chatId,String userId){
+        if(!isUserInChat(chatId,userId)){
+            throw new AccessDeniedException("User does not have access to this chat");
+        }
     }
 
 }

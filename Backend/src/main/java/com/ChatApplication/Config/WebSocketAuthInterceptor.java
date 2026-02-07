@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -18,8 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -40,16 +43,23 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         }
 
         logger.debug("Processing WebSocket message: {}", stompHeaderAccessor.getCommand());
-
         if (StompCommand.CONNECT.equals(stompHeaderAccessor.getCommand())) {
-            String authHeader = stompHeaderAccessor.getFirstNativeHeader("Authorization" );
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                logger.warn("Missing or invalid Authorization header in WebSocket request" );
-                throw new AccessDeniedException("Unauthorized WebSocket connection" );
-            }
-
             try {
-                String token = authHeader.substring(7);
+                String token = null;
+               String cookieHeader = stompHeaderAccessor.getFirstNativeHeader("Cookie");
+                if(cookieHeader != null && !cookieHeader.isEmpty()){
+                    logger.debug("Cookie header: {}", cookieHeader);
+                    String[] cookies = cookieHeader.split(";");
+                    for (String cookie : cookies ){
+                        cookie = cookie.trim();
+                        if (cookie.startsWith("token=")){
+                            token = cookie.substring(6);
+
+                            break;
+                        }
+                    }
+                }
+                System.out.println("Token: "+ token);
                 String username = jwtService.extractUsername(token);
 
                 if (username != null) {

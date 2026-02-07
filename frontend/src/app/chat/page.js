@@ -9,31 +9,24 @@ import ChatContainer from '../Component/chat/ChatContainer';
 import { useAuth } from '../context/AuthContext';
 import SearchUser from '../Component/SearchUser';
 import ChatInfoDisplay from '../Component/ChatInfoDisplay';
-import useUserStatus from '../hooks/useUserStatus';
 import { useWebSocket } from '../context/WebSocketContext';
-import { fetchUserChatsWithNames } from '../services/chatServices';
 import { useChatManager } from '../hooks/useChatManager';
 
 export default function Chat() {
     const route = useRouter();
-    const { token, userId, logout, isLoading, isInitialized } = useAuth()
+    const { userId, logout, isLoading, isInitialized } = useAuth()
     const [error, setError] = useState(null);
-    // const [chatName, setChatName] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    // const [showSearchBox, setShowSearchBox] = useState(false);
-    // const [showChatInfoBox, setShowChatInfoBox] = useState(false);
-    // const [selectedChatInfo, setSelectedChatInfo] = useState(null);
     const [otherUserDetails, setOtherUserDetails] = useState([]);
-    const { userStatusMap,setUserStatusMap} = useWebSocket();
+    const { userStatusMap, setUserStatusMap } = useWebSocket();
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
         chatType: "",
         participantIds: [],
     })
-    // const [chatId, setChatId] = useState('');
-    // const [chatNames, setChatNames] = useState({});
-    const { 
+
+    const {
         chatId,
         chatName,
         chatNames,
@@ -42,7 +35,6 @@ export default function Chat() {
         showChatInfoBox,
         selectedChatInfo,
         isChatInfosLoading,
-       
 
         setChatId,
         setChatName,
@@ -56,84 +48,49 @@ export default function Chat() {
         loadUserChats,
         handleChatInfoToggle,
         handleSearchToggle,
-        onChatSelect} = useChatManager();
+        onChatSelect
+    } = useChatManager();
 
-    // from selectedChatInfo  which is set during when clicked in the image of the chat
     const otherUserId = () => {
         return selectedChatInfo.participantIds.find(pId => pId !== userId);
     }
-    
-    const fetchUserChatDetails = async () => {
-        if (!chatId && !token) return;
+
+    const fetchUserChatDetails = useCallback(async () => {
+        if (!chatId) return;
         try {
-            const response = await axiosInterceptor.get(`${baseUrl}/api/chats/chatDetails/${chatId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            // console.log("Data in /chat: ", response.data);
-            const chatDetails = response.data
-            setUserChat(chatDetails);
+            const response = await axiosInterceptor.get(`/api/chats/chatDetails/${chatId}`)
+            setUserChat(response.data);
         } catch (error) {
             console.log("Error: ", error.response?.data)
         }
-    }
+    }, [chatId])
 
     const getOtherUserId = () => {
-        if (!userChat.participantIds || userChat.participantIds.length === 0) {
-            console.log("No participants availble");
-            return [];
-        }
-        if (userChat.chatType === 'GROUP') {
-            console.log("Chat is group type");
-            return null;
-        }
-        const otherUser = userChat.participantIds.filter(pIds => pIds !== userId)[0];
-        // console.log("Other users after filtering:", otherUser);
-        return otherUser;
+        if (!userChat.participantIds || userChat.participantIds.length === 0) return [];
+        if (userChat.chatType === 'GROUP') return null;
+        return userChat.participantIds.filter(pIds => pIds !== userId)[0];
     }
 
     const fetchUserDetails = async () => {
-        // userChat.participantIds.forEach(pIds=>  console.log("Chat participants:",pIds))
         const otherUserIds = getOtherUserId();
-        console.log("Other user Id:\n", otherUserIds)
         if (!otherUserIds) return
-
         try {
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserIds}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            console.log("OtherUser:\n", response.data)
+            const response = await axiosInterceptor.get(`/api/users/${otherUserIds}`, {})
             setOtherUserDetails(response.data);
         } catch (error) {
-            console.log("Error in fetchUserDetails: ", error.response.data);
+            console.log("Error in fetchUserDetails: ", error.response?.data);
             setOtherUserDetails([]);
         }
-
     }
 
     useEffect(() => {
-        if (isLoading) return;
-        if (!token || !userId) {
-            setError("Missing required authentication information");
-            setTimeout(() => {
-                route.push("/")
-            }, 100)
-            return;
-        }
-
-        if (chatId) {
-            fetchUserChatDetails();
-        }
-    }, [token, userId, chatId, isLoading])
+        if (chatId) fetchUserChatDetails();
+    }, [userId, chatId, isLoading, fetchUserChatDetails, route])
 
     useEffect(() => {
-        if (userChat.chatId) {
-            fetchUserDetails();
-        }
+        if (userChat.chatId) fetchUserDetails();
     }, [userChat]);
 
-    // const closeErrorMessage = () => {
-    //     setErrorMessage("");
-    // }
     const handleErrorMessage = (message) => {
         setErrorMessage(message);
     }
@@ -158,9 +115,10 @@ export default function Chat() {
                     chatData={selectedChatInfo}
                     setChatData={setSelectedChatInfo}
                     loadUserChats={loadUserChats}
-                    onClose={() => setShowChatInfoBox(false)} />}
+                    onClose={() => setShowChatInfoBox(false)}
+                />
+            }
             <div className={style.UserChat}>
-               
                 <UserChats
                     onChatSelect={onChatSelect}
                     setShowSearchBox={setShowSearchBox}
@@ -172,8 +130,8 @@ export default function Chat() {
                     loadUserChats={loadUserChats}
                     chatNames={chatNames}
                     setChatNames={setChatNames}
-                    handleChatInfoToggle = {handleChatInfoToggle}
-                    handleSearchToggle = {handleSearchToggle}
+                    handleChatInfoToggle={handleChatInfoToggle}
+                    handleSearchToggle={handleSearchToggle}
                     chatInfos={chatInfos}
                     isChatInfosLoading={isChatInfosLoading}
                 />
@@ -181,11 +139,11 @@ export default function Chat() {
             <ChatContainer
                 chatId={chatId}
                 userId={userId}
-                token={token}
                 chatName={chatName}
                 setOtherUserDetails={setOtherUserDetails}
                 otherUserDetails={otherUserDetails}
-                onLogout={logout} />
+                onLogout={logout}
+            />
         </div>
     )
 }

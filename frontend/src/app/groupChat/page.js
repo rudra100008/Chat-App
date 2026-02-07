@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { fetchUserChatsWithNames } from "../services/chatServices";
 import { useRouter } from "next/navigation";
@@ -7,23 +7,26 @@ import GetUserImage from "../Component/GetUserImage";
 import style from '../Style/group.module.css';
 import axiosInterceptor from "../Component/Interceptor";
 import baseUrl from "../baseUrl";
+import { useNotification } from "../context/NotificationContext";
 
 const GroupChat = () => {
     const router = useRouter();
     const chatContainerRef = useRef(null);
+    const inputContainerRef = useRef(null);
     const [chatInfos, setChatInfos] = useState([]);
     const [participantIds, setParticipantIds] = useState([]);
     const [selectedChat, setSelectedChat] = useState([]);
     const [chatNames, setChatNames] = useState({});
-    const { userId, token, isLoading, logout } = useAuth();
+    const { userId,  isLoading, logout } = useAuth();
     const [chatName, setChatName] = useState('');
+    const {success,error} = useNotification();
 
     const handleChatName = (e) => {
         setChatName(e.target.value)
     }
     const loadUserChat = async () => {
         try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token);
+            const { chats, chatNames } = await fetchUserChatsWithNames(userId);
 
             console.log("Chats in GroupChat:\n", chats);
             setChatInfos(chats);
@@ -57,39 +60,41 @@ const GroupChat = () => {
     }
 
     const setGroupChat = async () => {
-        if(!token || !userId) return;
+        if( !userId) return;
 
         try{
-            const response = await  axiosInterceptor.post(`${baseUrl}/api/chats/groupChat/${chatName}`,participantIds,{
-                headers:{Authorization: `Bearer ${token}`}
-            })
+            const response = await  axiosInterceptor.post(`/api/chats/groupChat/${chatName}`,participantIds)
             console.log(response.data);
+            success("Chat group created successful")
+            router.push("/chat");
         }catch(error){
-            console.log(error?.response.message);
+            console.log(error?.response.data);
         }
     }
-    useEffect(() => {
-        const handleClickOutside = (event) => {
+   useEffect(() => {
+    const handleClickOutside = (event) => {
+       const isClickInChatContainer =  chatContainerRef.current.contains(event.target);
+       const isClickInInputContainer = inputContainerRef.current.contains(event.target);
+       if(!isClickInChatContainer && !isClickInInputContainer){
+         console.log("Clicked outside both containers");
+        setSelectedChat([]);
+        setParticipantIds([]);
+       }
+    };
 
-            if (!event.target.closest(`.${style.chatGroup}`)) {
-                setSelectedChat([]);
-            }
-        };
-
-        document.addEventListener("click", handleClickOutside);
-        return () => document.removeEventListener("click", handleClickOutside);
-    }, []);
-
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
     useEffect(() => {
         if (isLoading) return;
-        if (!userId || !token) {
+        if (!userId) {
             logout();
         }
         loadUserChat();
-    }, [userId, token])
+    }, [userId])
     return (
         <div className={style.body}>
-            <div className={style.inputGroup}>
+            <div  ref={inputContainerRef} className={style.inputGroup}>
                 <input 
                 id="chatName"
                 name="chatname"

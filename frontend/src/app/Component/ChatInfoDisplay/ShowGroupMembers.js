@@ -7,7 +7,7 @@ import baseUrl from "@/app/baseUrl";
 import GetUserImage from "../GetUserImage";
 import MemberDetail from "./MemberDetail";
 const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
-    const { userId, token, logout } = useAuth();
+    const { userId, logout } = useAuth();
     const [groupMembers, setGroupMembers] = useState([]);
     const [showMember, setShowMember] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -20,9 +20,7 @@ const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
         try {
             const requests = chatData?.participantIds.map((pId) =>
                 axiosInterceptor.get(`${baseUrl}/api/users/${pId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    
                 })
             )
 
@@ -57,11 +55,11 @@ const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
     }
 
     useEffect(() => {
-        if (!userId || !token) return;
+        if (!userId ) return;
         if (chatData) {
             fetchParticipants();
         }
-    }, [chatData?.participantIds, token,userId])
+    }, [chatData?.participantIds,userId])
     return (
         <div className={style.groupContainer}>
             <h3 className={style.title}>Participants ({chatData.participantIds.length})</h3>
@@ -69,7 +67,6 @@ const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
                 {groupMembers.length > 0 &&
                     groupMembers.map((user) => {
                         const statusInfo = userStatusMap[user.userId];
-                        // console.log("User->", user.username, "===", statusInfo);
                         return (
                             <div
                                 key={user.userId}
@@ -80,13 +77,10 @@ const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
                                     setShowMember(true);
                                 }}
                             >
-                                <div
-                                    className={`${style.imageContainer} ${statusInfo?.status === 'ONLINE' ? style.online : style.offline}`}
-                                >
+                                <div className={`${style.imageContainer} ${statusInfo?.status === 'ONLINE' ? style.online : style.offline}`}>
                                     <GetUserImage userId={user.userId} size={40} />
                                 </div>
                                 <div className={style.userContainer}>
-
                                     <div className={style.nameSection}>
                                         <span className={style.username}>{user.username}</span>
                                         {checkChatAdmin(user) && (
@@ -94,34 +88,25 @@ const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
                                         )}
                                     </div>
                                     <span className={style.userLastSeen}>
-                                        {new Date(statusInfo?.lastSeen || user.lastSeen).toLocaleDateString(
-                                            "en-us",
-                                            {
-                                                year: "numeric",
-                                                day: "2-digit",
-                                                month: "2-digit",
-                                            }
-                                        )}
+                                        {new Date(statusInfo?.lastSeen || user.lastSeen).toLocaleDateString("en-us", {
+                                            year: "numeric", day: "2-digit", month: "2-digit",
+                                        })}
                                     </span>
-
                                 </div>
                             </div>
-                        )
-
+                        );
                     })}
             </div>
-            {
-                showMember && showMember &&
+            {showMember && (
                 <MemberDetail
                     user={selectedUser}
                     onClose={onClose}
                     checkChatAdmin={checkChatAdmin}
                     chatData={chatData}
-                    setChatData = {setChatData}
+                    setChatData={setChatData}
                 />
-            }
+            )}
         </div>
     );
-
 }
 export default ShowGroupMembers;

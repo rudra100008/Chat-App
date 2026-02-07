@@ -108,6 +108,8 @@ public class MessageServiceImpl implements MessageService {
     private MessageDTO postMessageInternal(String senderId, String chatId, String content, Attachment attachment, StompHeaderAccessor headerAccessor) {
         validateNotBlankChatIdAndSenderId(chatId,senderId);
 
+        LocalDateTime now = LocalDateTime.now();
+
         User sender = getUser(senderId);
         Chat chat = getChat(chatId);
 
@@ -123,16 +125,17 @@ public class MessageServiceImpl implements MessageService {
                 .sender(sender)
                 .chat(chat)
                 .content(content)
-                .timestamp(LocalDateTime.now())
+                .timestamp(now)
                 .isRead(false)
                 .build();
+
         if(attachment != null){
             message.setAttachment(attachment);
         }
         Message savedMessage = messageRepository.save(message);
 
         chat.setLastMessage(savedMessage.getContent());
-        chat.setLastMessageTime(LocalDateTime.now());
+        chat.setLastMessageTime(now);
         Chat updatedChat = chatRepository.save(chat);
         for(User participant : chat.getParticipants()){
             messagingTemplate.convertAndSendToUser(
@@ -277,4 +280,5 @@ public class MessageServiceImpl implements MessageService {
         return chatRepository.findById(chatId)
                 .orElseThrow(()-> new ResourceNotFoundException("Not found: chatId= "+chatId));
     }
+
 }

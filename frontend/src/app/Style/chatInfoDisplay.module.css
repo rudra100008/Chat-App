@@ -1,352 +1,481 @@
-.chatInfoContainer{
-    position: fixed;
-    width: 750px;
-    height: 450px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 24px;
-    box-shadow: 
-        0 24px 48px rgba(0, 0, 0, 0.15),
-        0 8px 16px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    z-index: 100000;
-    overflow: hidden;
-    font-size: 0.85rem;
+/* ============================================================
+   chatInfoDisplay.module.css  — Dark-themed info modal
+   ============================================================ */
+
+/* ── Backdrop + centred modal shell ── */
+.chatInfoContainer {
+  position: fixed;
+  width: 760px;
+  max-width: 92vw;
+  height: 480px;
+  max-height: 88vh;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  background: #1e2d4d;
+  border: 1px solid #2a3a5c;
+  border-radius: 20px;
+  box-shadow: 0 28px 56px rgba(0, 0, 0, 0.5), 0 8px 18px rgba(0, 0, 0, 0.3);
+  z-index: 100000;
+  overflow: hidden;
+  font-size: 0.85rem;
+  color: #c8d6e5;
 }
 
-.leftContainer{
-   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    width: 30%;
-    height: 100%;
-    padding: 1rem 1.5rem;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 10px;
-    border-right: 1px solid rgba(226, 232, 240, 0.8);
-    position: relative;
-}
-
-.rightContainer{
-   width: 70%;
-    height: 100%;
-    padding: 1rem;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #8b5a9e 100%);
-    position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
+/* ── Left tab column ── */
+.leftContainer {
+  background: #16213e;
+  width: 28%;
+  height: 100%;
+  padding: 1.2rem 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  border-right: 1px solid #2a3a5c;
 }
 
 .leftContainer button {
-    position: relative;
-    z-index: 2;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: white;
-    font-weight: 550;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
-        0 4px 8px rgba(59, 130, 246, 0.3),
-        0 2px 4px rgba(59, 130, 246, 0.2);
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-    overflow: hidden;
-}
-
-.leftContainer button:hover{
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-    transform: translateY(-2px);
-    box-shadow: 
-        0 8px 16px rgba(59, 130, 246, 0.4),
-        0 4px 8px rgba(59, 130, 246, 0.3);
-}
-
-.leftContainer button:active{
-    transform: translateY(0);
-    box-shadow: 
-        0 2px 4px rgba(59, 130, 246, 0.3),
-        0 1px 2px rgba(59, 130, 246, 0.2);
-}
-.closeButton{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    border-radius: 50%;
-    padding: 4px;
-    z-index: 10;
-    font-size: 0.8rem;
-    position: relative;
-    width: 26px;
-    height: 26px;
-    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-
-.closeButton:hover {
-    background: rgba(255,255, 255, 0.2); 
-    transform: scale(1.1) rotate(90deg); 
-    color: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-.closeButton:active{
-    transform: scale(0.95) rotate(90deg);
-     background: rgba(255, 255, 255, 0.15);
-}
-
-.infoDisplayContainer{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding:1rem;
-    gap: 0.75rem;
-    z-index: 2;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-}
-
-.infoDisplayContainer .image{
-    position: relative;
-    overflow: visible;
-    border-radius: 50%;
-    border: 3px solid #667eea;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
-
-.infoDisplayContainer .image:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-.chatName{
-    font-size: 1rem;
-    font-weight: 700;
-    color: white;
-    margin: 0;
-    text-align: center;
-    letter-spacing: -0.5px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #ffffff, #f1f5f9);
-    background-clip: text;
-    position: relative;
-}
-
-.chatInfoDisplay {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
-    font-size: 0.9rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    width: 100%;
-    max-width: 320px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    margin-bottom: 0.8rem;
-}
-
-.chatInfoDisplay:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
-.iconStyle {
-    margin-right: 8px;
-    color: #7c3aed; /* Purple accent color */
-    font-size: 1.1rem;
-    min-width: 24px;
-    text-align: center;
-}
-
-.chatInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    width: 100%;
-}
-
-.chatInfo > p:first-child {
-    font-weight: 600;
-    color: #e2e8f0; 
-    font-size: 0.85rem;
-    margin-bottom: 0.2rem;
-}
-
-/* .chatInfo p:not(:first-child) {
-    color: #a5b4fc;
-    font-size: 0.9rem;
-    line-height: 1.4;
-} */
-
-.adminList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.adminList p {
-    background: rgba(124, 58, 237, 0.15);
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    color: #e8e8eb;
-    font-size: 0.85rem;
-}
-
-.groupContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  max-height: 300px;
-  overflow-y: auto;
-  scrollbar-width: none; /*fire fox */
-  -ms-overflow-style: none;
-}
-.membersList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.groupContainer::-webkit-scrollbar{
-  display: none;
-}
-.memberCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 35px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-.memberCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  background: rgba(255, 255, 255, 1);
-}
-
-.title {
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 16px;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.imageContainer {
-  position: relative;
-  border-radius: 50%;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.offline{
-    border: 3px solid #667eea;
-}
-.online{
-  border: 3px solid rgb(62, 221, 62);
-}
-.userContainer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 90%;
-}
-
-
-.userContainer  .nameSection {
-  display: flex;
-  flex-direction: column;
-}
-
-.userContainer  .username {
-  font-size: 1rem;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #8899aa;
   font-weight: 500;
-  color: #333;
-}
-
-.userContainer  .adminLabel {
   font-size: 0.8rem;
-  color: #007bff;
-  font-weight: 500;
-  margin-top: 2px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  text-align: left;
 }
 
-.userContainer  .userLastSeen {
+.leftContainer button:hover {
+  background-color: rgba(79, 195, 247, 0.08);
+  color: #4fc3f7;
+  border-color: rgba(79, 195, 247, 0.2);
+}
+
+.leftContainer button.activeTabBtn {
+  background-color: rgba(79, 195, 247, 0.15);
+  color: #4fc3f7;
+  border-color: rgba(79, 195, 247, 0.35);
+  font-weight: 600;
+}
+
+/* ── Right content column ── */
+.rightContainer {
+  width: 72%;
+  height: 100%;
+  padding: 1.2rem 1.4rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #1a1a2e;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #2a3a5c transparent;
+}
+.rightContainer::-webkit-scrollbar { width: 5px; }
+.rightContainer::-webkit-scrollbar-thumb { background: #2a3a5c; border-radius: 6px; }
+.rightContainer::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Close button (top-right of right panel) ── */
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-left: auto;
-  color: rgb(82, 81, 81);
+  margin-bottom: 0.6rem;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  color: #6b7a8d;
+  font-size: 0.85rem;
+  transition: all 0.22s ease;
+  background: transparent;
+  border: none;
+}
+.closeButton:hover {
+  background: rgba(255,255,255,0.08);
+  color: #ef5350;
+  transform: rotate(90deg);
+}
+.closeButton:active {
+  transform: rotate(90deg) scale(0.9);
 }
 
-.faEdit{
+/* ── Info display wrapper (SingleChat / GroupChat content) ── */
+.infoDisplayContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0.8rem 0.6rem;
+  gap: 0.7rem;
+  z-index: 2;
+}
+
+/* ── Avatar ring ── */
+.infoDisplayContainer .image {
+  position: relative;
+  overflow: visible;
+  border-radius: 50%;
+  border: 3px solid #4fc3f7;
+  transition: all 0.25s ease;
+  display: inline-block;
+}
+.infoDisplayContainer .image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(79, 195, 247, 0.3);
+}
+
+/* ── Chat / user name ── */
+.chatName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #eef2ff;
+  margin: 0;
+  text-align: center;
+  letter-spacing: -0.3px;
+  cursor: default;
+}
+
+/* ── Info card rows (phone, email, lastSeen, createdAt, admins) ── */
+.chatInfoDisplay {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  border: 1px solid #2a3a5c;
+  width: 100%;
+  max-width: 320px;
+  transition: background 0.2s ease;
+  color: #c8d6e5;
+}
+.chatInfoDisplay:hover {
+  background: rgba(255,255,255,0.07);
+}
+.chatInfoDisplay svg {
+  color: #4fc3f7;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── Icon accent colour ── */
+.iconStyle {
+  color: #4fc3f7;
+  font-size: 1rem;
+  min-width: 22px;
+  text-align: center;
+}
+
+/* ── Nested info label + value ── */
+.chatInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+}
+.chatInfo > p:first-child {
+  font-weight: 600;
+  color: #8899aa;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+.chatInfo > p:last-child {
+  color: #c8d6e5;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ── Admin list pills ── */
+.adminList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.adminList p {
+  background: rgba(79, 195, 247, 0.12);
+  border: 1px solid rgba(79, 195, 247, 0.25);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  color: #81d4fa;
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+/* ── Edit pencil on group avatar ── */
+.faEdit {
   position: absolute;
-  bottom: 1px;
-  right: 1px;
-  color: white;
+  bottom: 2px;
+  right: 2px;
+  color: #4fc3f7;
   cursor: pointer;
   opacity: 0;
-  transition: all 0.2s ease-in-out;
+  transition: opacity 0.2s ease;
   border-radius: 50%;
   z-index: 10;
+  background: rgba(22, 33, 62, 0.85);
+  padding: 3px;
 }
-
 .infoDisplayContainer .image:hover .faEdit {
-    opacity: 1;
-    transform: scale(1);
+  opacity: 1;
 }
-.faEdit :active{
-  transform: scale(0.95);
-}
+.faEdit:active { transform: scale(0.9); }
 
-.InputStyle[type="text"]{
-  border: 1px solid white;
-  border-radius: 12px;
-  padding: 0.25rem;
+/* ── Inline name-edit input ── */
+.InputStyle[type="text"] {
+  border: 1px solid #4fc3f7;
+  border-radius: 10px;
+  padding: 0.3rem 0.6rem;
   box-sizing: border-box;
   font-size: 1rem;
+  background: #1e2d4d;
+  color: #eef2ff;
 }
-
-.InputStyle[type="text"]:focus{
+.InputStyle[type="text"]:focus {
   outline: none;
-  border-color: #2b89d6;
-  box-shadow: 0 0 0 3px rgba(71, 147, 209, 0.2);
+  border-color: #81d4fa;
+  box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
 }
 
-.hiddenSpan{
+.hiddenSpan {
   visibility: hidden;
   position: absolute;
   font-family: inherit;
   white-space: pre;
   font-size: 1rem;
   font-weight: 700;
+  color: transparent;
+}
+
+/* ── Delete button ── */
+.deleteButton {
+  width: 100%;
+  max-width: 320px;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
   color: white;
-  margin: 0;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 10px rgba(231, 76, 60, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.deleteButton::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  transition: left 0.45s ease;
+}
+.deleteButton:hover::before { left: 100%; }
+.deleteButton:hover {
+  background: linear-gradient(135deg, #a93226 0%, #c0392b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+}
+.deleteButton:active { transform: translateY(0); }
+.deleteButton:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.deleteIcon { font-size: 0.9rem; transition: transform 0.2s; }
+.deleteButton:hover .deleteIcon { transform: scale(1.12); }
+
+/* ── Confirm-delete dialog ── */
+.confirmDialogOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.confirmDialog {
+  background: #1e2d4d;
+  border: 1px solid #2a3a5c;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  animation: slideUp 0.28s cubic-bezier(0.4,0,0.2,1);
+  z-index: 100002;
+  position: relative;
+}
+@keyframes slideUp {
+  from { transform: translateY(18px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.confirmDialog p {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #c8d6e5;
+  margin: 0 0 1.2rem;
   text-align: center;
-  letter-spacing: -0.5px;
+  line-height: 1.55;
+}
+
+.confirmDialogIcon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+.confirmDialogIcon svg {
+  width: 42px;
+  height: 42px;
+  color: #e74c3c;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.06); }
+}
+
+.confirmButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 1.2rem;
+}
+.confirmButtons button {
+  flex: 1;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+/* Yes, Delete */
+.confirmButtons button:first-child {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  box-shadow: 0 3px 8px rgba(231,76,60,0.3);
+}
+.confirmButtons button:first-child:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-1px);
+}
+/* Cancel */
+.confirmButtons button:last-child {
+  background: #2a3a5c;
+  color: #c8d6e5;
+  border: 1px solid #3a4a6c;
+}
+.confirmButtons button:last-child:hover {
+  background: #34495e;
+  transform: translateY(-1px);
+}
+
+/* ── Members list (ShowGroupMembers) ── */
+.groupContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.groupContainer::-webkit-scrollbar { display: none; }
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #eef2ff;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memberCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  border: 1px solid #2a3a5c;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.memberCard:hover {
+  background: rgba(79, 195, 247, 0.08);
+  border-color: rgba(79, 195, 247, 0.3);
+}
+
+.imageContainer {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.offline { border: 2.5px solid #2a3a5c; }
+.online  { border: 2.5px solid #4caf50; }
+
+.userContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
+}
+.userContainer .nameSection {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.userContainer .username {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #e0e6ee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.userContainer .adminLabel {
+  font-size: 0.7rem;
+  color: #4fc3f7;
+  font-weight: 500;
+  margin-top: 1px;
+}
+.userContainer .userLastSeen {
+  margin-left: auto;
+  color: #5a6a7d;
+  font-size: 0.72rem;
+  flex-shrink: 0;
 }

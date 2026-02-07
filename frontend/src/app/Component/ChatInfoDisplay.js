@@ -11,33 +11,30 @@ import GroupChat from "./ChatInfoDisplay/GroupChat";
 import ShowGroupMembers from "./ChatInfoDisplay/ShowGroupMembers";
 
 
-const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, lastSeen, status, userStatusMap, setUserStatusMap, loadUserChats }) => {
+const ChatInfoDisplay = ({ userId, chatData, setChatData, onClose, lastSeen, status, userStatusMap, setUserStatusMap, loadUserChats }) => {
     const [activeTab, setActiveTab] = useState("overview");
     const [otherUserData, setOtherUserData] = useState({});
     const { stompClientRef } = useWebSocket();
 
-    const handleOverView = () => {
-        setActiveTab("overview");
-    }
-    const handleShowGroup = () => {
-        setActiveTab("group")
-    }
-    const handleShowMedia = () => {
-        setActiveTab("media");
-    }
-    const handleMembers = () => {
-        setActiveTab("members");
-    }
+
     const otherUserId = (chat) => {
         return chat.participantIds.find(pId => pId !== userId);
+    }
+
+     const tabs = [
+        { key: "overview", label: "OverView" },
+        { key: "group",    label: "Group" },
+        { key: "media",    label: "Media" },
+    ];
+
+     if (chatData.chatType === "GROUP") {
+        tabs.push({ key: "members", label: "Members" });
     }
 
     const fetchOtherUser = async () => {
         const otherUserId = chatData.participantIds.find(pId => pId !== userId);
         try {
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserId}`)
             console.log(response.data);
             setUserStatusMap(prev => ({
                 ...prev,
@@ -74,84 +71,77 @@ const ChatInfoDisplay = ({ userId, token, chatData, setChatData, onClose, lastSe
             })
         }
     }
+
     useEffect(() => {
         if (chatData.chatType !== "SINGLE") return;
         fetchOtherUser();
-        console.log("LastSeen:\n", lastSeen, "\nStatus:\n", status)
-    }, [chatData, token, userId])
-    return (
+    }, [chatData, userId])
+
+
+     return (
         <div className={style.chatInfoContainer}>
+            {/* ── Left tab nav ── */}
             <div className={style.leftContainer}>
-                <button onClick={handleOverView}>
-                    OverView
-                </button>
-                <button onClick={handleShowGroup}>
-                    Group
-                </button>
-                <button onClick={handleShowMedia}>
-                    Media
-                </button>
-                {chatData.chatType === "GROUP" &&
-                    <button onClick={handleMembers}>
-                        Members
-                    </button>}
+                {tabs.map(tab => (
+                    <button
+                        key={tab.key}
+                        className={activeTab === tab.key ? style.activeTabBtn : ""}
+                        onClick={() => setActiveTab(tab.key)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
+
+            {/* ── Right content ── */}
             <div className={style.rightContainer}>
-                <div className={style.closeButton} onClick={onClose}>
-                    <FontAwesomeIcon icon={faClose} size="lg"  />
-                </div>
-                {
-                    activeTab === "overview" &&
+                <button className={style.closeButton} onClick={onClose} aria-label="Close">
+                    <FontAwesomeIcon icon={faClose} size="lg" />
+                </button>
+
+                {activeTab === "overview" && (
                     <div>
-                        {
-                            chatData.chatType === "SINGLE" ?
-                                (
-                                    <SingleChat
-                                        otherUserId={otherUserId}
-                                        otherUserData={otherUserData}
-                                        lastSeen={lastSeen}
-                                        status={status}
-                                        formatLastSeen={formatLastSeen}
-                                        chatData={chatData}
-                                        setChatData ={setChatData}
-                                        loadUserChats={loadUserChats}
-                                    />
-                                ) :
-                                (
-                                    <GroupChat
-                                        chatData={chatData}
-                                        token={token}
-                                        setChatData={setChatData}
-                                        loadUserChats={loadUserChats}
-                                    />
-                                )
-                        }
+                        {chatData.chatType === "SINGLE" ? (
+                            <SingleChat
+                                otherUserId={otherUserId}
+                                otherUserData={otherUserData}
+                                lastSeen={lastSeen}
+                                status={status}
+                                formatLastSeen={formatLastSeen}
+                                chatData={chatData}
+                                setChatData={setChatData}
+                                loadUserChats={loadUserChats}
+                            />
+                        ) : (
+                            <GroupChat
+                                chatData={chatData}
+                                setChatData={setChatData}
+                                loadUserChats={loadUserChats}
+                                onClose={onClose}
+                            />
+                        )}
                     </div>
-                }
-                {
-                    activeTab === "group" &&
-                    <div>
+                )}
+
+                {activeTab === "group" && (
+                    <div style={{ color: "#6b7a8d", textAlign: "center", marginTop: "2rem", fontSize: "0.9rem" }}>
                         Group Page
                     </div>
-                }
-                {
-                    activeTab === "media" &&
-                    <div>
+                )}
+
+                {activeTab === "media" && (
+                    <div style={{ color: "#6b7a8d", textAlign: "center", marginTop: "2rem", fontSize: "0.9rem" }}>
                         Media Page
                     </div>
-                }
+                )}
 
-                {
-                    chatData.chatType === "GROUP" && activeTab === "members" && (
-                        <ShowGroupMembers
-                            chatData={chatData}
-                            setChatData={setChatData}
-                            userStatusMap ={userStatusMap}
-                        />
-                    )
-                }
-
-
+                {chatData.chatType === "GROUP" && activeTab === "members" && (
+                    <ShowGroupMembers
+                        chatData={chatData}
+                        setChatData={setChatData}
+                        userStatusMap={userStatusMap}
+                    />
+                )}
             </div>
         </div>
     )

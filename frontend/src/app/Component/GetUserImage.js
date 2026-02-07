@@ -8,19 +8,19 @@ import style from "../Style/image.module.css";
 
 export default function GetUserImage({ userId ,size = 40,className = ""}) {
     const [imageUrl, setImageUrl] = useState("");
-    const {token} = useAuth();
 
     useEffect(() => {
         const fetchUserImage = async () => {
             try {
                 const response = await axiosInterceptor.get(`${baseUrl}/api/users/getUserImage/user/${userId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
+
                     responseType: 'blob',
                 });
+                console.log("Response of UserImage: ",response.data)
                 const url = URL.createObjectURL(response.data);
                 setImageUrl(url);
             } catch (error) {
-                console.error("Error fetching user image:", error.response);
+                console.error("Error fetching user image:", error);
             }
         };
 

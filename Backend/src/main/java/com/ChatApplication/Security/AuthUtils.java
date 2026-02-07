@@ -17,15 +17,11 @@ public class AuthUtils {
     // Retrieves the logged-in user's details from SecurityContextHolder
     public User getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-//        if (authentication == null || !"anonymousUser".equals(authentication.getPrincipal())) {
-//            throw new IllegalArgumentException("No authenticated user found.");
-//        }
         if(!authentication.isAuthenticated()){
             throw new IllegalArgumentException("No authenticated user found");
         }
 
-        return userRepository.findByUsername(authentication.getName())
+        return userRepository.findByPhoneNumber(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         authentication.getName() + " not found in the server."));
     }
@@ -41,7 +37,7 @@ public class AuthUtils {
 //        System.out.println("User: " + authentication.getName());
 //        System.out.println("Authentication: " + authentication);
 //        System.out.println("Header: " + stompHeaderAccessor.toNativeHeaderMap() );
-        return userRepository.findByUsername(authentication.getName())
+        return userRepository.findByPhoneNumber(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         authentication.getName() + " not found in the server."));
     }

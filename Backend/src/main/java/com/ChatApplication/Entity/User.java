@@ -2,10 +2,7 @@ package com.ChatApplication.Entity;
 
 
 import com.ChatApplication.Enum.UserStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,12 +16,14 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @ToString(exclude = "password")
 public class User  implements UserDetails {
   @MongoId
     private String userId;
     private String username;
     private String email;
+    private String about;
     private String password;
     private String profilePicture;
     private String phoneNumber;
@@ -38,7 +37,7 @@ public class User  implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.username;
+        return this.phoneNumber;
     }
 
     @Override

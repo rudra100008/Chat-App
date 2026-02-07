@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const useReadMessage = ({userId,stompClientRef,chatId}) => {
-    const {token} = useAuth();
     const observerRef = useRef(null);
     const observeredMessage = useRef(new Set());
     const messageRef = useRef(new Map());
@@ -29,9 +28,6 @@ const useReadMessage = ({userId,stompClientRef,chatId}) => {
                     const client = stompClientRef.current;
                     client.publish({
                         destination : "/app/messageRead",
-                        headers :{ 
-                            Authorization : `Bearer ${token}`
-                        },
                         body : JSON.stringify(messageRead)
                     }) 
                       console.log("Message read successfully");

@@ -4,6 +4,7 @@ import com.ChatApplication.Exception.ImageInvalidException;
 import com.ChatApplication.Exception.ImageProcessingException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Service.ImageService;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,4 +75,15 @@ public class ImageServiceImpl implements ImageService {
         }
 
     }
+
+    @Override
+    public MediaType determineMediaType(String fileName) {
+        String lowerCase = fileName.toLowerCase();
+        if(lowerCase.endsWith(".png")) return MediaType.IMAGE_PNG;
+        if (lowerCase.endsWith(".gif")) return MediaType.IMAGE_GIF;
+        if(lowerCase.endsWith(".webp")) return MediaType.parseMediaType("image/webp");
+        return MediaType.IMAGE_JPEG;
+    }
+
+
 }

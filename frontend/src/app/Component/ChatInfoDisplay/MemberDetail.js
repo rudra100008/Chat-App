@@ -9,9 +9,10 @@ import { useAuth } from "@/app/context/AuthContext";
 
 
 const MemberDetail = ({ user, onClose, checkChatAdmin, chatData, setChatData }) => {
-    const { userId, token, logout } = useAuth();
+    const { userId, logout } = useAuth();
+    
     const handleRemove = async() => {
-        const  updatedChatData = await handleRemoveUser(token, logout, user, chatData);
+        const  updatedChatData = await handleRemoveUser( logout, user, chatData);
         if(updatedChatData){
             setChatData(prev =>({
                 ...prev,
@@ -23,7 +24,7 @@ const MemberDetail = ({ user, onClose, checkChatAdmin, chatData, setChatData }) 
         onClose();
     }
     const handlePromote = async() => {
-        const updatedChatData = await handlePromoteUser( token, logout, user, chatData);
+        const updatedChatData = await handlePromoteUser(  logout, user, chatData);
 
         if (updatedChatData) {
             setChatData(prev =>
@@ -31,7 +32,7 @@ const MemberDetail = ({ user, onClose, checkChatAdmin, chatData, setChatData }) 
             )
         }
     }
-    return (
+     return (
         <Portal>
             <div className={style.memberOverlay}>
                 <div className={style.memberContainer}>
@@ -39,19 +40,15 @@ const MemberDetail = ({ user, onClose, checkChatAdmin, chatData, setChatData }) 
                         <FontAwesomeIcon icon={faClose} />
                     </button>
 
-
                     <div className={style.image}>
                         <GetUserImage userId={user.userId} size={130} />
                     </div>
 
                     <div className={style.userInfo}>
-                         <p className={style.username}>
-                        {user.username}
-                    </p>
-                    {
-                        checkChatAdmin(user) &&
-                        <p className={style.adminLabel}>Admin</p>
-                    }
+                        <p className={style.username}>{user.username}</p>
+                        {checkChatAdmin(user) && (
+                            <p className={style.adminLabel}>Admin</p>
+                        )}
                     </div>
 
                     <div className={style.userInfoDisplay}>
@@ -62,6 +59,7 @@ const MemberDetail = ({ user, onClose, checkChatAdmin, chatData, setChatData }) 
                         <FontAwesomeIcon icon={faEnvelope} />
                         <p>{user?.email}</p>
                     </div>
+
                     <button className={`${style.buttonGroup} ${style.removeButton}`} onClick={handleRemove}>
                         <p>Remove User {user.username}</p>
                     </button>

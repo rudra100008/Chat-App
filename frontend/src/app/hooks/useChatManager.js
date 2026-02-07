@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 export const useChatManager = () => {
     const router = useRouter();
     const [isChatInfosLoading, setIsChatInfosLoading] = useState(true);
-    const { userId, token, logout } = useAuth();
+    const { userId, logout } = useAuth();
     const [chatId,setChatId] = useState('');
     const [chatNames, setChatNames] = useState({});
     const [chatName,setChatName] = useState('');
@@ -20,23 +20,23 @@ export const useChatManager = () => {
 
 
     const loadUserChats = useCallback(async () => {
-        if (!userId || !token) return;
+        if (!userId) return;
         setIsChatInfosLoading(true);
         try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, token, router, logout);
+            const { chats, chatNames } = await fetchUserChatsWithNames(userId, router, logout);
             setChatNames(chatNames);
             setChatInfos(chats);
         } catch (error) {
-            console.log("UseChatManager: ", error.response.data);
+            console.log("UseChatManager: ", error.response?.data);
             if (error.response && error.response.status === 403) {
                 logout();
             } else {
-                console.log("UseChatManager: ", error.response.data);
+                console.log("UseChatManager: ", error.response?.data);
             }
         }finally{
             setIsChatInfosLoading(false);
         }
-    }, [userId, token, router, logout, setChatInfos])
+    }, [userId, router, logout, setChatInfos])
 
 
     const handleChatInfoToggle = useCallback((chatDetails) => {
@@ -51,7 +51,7 @@ export const useChatManager = () => {
                 chatName : chatNames[chatDetails.chatId]
             })
         }
-    })
+    },[selectedChatInfo,chatNames])
     const handleSearchToggle = () => {
         setShowSearchBox(prev => !prev);
     }

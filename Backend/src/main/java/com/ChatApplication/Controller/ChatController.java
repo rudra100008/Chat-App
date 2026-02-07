@@ -129,12 +129,13 @@ public class ChatController {
         ChatDTO chatDTO = this.chatService.deleteParticipants(chatId,userId);
         return ResponseEntity.ok(chatDTO);
     }
+
     @DeleteMapping("/delete/{chatId}")
-    public ResponseEntity<String> removeChat(
+    public ResponseEntity<Map<?,?>> removeChat(
             @PathVariable("chatId")String chatId
     ){
         this.chatService.deleteChat(chatId);
-        return  ResponseEntity.ok("Chat Deleted");
+        return  ResponseEntity.status(HttpStatus.OK).body(Map.of("message","Chat deleted successfully."));
     }
 
     @GetMapping("/chatDetails/{chatId}")

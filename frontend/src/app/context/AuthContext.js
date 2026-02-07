@@ -6,7 +6,6 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [userId, setUserId] = useState('');
-    const [token, setToken] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
     const router = useRouter();
@@ -14,11 +13,9 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const storedUserId = localStorage.getItem('userId');
-            const storedToken = localStorage.getItem('token');
 
-            if (storedUserId && storedToken) {
+            if (storedUserId) {
                 setUserId(storedUserId);
-                setToken(storedToken);
             }
         }
         setIsLoading(false);
@@ -26,26 +23,20 @@ export const AuthProvider = ({ children }) => {
 
     }, [])
 
-    const login = (newUserId, newToken) => {
+    const login = (newUserId) => {
         localStorage.setItem("userId", newUserId);
-        localStorage.setItem("token", newToken);
         setUserId(newUserId);
-        setToken(newToken);
     }
 
     const logout = () => {
         localStorage.removeItem("userId");
-        localStorage.removeItem("token");
-        localStorage.removeItem("isTokenValid")
         setUserId('');
-        setToken('');
         router.push('/')
     }
     const value = {
-        token,
         userId,
         isLoading,
-        isAuthenticated: !!token && !!userId,
+        isAuthenticated:  !!userId,
         login,
         logout,
         isInitialized

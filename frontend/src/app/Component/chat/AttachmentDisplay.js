@@ -7,7 +7,6 @@ import baseUrl from '@/app/baseUrl';
 import { useAuth } from '@/app/context/AuthContext';
 
 const AttachmentDisplay = ({ message }) => {
-    const {token} = useAuth();
     const getFileName = (fileName) => {
         let result = fileName.indexOf("_");
         return fileName.substring(result + 1);
@@ -17,7 +16,6 @@ const AttachmentDisplay = ({ message }) => {
         console.log("Downloading: ",message.attachment.url);
         console.log("Full URL:", `${baseUrl}/${message.attachment?.url}`);
         await axiosInterceptor.get(`${baseUrl}/${message.attachment.url}`,{
-            headers :{Authorization : `Bearer ${token}`},
             responseType:'blob'
         }).then((res)=>{
             const blob = res.data;

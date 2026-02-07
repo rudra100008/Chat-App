@@ -3,17 +3,14 @@ import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 
 
-export const fetchChatNames = async (chats, userId, token) => {
+export const fetchChatNames = async (chats, userId) => {
     const chatNames = {};
 
     for (const chat of chats) {
         if (chat.chatType == "SINGLE") {
             try {
                 const response = await axiosInterceptor.get(
-                    `${baseUrl}/api/chatName/fetchChatName/${userId}/chat/${chat.chatId}`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }
+                    `/api/chatName/fetchChatName/${userId}/chat/${chat.chatId}`
                 );
                 chatNames[chat.chatId] = response.data.chatname;
             } catch (error) {
@@ -34,17 +31,14 @@ export const fetchChatNames = async (chats, userId, token) => {
 };
 
 
-export const fetchUserChats = async (userId, token,logout) => {
-    if (!userId || !token) {
-        throw new Error("User ID and token are required");
+export const fetchUserChats = async (userId,logout) => {
+    if (!userId ) {
+        throw new Error("User ID is required");
     }
 
     try {
         const response = await axiosInterceptor.get(
-            `${baseUrl}/api/chats/user/${userId}`,
-            {
-                headers: { Authorization: `Bearer ${token}` }
-            }
+            `/api/chats/user/${userId}`
         );
         console.log('Response of userChats:', response.data);
         return response.data;
@@ -57,10 +51,10 @@ export const fetchUserChats = async (userId, token,logout) => {
     }
 };
 
-export const fetchUserChatsWithNames = async (userId, token,router,logout) => {
+export const fetchUserChatsWithNames = async (userId,router,logout) => {
     try {
-        const chats = await fetchUserChats(userId, token,logout);
-        const chatNames = await fetchChatNames(chats, userId, token);
+        const chats = await fetchUserChats(userId,logout);
+        const chatNames = await fetchChatNames(chats, userId);
 
         return {
             chats,
@@ -70,3 +64,12 @@ export const fetchUserChatsWithNames = async (userId, token,router,logout) => {
         throw error;
     }
 };
+
+export const deleteChat = async(chatId)=>{
+    try{
+        const response = await axiosInterceptor.delete(`/api/chats/delete/${chatId}`);
+        return response.data;
+    }catch(err){
+        console.log("Error responsein chatService: ",err.response.data)
+    }
+}

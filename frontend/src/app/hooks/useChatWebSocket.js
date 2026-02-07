@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 
-const useChatWebSocket = ({ userId, chatId, token, messages, setMessages, router }) => {
+const useChatWebSocket = ({ userId, chatId, messages, setMessages, router }) => {
     const { stompClientRef, isWebSocketConnected } = useWebSocket();
     const [connected, setConnected] = useState(false);
     const [error, setError] = useState('');
@@ -16,20 +16,11 @@ const useChatWebSocket = ({ userId, chatId, token, messages, setMessages, router
         }
     }, []);
 
-    const handleTokenExpired = useCallback(() => {
-        console.log("Token expired, logging out...");
-        localStorage.clear();
-        disconnectWebSocket();
-        if (router && router.push) {
-            router.push("/");
-        } else {
-            window.location.href = "/";
-        }
-    }, [router, disconnectWebSocket]);
+
 
     const connectWebSocket = useCallback(() => {
-        if (!userId || !chatId || !token) {
-            console.log("Missing params:", { userId, chatId, token: !!token });
+        if (!userId || !chatId ) {
+            console.log("Missing params:", { userId, chatId });
             return;
         }
 
@@ -89,7 +80,7 @@ const useChatWebSocket = ({ userId, chatId, token, messages, setMessages, router
             setError("Failed to subscribe to chat");
             setConnected(false);
         }
-    }, [userId, token, chatId, setMessages, stompClientRef,]);
+    }, [userId, chatId, setMessages, stompClientRef,isWebSocketConnected]);
 
     useEffect(() => {
         if (!chatId) {

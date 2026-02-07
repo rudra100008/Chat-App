@@ -6,7 +6,7 @@ import GroupChatMessage from './GroupChatMessage';
 import axiosInterceptor from '../Interceptor';
 import baseUrl from '@/app/baseUrl';
 
-export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, token, initialLoad }) {
+export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, initialLoad }) {
     const messageEndRef = useRef(null);
     const containerRef = useRef(null);
     const prevScrollHeight = useRef(0);
@@ -38,10 +38,8 @@ export default function Message({ messages, setMessages, userId, loading, firstP
 
     const fetchUser = async (userId) => {
         try {
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            const response = await axiosInterceptor.get(`/api/users/${userId}`, {
+              
             })
             const userData = response.data;
             console.log("Message: UserData:\n", userData);

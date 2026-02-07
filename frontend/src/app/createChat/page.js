@@ -5,14 +5,14 @@ import axiosInterceptor from '../Component/Interceptor';
 import baseUrl from '../baseUrl';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 export default function CreateChat() {
   const router = useRouter();
-  const {token} = useAuth();
   const [chatName, setChatName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const {success,error} = useNotification();
 
   const handleChatNameChange = (e) => {
     setChatName(e.target.value);
@@ -26,25 +26,20 @@ export default function CreateChat() {
     try {
       // Using encodeURIComponent for safe URL parameter encoding
       const response = await axiosInterceptor.post(
-        `${baseUrl}/api/chats?phoneNumber=${encodeURIComponent(phoneNumber)}&chatName=${encodeURIComponent(chatName)}`,
+        `/api/chats?phoneNumber=${encodeURIComponent(phoneNumber)}&chatName=${encodeURIComponent(chatName)}`,
         {}, // Empty body since we're using query params
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
       );
       
       console.log('Chat created successfully:', response.data);
-      
+      success("Chat created with "+ phoneNumber)
       // Navigate to the chat or chat list page after successful creation
       router.push('/chat');
-    } catch (error) {
-      console.error('Error creating chat:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
+    } catch (err) {
+      console.error('Error creating chat:', err);
+      if (err.response && err.response.data && err.response.data.message) {
+        error(err.response.data.message);
       } else {
-        setError('Failed to create chat. Please try again.');
+        error('Failed to create chat. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -87,7 +82,6 @@ export default function CreateChat() {
             required
           />
         </div>
-        {error && <div className={style.Error}>{error}</div>}
         <div className={style.ButtonGroup}>
           <button type="submit" disabled={isLoading}>
             {isLoading ? "Creating Chat..." : "Create Chat"}

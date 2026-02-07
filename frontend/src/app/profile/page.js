@@ -4,13 +4,13 @@ import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 import { useAuth } from "../context/AuthContext";
 import style from "../Style/profile.module.css"
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
-import { preconnect } from "react-dom";
 import { useWebSocket } from "../context/WebSocketContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHourglass } from "@fortawesome/free-solid-svg-icons";
+import GetUserImage from "../Component/GetUserImage";
 
 const Profile = () => {
-    const { userId, token, isLoading, logout } = useAuth();
+    const { userId, isLoading, logout } = useAuth();
     const { userLastSeen, userStatus,stompClientRef } = useWebSocket();
     const [user, setUser] = useState({
         username: "",
@@ -39,19 +39,17 @@ const Profile = () => {
 
     // Function to fetch profile image with authentication
     const fetchProfileImage = async () => {
-        if (!userId || !token) return;
+        if (!userId ) return;
 
         setImageLoading(true);
         try {
             const response = await axiosInterceptor.get(
                 `${baseUrl}/api/users/getUserImage/user/${userId}`,
                 {
-                    headers: { Authorization: `Bearer ${token}` },
-                    responseType: 'blob' // Important: Get response as blob
+                    responseType: 'blob' 
                 }
             );
-
-            // Create object URL from blob
+            console.log("Response of fetchUser:",response)
             const imageUrl = URL.createObjectURL(response.data);
             setProfileImageUrl(imageUrl);
         } catch (error) {
@@ -65,7 +63,6 @@ const Profile = () => {
     const fetchUser = async () => {
         try {
             const response = await axiosInterceptor.get(`${baseUrl}/api/users/current-user`, {
-                headers: { Authorization: `Bearer ${token}` }
             });
             console.log(response.data);
             setUser(response.data);
@@ -75,7 +72,7 @@ const Profile = () => {
     }
 
     useEffect(() => {
-        if(!token || !userId)return;
+        if( !userId)return;
         console.log("User LastSeen:\n",userLastSeen,"\nUser Status:\n",userStatus);
         if(userStatus || userLastSeen){
         setUser((prev)=>({
@@ -84,14 +81,14 @@ const Profile = () => {
             status:userStatus || prev.status
         }))
     }
-    }, [token,userLastSeen,userId,userStatus])
+    }, [userLastSeen,userId,userStatus])
     
     useEffect(() => {
-        if (token && userId) {
+        if (userId) {
             fetchUser();
             fetchProfileImage();
         }
-    }, [token, userId]);
+    }, [ userId]);
 
     // Cleanup object URL when component unmounts or image changes
     useEffect(() => {
@@ -111,13 +108,14 @@ const Profile = () => {
             <div className={style.profilecontainer}>
                 <div className={style.profilepicture}>
                     {imageLoading ? (
-                        <div className={style.placeholder}>⏳</div>
+                        <div className={style.placeholder}><FontAwesomeIcon icon={faHourglass}/></div>
                     ) : profileImageUrl ? (
-                        <img
-                            src={profileImageUrl}
-                            alt="Profile Picture"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
+                        // <img
+                        //     src={profileImageUrl}
+                        //     alt="Profile Picture"
+                        //     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        // />
+                        <GetUserImage userId={userId} size={150} />
                     ) : (
                         <div className={style.placeholder}>👤</div>
                     )}

@@ -9,20 +9,18 @@ const GetGroupImage = ({ chatId, selectedChatInfo, size = 40 }) => {
     const [imageUrl, setImageUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [isImageLoaded,setIsImageLoaded] = useState(false);
-    const { token } = useAuth();
     useEffect(() => {
 
         const fetchGroupImage = async () => {
             setLoading(true);
             try {
-                const response = await axiosInterceptor.get(`${baseUrl}/api/chats/groupImage?chatId=${chatId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
+                const response = await axiosInterceptor.get(`/api/chats/groupImage?chatId=${chatId}`, {
                     responseType: "blob"
                 })
                 const url = URL.createObjectURL(response.data);
                 setImageUrl(url);
             } catch (error) {
-                console.log(error.response)
+                console.log(error)
             } finally {
                 setLoading(false);
             }

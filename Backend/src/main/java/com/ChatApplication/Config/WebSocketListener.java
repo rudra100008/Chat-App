@@ -5,8 +5,8 @@ import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketListener {
     private final UserService userService;
     private final AuthUtils authUtils;
@@ -29,28 +30,32 @@ public class WebSocketListener {
     private final Map<String,String> userSessionMap = new ConcurrentHashMap<>();
     private final Map<String, LocalDateTime> userActivity = new ConcurrentHashMap<>();
 
+    private static final long INACTIVITY_THRESHOLD_MINUTES = 5;
+    private static final long HEARTBEAT_INTERVAL_MS = 10000;
+
     @EventListener
     public void handleWebConnectionListener(SessionConnectedEvent event){
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
         try{
             User user = authUtils.getLoggedInUserFromWebSocket(headerAccessor);
+            if(user == null){
+                log.warn("Failed to authenticate user for session: {}",sessionId);
+            }
+
             String userId = user.getUserId();
 
-            sessionUserMap.put(sessionId,userId);
-            userSessionMap.put(userId,sessionId);
-            userActivity.put(userId,LocalDateTime.now());
+            registerUserSession(sessionId,userId);
 
-            userService.updateLastSeen(userId);
-            userService.updateUserStatus(userId,UserStatus.ONLINE);
-            userService.broadCastUserStatus(userId,UserStatus.ONLINE,user.getUsername());
+            setUserOnline(userId,user.getUsername());
+
         }catch (Exception e){
-            System.out.println("Unexcepted Error Occurred: "+e.getMessage());
+            log.error("Error handling connection for session {}: {}", sessionId, e.getMessage(), e);
         }
 
     }
-
-    // Try this event instead - it fires after subscription
+//   * Handles subscription events to update user activity
+//     * This fires when users subscribe to topics/queues
     @EventListener
     public void handleWebSubscribeListener(SessionSubscribeEvent event){
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
@@ -58,15 +63,19 @@ public class WebSocketListener {
 
         try{
             User user = authUtils.getLoggedInUserFromWebSocket(headerAccessor);
+            if (user == null) {
+                return;
+            }
             String userId = user.getUserId();
-//            sessionUserMap.put(sessionId,userId);
-//            userSessionMap.put(userId,sessionId);
-            userActivity.put(userId,LocalDateTime.now());
+            String destination = headerAccessor.getDestination();
 
-//            userService.updateLastSeen(userId);
-//            userService.updateUserStatus(userId,UserStatus.ONLINE);
+
+            updateUserActivity(userId);
+
+            log.debug("User subscribed - userId: {}, destination :{}",userId,destination);
+
         }catch (Exception e){
-            System.out.println("Unexcepted Error Occurred: "+e.getMessage());
+            log.error("Error handling subscription for session {}: {}", sessionId, e.getMessage());
         }
     }
 
@@ -74,36 +83,95 @@ public class WebSocketListener {
     public void  handleWebDisconnectListener(SessionDisconnectEvent event){
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
-        String userId = sessionUserMap.remove(sessionId);
-        if(userId != null){
-            userSessionMap.remove(userId);
-            userActivity.remove(userId);
-            userService.updateUserStatus(userId,UserStatus.OFFLINE);
-            userService.updateLastSeen(userId);
-            User user = userService.fetchUserByUserId(userId);
-            userService.broadCastUserStatus(userId,UserStatus.OFFLINE,user.getUsername());
+        try{
+            String userId = sessionUserMap.remove(sessionId);
+            if(userId != null){
+                unregisterSession(userId);
+
+                setUserOffline(userId);
+
+                log.debug("User disconnected - userId: {},  sessionId: {}",userId,sessionId);
+            }
+        }catch(Exception e){
+            log.error("Error handling disconnection for session {}: {}", sessionId, e.getMessage(), e);
         }
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = HEARTBEAT_INTERVAL_MS)
     public void updateActiveUser(){
-        for(String userId:userSessionMap.keySet()){
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime inactivityThreshold = now.minusMinutes(INACTIVITY_THRESHOLD_MINUTES);
+
+        userSessionMap.keySet().forEach(userId->{
             try{
                 LocalDateTime lastActive = userActivity.get(userId);
-                UserStatus status;
-                if(lastActive != null && lastActive.isBefore(LocalDateTime.now().minusMinutes(10))){
-                   status = UserStatus.OFFLINE;
-                }else{
-                   status = UserStatus.ONLINE;
+                if(lastActive == null){
+                    log.warn("No activity record found for userI:{}",userId);
+                    return;
                 }
-                userService.updateLastSeen(userId);
-                User  user = userService.fetchUserByUserId(userId);
-                userService.updateUserStatus(userId,status);
-                userService.broadCastUserStatus(userId,status,user.getUsername());
+                UserStatus currentStatus = determineUserStatus(lastActive,inactivityThreshold);
+                updateUserStatusAndBroadCast(userId,currentStatus);
             }catch (Exception e){
-                System.out.println("Failed to update last Seen for user: "+userId+" error: "+e.getMessage());
+                log.error("Failed to update status for userId {}: {}", userId, e.getMessage());
             }
+        });
+        log.debug("Updated status for {} active users", userSessionMap.size());
+    }
+
+
+    // private helper method
+
+    private void registerUserSession(String sessionId,String userId){
+        sessionUserMap.put(sessionId,userId);
+        userSessionMap.put(userId,sessionId);
+        userActivity.put(userId,LocalDateTime.now());
+    }
+
+    private void unregisterSession(String userId){
+        userSessionMap.remove(userId);
+        userActivity.remove(userId);
+    }
+
+    public void updateUserActivity(String userId){
+        if(userSessionMap.containsKey(userId)){
+            userActivity.put(userId,LocalDateTime.now());
         }
+    }
+
+    private void setUserOnline(String userId,String username){
+        userService.updateUserStatus(userId,UserStatus.ONLINE);
+        userService.updateLastSeen(userId);
+        userService.broadCastUserStatus(userId,UserStatus.ONLINE,username);
+    }
+
+    private void setUserOffline(String userId){
+        User user = this.userService.fetchUserByUserId(userId);
+        userService.updateLastSeen(user.getUserId());
+        userService.updateUserStatus(user.getUserId(),UserStatus.OFFLINE);
+        userService.broadCastUserStatus(user.getUserId(),UserStatus.OFFLINE,user.getUsername());
+    }
+
+    private UserStatus determineUserStatus(LocalDateTime lastActive,LocalDateTime threshold){
+        return lastActive.isBefore(threshold) ? UserStatus.OFFLINE : UserStatus.ONLINE;
+    }
+
+    private void updateUserStatusAndBroadCast(String userId,UserStatus status){
+        User user = userService.fetchUserByUserId(userId);
+        userService.updateUserStatus(user.getUserId(),status);
+        userService.updateLastSeen(user.getUserId());
+        userService.broadCastUserStatus(user.getUserId(),status,user.getUsername());
+    }
+
+    public int getActiveUserCount(){
+        return userSessionMap.size();
+    }
+
+    public boolean isUserConnected(String userId){
+        return userSessionMap.containsKey(userId);
+    }
+
+    public LocalDateTime getLastActivity(String userId){
+        return userActivity.get(userId);
     }
 
 

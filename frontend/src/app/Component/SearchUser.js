@@ -1,4 +1,4 @@
-"use clients"
+"use client"
 
 import { useState } from "react"
 import style from '../Style/search.module.css'
@@ -8,35 +8,36 @@ import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 import ErrorPrompt from "./ErrorPrompt";
 
-export default function SearchUser({onError}) {
+export default function SearchUser({ onError }) {
     const [userName, setUserName] = useState("");
-    const [user,setUser] =  useState([]);
-    const [errorMessage,setErrorMessage] =  useState('');
+    const [user, setUser] = useState([]);
+    const [errorMessage, setErrorMessage] = useState('');
+
     const onValueChange = (e) => {
         setUserName(e.target.value)
     }
-    const searchUser=async()=>{
-        const token = localStorage.getItem('token');
-        
-        await axiosInterceptor.get(`${baseUrl}/api/users/search/${userName}`,{
-            headers:{Authorization:`Bearer ${token}`}
-        }).then((response)=>{
-            console.log(response.data)
-            setUser(response.data)
-        }).catch((error)=>{
-            console.error('Error in SearchUser:\n',error.response?.data);
-            setErrorMessage(error.response?.data.message);
-        })
+
+    const searchUser = async () => {
+        await axiosInterceptor.get(`/api/users/search/${userName}`)
+            .then((response) => {
+                setUser(response.data)
+            })
+            .catch((error) => {
+                console.error('Error in SearchUser:\n', error.response?.data);
+                setErrorMessage(error.response?.data.message);
+            })
     }
-    const handleSubmit =(e)=>{
+
+    const handleSubmit = (e) => {
         e.preventDefault();
         searchUser();
     }
+
     return (
-        <div  className={style.searchcontainer}>
-            <ErrorPrompt errorMessage={errorMessage} setErrorMessage={setErrorMessage}  />
+        <div className={style.searchcontainer}>
+            <ErrorPrompt errorMessage={errorMessage} setErrorMessage={setErrorMessage} />
             <div className={style.searchbox}>
-            <FontAwesomeIcon className={style.searchicon}  icon={faSearch} onClick={handleSubmit}/>
+                <FontAwesomeIcon className={style.searchicon} icon={faSearch} onClick={handleSubmit} />
                 <input
                     type="text"
                     id="username"
@@ -44,8 +45,9 @@ export default function SearchUser({onError}) {
                     value={userName}
                     className={style.searchinput}
                     onChange={onValueChange}
-                    onKeyPress={(e)=> e.key === 'Enter' && handleSubmit(e)}
-                    placeholder="Search here" />
+                    onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
+                    placeholder="Search here"
+                />
             </div>
         </div>
     )

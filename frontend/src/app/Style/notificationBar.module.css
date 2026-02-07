@@ -1,0 +1,60 @@
+/* ============================================================
+   notificationBar.module.css  — Dark notification toast
+   ============================================================ */
+
+.container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 290px;
+    min-height: 56px;
+    z-index: 1000;
+    background: #1e2d4d;
+    border: 1px solid #2a3a5c;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    border-left: 4px solid #4fc3f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    animation: slideIn 0.3s cubic-bezier(0.4,0,0.2,1) ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.container span {
+    flex: 1;
+    color: #c8d6e5;
+    font-size: 0.84rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.container button {
+    background: #e74c3c;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.18s ease;
+    min-width: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container button:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+}
+.container button:active {
+    transform: translateY(0);
+}

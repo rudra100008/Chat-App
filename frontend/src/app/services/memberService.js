@@ -1,16 +1,11 @@
 
-
-import axios from "axios";
 import axiosInterceptor from "../Component/Interceptor";
-import baseUrl from "../baseUrl";
 
-export const handlePromoteUser = async(token,logout,user,chatData) =>{
-    if( !token) return;
+
+export const handlePromoteUser = async(logout,user,chatData) =>{
     try{
-        const response =  await axiosInterceptor.put(`${baseUrl}/api/chats/promoteUserToAdmin?chatId=${chatData.chatId}&userId=${user.userId}`,{},{
-            headers:{
-                Authorization: `Bearer ${token}`
-            }
+        const response =  await axiosInterceptor.put(`/api/chats/promoteUserToAdmin?chatId=${chatData.chatId}&userId=${user.userId}`,{},{
+          
         })
         console.log(response.data);
         return response.data;
@@ -23,13 +18,10 @@ export const handlePromoteUser = async(token,logout,user,chatData) =>{
     }
 }
 
-export const handleRemoveUser = async (token,logout,user,chatData) => {
-    if(!token) return
+export const handleRemoveUser = async (logout,user,chatData) => {
     try{
-        const response = await axiosInterceptor.put(`${baseUrl}/api/chats/removeUser?chatId=${chatData.chatId}&userId=${user.userId}`
-            ,{},{
-                headers:{Authorization: `Bearer ${token}`}
-            }
+        const response = await axiosInterceptor.put(`/api/chats/removeUser?chatId=${chatData.chatId}&userId=${user.userId}`
+            ,{}
         )
         console.log("ChatData: ",response.data)
         return response.data;

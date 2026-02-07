@@ -1,15 +1,11 @@
 
+import axios from "axios";
 import axiosInterceptor from "../Component/Interceptor";
-import baseUrl from "../baseUrl";
 
-export const fetchUserData = async (userId, token, logout) => {
-    if (!userId) {
-        throw new Error("User ID is required");
-    }
-
+export const fetchUserData = async (logout) => {
     try {
-        const response = await axiosInterceptor.get(`${baseUrl}/api/users/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` }
+        const response = await axiosInterceptor.get(`/api/users/current-user`, {
+    
         });
         console.log("UserService: Response from server", response.data);
         return response.data; 
@@ -22,3 +18,16 @@ export const fetchUserData = async (userId, token, logout) => {
     }
 };
 
+
+export const fetchUserImage = async(userId =0) =>{
+    try{
+        const response  = await axiosInterceptor.get(`/api/users/getUserImage/user/${userId}`,{
+            responseType:'blob'
+        });
+        console.log("Response of fetchUserImage: ",response.data);
+        return response.data;
+    }catch(err){
+        console.log("Error in fetchUserImage: ",err);
+        throw err;
+    }
+}

@@ -1,239 +1,332 @@
+/* ============================================================
+   userChats.module.css  — Dark sidebar chat-list
+   ============================================================ */
+
 .Container {
     display: flex;
     flex-direction: column;
-    padding: 12px;
-    background-color: #ffffff;
+    padding: 0;
+    background-color: #16213e;
     height: 100vh;
     width: 100%;
     box-sizing: border-box;
     overflow-y: auto;
-    border-right: 1px solid #f0f0f0;
+    scrollbar-width: thin;
+    scrollbar-color: #1e3a5f transparent;
 }
 
+.Container::-webkit-scrollbar { width: 5px; }
+.Container::-webkit-scrollbar-thumb {
+    background-color: #1e3a5f;
+    border-radius: 8px;
+}
+.Container::-webkit-scrollbar-track { background: transparent; }
+
+/* ── Top search bar (inside sidebar) ── */
+.searchBarRow {
+    padding: 14px 16px 10px;
+    background-color: #16213e;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.searchBarInner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #1e2d4d;
+    border-radius: 22px;
+    padding: 8px 14px;
+    border: 1px solid #2a3a5c;
+    transition: border-color 0.25s;
+}
+.searchBarInner:focus-within {
+    border-color: #4fc3f7;
+}
+
+.searchBarInner svg {
+    color: #6b7a8d;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.searchBarInput {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #c8d6e5;
+    font-size: 0.88rem;
+    width: 100%;
+}
+.searchBarInput::placeholder {
+    color: #5a6a7d;
+}
+
+/* ── "Message" label + tab pills ── */
+.sectionLabel {
+    padding: 14px 18px 4px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #c8d6e5;
+    letter-spacing: 0.2px;
+}
+
+.tabRow {
+    display: flex;
+    gap: 6px;
+    padding: 6px 18px 10px;
+}
+
+.tab {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1px solid #2a3a5c;
+    background: transparent;
+    color: #8899aa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.tab:hover {
+    border-color: #4fc3f7;
+    color: #4fc3f7;
+}
+.tab.activeTab {
+    background-color: #4fc3f7;
+    color: #0d1b2a;
+    border-color: #4fc3f7;
+    font-weight: 600;
+}
+
+/* ── Top action row (search icon + ellipsis) ── */
 .Section {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 6px 16px 8px;
     position: relative;
-    margin-bottom: 12px;
-    gap: 12px;
+    gap: 4px;
 }
 
 .faEllipsisV {
-    color: #374151;
+    color: #8899aa;
     padding: 8px;
-    font-size: larger;
+    font-size: 1.1rem;
     border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.25s ease, transform 0.2s ease;
+    transition: background-color 0.25s ease, color 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .faEllipsisV:hover {
-    background-color: #f3f4f6;
-    transform: scale(1.05);
+    background-color: rgba(255,255,255,0.07);
+    color: #4fc3f7;
 }
 
+/* ── Dropdown menu ── */
 .ShowBox {
     position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    background-color: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    min-width: 200px;
-    padding: 12px 0;
-    z-index: 15;
-    border: 1px solid  rgba(229, 231, 235, 0.6);
+    top: calc(100% + 4px);
+    right: 12px;
+    background-color: #1e2d4d;
+    border-radius: 14px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+    min-width: 190px;
+    padding: 10px 0;
+    z-index: 20;
+    border: 1px solid #2a3a5c;
     display: flex;
     flex-direction: column;
-    animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(10px);
+    animation: dropDown 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
 }
 
-.ShowBox::before{
-    content:'';
-    position: absolute;
-    top:-6px;
-    right:16px;
-    height:12px;
-    width:12px;
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border:1px solid rgba(229,231,235,0.6);
-    border-bottom: none;
-    border-right:none;
-    transform: rotate(45deg);
-    z-index: -1;
-
+@keyframes dropDown {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)  scale(1); }
 }
+
 .ShowBox a {
-    position:relative;
-    margin: 2px 8px;
+    margin: 1px 6px;
     border-radius: 10px;
-    padding: 14px 20px;
-    font-size: 0.95rem;
+    padding: 11px 18px;
+    font-size: 0.88rem;
     font-weight: 500;
     gap: 12px;
-    color: #374151;
+    color: #c8d6e5;
     text-decoration: none;
     display: flex;
-    align-items:center;
-    justify-content: center;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    align-items: center;
+    transition: all 0.2s ease;
 }
 
-.ShowBox a div{
+.ShowBox a div {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 18px;
     height: 18px;
-    color: #6b7280;
-    transition:  all 0.3s ease;
+    color: #6b7a8d;
+    transition: color 0.2s;
 }
+
 .ShowBox a:hover {
-    background: linear-gradient(135deg, #f8fafc 0%, #e6f7ff 100%);
-    color: #366094;
-    transform: translateX(4px);
-    box-shadow: 0px 4px 12px rgba(0,80,170,0.1);
+    background-color: rgba(79, 195, 247, 0.1);
+    color: #4fc3f7;
 }
-
 .ShowBox a:hover div {
-    color: #0050b3;
-    transform: scale(1.1);
+    color: #4fc3f7;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
+/* ── Chat item row ── */
 .ChatContainer {
     display: flex;
     align-items: center;
     cursor: pointer;
-    margin: 8px 0;
-    padding: 12px 16px;
-    border: 1px solid transparent;
+    margin: 2px 10px;
+    padding: 10px 12px;
     border-radius: 12px;
-    transition: all 0.2s ease;
-    background-color: #fafafa;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: background-color 0.2s ease;
+    background-color: transparent;
+    gap: 12px;
 }
 
 .ChatContainer:hover {
-    background-color: #f0f2f5;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    background-color: rgba(255,255,255,0.05);
 }
 
-.active {
-    background-color: #e6f7ff;
-    border-color: #91d5ff;
-    font-weight: 600;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+.ChatContainer.active {
+    background-color: rgba(79, 195, 247, 0.1);
+}
+
+/* ── Avatar + online ring ── */
+.imageContainer {
+    position: relative;
+    border-radius: 50%;
+    overflow: visible;
+    flex-shrink: 0;
+}
+
+.online .imageContainer::after,
+.imageContainer.online::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 11px;
+    height: 11px;
+    background-color: #4caf50;
+    border: 2px solid #16213e;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* ── Text block next to avatar ── */
+.chatTextBlock {
+    min-width: 0;
+    flex: 1;
 }
 
 .chatName {
-    margin-left: 14px;
-    font-size: 0.95rem;
-    color: #333;
+    font-size: 0.9rem;
+    color: #e0e6ee;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.ChatContainer.active .chatName {
+    color: #4fc3f7;
+    font-weight: 600;
+}
+
+.lastMessage {
+    font-size: 0.74rem;
+    color: #5a6a7d;
+    margin: 2px 0 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.active .chatName {
-    font-weight: 600;
-    color: #0050b3;
+.ChatContainer.active .lastMessage {
+    color: #6b9abf;
 }
 
+/* ── Unread badge ── */
+.unreadBadge {
+    background-color: #4fc3f7;
+    color: #0d1b2a;
+    font-size: 0.68rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── Divider between sections ── */
+.sectionDivider {
+    height: 1px;
+    background-color: #0f3460;
+    margin: 10px 16px;
+}
+
+/* ── Empty / loading states ── */
 .errorMessage {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    color: #999;
-    font-size: 1rem;
+    color: #5a6a7d;
+    font-size: 0.88rem;
     text-align: center;
-    padding: 20px;
+    padding: 24px 18px;
 }
 
 .searchButton {
     cursor: pointer;
-    font-weight: bold;
-    font-size: 24px;
-    transition: all 0.3s ease;
-    color: #333;
+    font-size: 1.1rem;
+    color: #8899aa;
+    padding: 6px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
 }
-
 .searchButton:hover {
-    transform: scale(1.05);
-    color: #005fa3;
+    color: #4fc3f7;
+    background-color: rgba(255,255,255,0.06);
 }
 
-.faEllipseChatIcon{
-    margin-left:auto;
-    color: #9ca3af;
-    opacity:0;    
-    padding:6px;
-    border-radius:50%;
-    cursor:pointer;
-    transition:all 0.3s ease;
-    display:flex;
+/* ── Per-chat ellipsis (appears on hover) ── */
+.faEllipseChatIcon {
+    margin-left: auto;
+    color: #5a6a7d;
+    opacity: 0;
+    padding: 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
     align-items: center;
     justify-content: center;
-    transform: scale(0.9);
-    align-self: flex-start;
+    flex-shrink: 0;
 }
-
 .faEllipseChatIcon:hover {
-    background-color: #f3f4f6;
-    color: #374151;
-    transform: scale(1);
+    background-color: rgba(255,255,255,0.08);
+    color: #4fc3f7;
 }
-
-.ChatContainer:hover .faEllipseChatIcon{
-    opacity:1;
-    transform:scale(1);
-}
-.active .faEllipseChatIcon{
+.ChatContainer:hover .faEllipseChatIcon {
     opacity: 1;
-    color:#0050b3;
 }
-
-.lastMessage{
-    margin-left: 16px;
-    font-size: 0.75rem;
-    color: rgb(175, 173, 173);
-}
-.active .lastMessage{
-    margin-left: 16px;
-    font-size: 0.75rem;
-    color: #0050b3;
-}
-
-.imageContainer {
-  position: relative;
-  border-radius: 50%;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.offline{
-    border: 3px solid #667eea;
-}
-.online{
-  border: 3px solid rgb(62, 221, 62);
+.ChatContainer.active .faEllipseChatIcon {
+    opacity: 1;
+    color: #4fc3f7;
 }

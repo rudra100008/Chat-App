@@ -10,7 +10,7 @@ import { useAuth } from '@/app/context/AuthContext';
 
 
 const SingleChat = ({ otherUserId, otherUserData, lastSeen, status, formatLastSeen, chatData, setChatData, loadUserChats }) => {
-    const {token,userId} = useAuth();
+    const {userId} = useAuth();
     const [showEditChatName, setShowEditChatName] = useState(false);
     const [localChatData, setLocalChatData] = useState(chatData);
     const [inputWidth, setInputWidth] = useState(100);
@@ -27,17 +27,13 @@ const SingleChat = ({ otherUserId, otherUserData, lastSeen, status, formatLastSe
             [name]: value
         }))
     }
-    const handleUpdateChatName =  useCallback( async () =>{
+    const handleUpdateChatName = useCallback(async () =>{
         try{
-            const response = await axiosInterceptor.put(`${baseUrl}/api/chatName/updateChatName/${userId}/chat/${chatData.chatId}?chatName=${encodeURIComponent(localChatData.chatName)}`
-                ,{},{
-                headers:{
-                    Authorization: `Bearer ${token}`
-                }
-            })
+            const response = await axiosInterceptor.put(
+                `${baseUrl}/api/chatName/updateChatName/${userId}/chat/${chatData.chatId}?chatName=${encodeURIComponent(localChatData.chatName)}`,
+                {}, {}
+            )
             const newChatName = response?.data;
-            console.log("Chat name Updated.")
-            console.log("SingleChat: New Chat Name:\n",newChatName);
             setLocalChatData(prev=>({
                 ...prev,
                 chatName: newChatName.chatname
@@ -51,7 +47,7 @@ const SingleChat = ({ otherUserId, otherUserData, lastSeen, status, formatLastSe
         }catch(error){
             console.log(error.response.data)
         }
-    },[chatData,localChatData])
+    },[chatData, localChatData])
 
     useEffect(()=>{
         const handleClickOutside = (e) =>{
@@ -59,67 +55,62 @@ const SingleChat = ({ otherUserId, otherUserData, lastSeen, status, formatLastSe
                 setShowEditChatName(false);
             }
         }
-        document.addEventListener('mousedown',handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
         return ()=>{
             setLocalChatData(chatData);
-            document.removeEventListener('mousedown',handleClickOutside)
+            document.removeEventListener('mousedown', handleClickOutside)
         }
     },[showEditChatName])
 
     useEffect(()=>{
         if(spanRef.current){
             const width = spanRef.current.offsetWidth;
-            setInputWidth(Math.max(100,width+20))
+            setInputWidth(Math.max(100, width + 20))
         }
     },[localChatData.chatName])
+
     return (
         <div className={style.infoDisplayContainer}>
             <div className={style.image}>
                 <GetUserImage userId={otherUserId(chatData)} size={120} />
             </div>
             {
-                showEditChatName ?
-                    (
-                        <div ref={inputRef}>
-                            <span ref={spanRef} className={style.hiddenSpan}>
-                                {localChatData.chatName || ""}
-                            </span>
-                            <input
-                                type='text'
-                                name="chatName"
-                                id='chatName'
-                                value={localChatData.chatName}
-                                onChange={handleValueChange}
-                                className={style.InputStyle}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        handleUpdateChatName();
-                                    }
-                                }}
-                                style={{width : inputWidth}}
-                            />
-                        </div>
-                    ) :
-                    (
-                        <p className={style.chatName} onDoubleClick={handleShowInput}>
-                            {chatData.chatName}
-                        </p>
-                    )
+                showEditChatName ? (
+                    <div ref={inputRef}>
+                        <span ref={spanRef} className={style.hiddenSpan}>
+                            {localChatData.chatName || ""}
+                        </span>
+                        <input
+                            type='text'
+                            name="chatName"
+                            id='chatName'
+                            value={localChatData.chatName}
+                            onChange={handleValueChange}
+                            className={style.InputStyle}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleUpdateChatName();
+                            }}
+                            style={{width: inputWidth}}
+                        />
+                    </div>
+                ) : (
+                    <p className={style.chatName} onDoubleClick={handleShowInput}>
+                        {chatData.chatName}
+                    </p>
+                )
             }
             <div className={style.chatInfoDisplay}>
                 <FontAwesomeIcon icon={faPhone} />
-                <p>{otherUserData?.phoneNumber || "Unkown PhoneNumber"}</p>
+                <p>{otherUserData?.phoneNumber || "Unknown PhoneNumber"}</p>
             </div>
             <div className={style.chatInfoDisplay}>
                 <FontAwesomeIcon icon={faEnvelope} />
-                <p>{otherUserData?.email || "Unkown email"}</p>
+                <p>{otherUserData?.email || "Unknown Email"}</p>
             </div>
-
             <div className={style.chatInfoDisplay}>
                 <FontAwesomeIcon icon={faClock} />
                 <p>{formatLastSeen(lastSeen)}</p>
             </div>
-
         </div>
     )
 }

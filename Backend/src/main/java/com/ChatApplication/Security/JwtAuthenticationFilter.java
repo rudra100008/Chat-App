@@ -1,7 +1,9 @@
 package com.ChatApplication.Security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
@@ -22,42 +24,62 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailService userDetailsService;
 
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
-        final String authHeader =  request.getHeader("Authorization");
-        if(authHeader ==  null || !authHeader.startsWith("Bearer ")){
-            filterChain.doFilter(request,response);
-            return;
-        }
+            @NonNull FilterChain filterChain) throws ServletException, IOException
+    {
         try{
-            final String jwt = authHeader.substring(7).trim();
-            String userName = jwtService.extractUsername(jwt);
+            String path = request.getServletPath();
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if(userName != null && authentication == null){
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
-                if (jwtService.isTokenValid(jwt,userDetails)){
-                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    // add additional information about the authentication request
-                    // It includes information like : sessionId , Ip address and others
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
+            if(path.startsWith("/auth/") || path.startsWith("/server/")){
+
+                filterChain.doFilter(request,response);
+                return;
             }
+           String jwt = null;
+           if (request.getCookies() != null){
+               for (Cookie cookie : request.getCookies()){
+                   if ("token".equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().trim().isEmpty()){
+                       jwt = cookie.getValue();
+                       break;
+                   }
+               }
+           }
+           if (jwt != null){
+               String userName = jwtService.extractUsername(jwt);
+               Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+               if(userName != null && authentication == null){
+                   UserDetails userDetails = this.userDetailsService.loadUserByUsername(userName);
+                   if (jwtService.isTokenValid(jwt,userDetails)){
+                       UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                               userDetails,
+                               null,
+                               userDetails.getAuthorities()
+                       );
+                       // add additional information about the authentication request
+                       // It includes information like : sessionId , Ip address and others
+                       auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                       SecurityContextHolder.getContext().setAuthentication(auth);
+                   }
+               }
+           }
             filterChain.doFilter(request,response);
-        }catch(Exception e){
-            handlerExceptionResolver.resolveException(request,response,null,e);
+        }catch (ExpiredJwtException e){
+            sendErrorResponse(response,"token_expired","Token has expired. Please login again",HttpServletResponse.SC_UNAUTHORIZED);
         }
 
+    }
+    private void sendErrorResponse(HttpServletResponse response,String error ,String message,int status)
+            throws IOException{
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write(
+                String.format("{\"error\":  \"%s\", \"message\" : \"%s\"}",error,message)
+        );
     }
 }
 // Example of what I might see in the Authentication object

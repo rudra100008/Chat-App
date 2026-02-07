@@ -1,4 +1,4 @@
-package com.ChatApplication.Entity;
+package com.ChatApplication.TwoFactorAuth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

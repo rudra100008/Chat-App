@@ -17,10 +17,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import java.util.stream.Collectors;
 
 @Configuration
-@EnableWebSocketMessageBroker
 @RequiredArgsConstructor
-public class AppConfig implements WebSocketMessageBrokerConfigurer {
+public class AppConfig  {
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+    private final WebSocketAuthHandshakeInterceptor handshakeInterceptor;
 
     @Bean
     public ModelMapper mapper(){
@@ -36,7 +36,7 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
                 chatDTO.setParticipantIds(chat.getParticipants()
                         .stream()
                         .map(User::getUserId)
-                        .collect(Collectors.toList()));
+                        .toList());
             }
 
             return chatDTO;
@@ -48,21 +48,5 @@ public class AppConfig implements WebSocketMessageBrokerConfigurer {
         return mapper;
     }
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/server")
-                .setAllowedOrigins("http://localhost:3000")
-                .withSockJS();
-    }
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/chatroom", "/user", "/private","/topic");
-        registry.setApplicationDestinationPrefixes("/app");
-        registry.setUserDestinationPrefix("/user");
-    }
-    @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-       registration.interceptors(webSocketAuthInterceptor);
-    }
 }

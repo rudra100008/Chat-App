@@ -29,7 +29,8 @@ public class UserDTO {
     @Email(message = "Invalid email format")
     @Size(max = 100, message = "Email must be less than 100 characters")
     private String email;
-
+    @Size(max = 1000,message = "Email must be less than 1000 characters")
+    private String about;
     @NotBlank(message = "Password cannot be blank")
     @Size(min = 8, max = 64, message = "Password must be between 8 and 64 characters")
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
@@ -37,6 +38,7 @@ public class UserDTO {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String profilePicture;
+    private String userImageUrl;
 
     @NotBlank(message = "Phone number cannot be blank")
     @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Invalid phone number format")

@@ -5,7 +5,7 @@ import axiosInterceptor from "../Component/Interceptor";
 
 const { useState, useRef, useCallback, useEffect } = require("react")
 
-const useMessages = ({userId,token,chatId})=>{
+const useMessages = ({userId,chatId})=>{
     const [messages,setMessages] = useState([]);
     const [loading,setLoading] = useState(false);
     const [hasMore,setHasMore] = useState(true);
@@ -49,16 +49,12 @@ const useMessages = ({userId,token,chatId})=>{
     },[chatId,resetState])
     
     const intialFetch=useCallback(async()=>{
-         if (!chatId || !userId || !token) return;
+         if (!chatId || !userId ) return;
          if (currentChatIdRef.current !== chatId) return;
 
         setLoading(true);
         try{
-             const response = await axiosInterceptor.get(`${baseUrl}/api/messages/chat/${chatId}?latest=true`,{
-            headers:{
-                Authorization:`Bearer ${token}`
-            }
-        })
+             const response = await axiosInterceptor.get(`/api/messages/chat/${chatId}?latest=true`)
         // console.log("Message from useMessage:\n",response.data)
         const {data,totalPage} = response.data
         console.log("All Messages: ", data);
@@ -74,7 +70,7 @@ const useMessages = ({userId,token,chatId})=>{
         }finally{
             setLoading(false);
         }
-    },[userId,token,chatId])
+    },[userId,chatId])
 
     const fetchOlderMessages= useCallback(async()=>{
         if(loading || page <= 0 || !hasMore) return ;
@@ -83,12 +79,7 @@ const useMessages = ({userId,token,chatId})=>{
         try{
             const previousPage = page - 1;
             const response = await  axiosInterceptor.get(
-                `${baseUrl}/api/messages/chat/${chatId}?latest=false&pageNumber=${previousPage}`,
-            {
-                headers:{
-                    Authorization:`Bearer ${token}`
-                }
-            })
+                `/api/messages/chat/${chatId}?latest=false&pageNumber=${previousPage}`,)
             
             const {data} = response.data;
             if(data &&  data.length > 0){
@@ -108,7 +99,7 @@ const useMessages = ({userId,token,chatId})=>{
         }finally{
             setLoading(false)
         }
-    },[loading,page,chatId,token,hasMore]);
+    },[loading,page,chatId,hasMore]);
 
     const firstMessageElementRef = useCallback(
         (node)=>{

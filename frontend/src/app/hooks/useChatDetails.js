@@ -1,10 +1,10 @@
 // hooks/useChatDetails.js
 "use client"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import axiosInterceptor from '../Component/Interceptor'
 import baseUrl from '../baseUrl'
 
-const useChatDetails = ({chatId, token, userId, setOtherUserDetails}) => {
+const useChatDetails = ({chatId, userId, setOtherUserDetails}) => {
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -14,20 +14,16 @@ const useChatDetails = ({chatId, token, userId, setOtherUserDetails}) => {
     })
 
     // Fetch chat details
-    const fetchUserChatDetails = async () => {
-        if (!chatId || !token) return
+    const fetchUserChatDetails = useCallback(async () => {
+        if (!chatId ) return
         try {
             const response = await axiosInterceptor.get(
-                `${baseUrl}/api/chats/chatDetails/${chatId}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            )
+                `/api/chats/chatDetails/${chatId}`)
             setUserChat(response.data)
         } catch (error) {
             console.log("Error fetching chat details:", error.response?.data)
         }
-    }
+    },[chatId])
 
     // Get other user ID (for 1-1 chats)
     const getOtherUserId = () => {
@@ -43,28 +39,25 @@ const useChatDetails = ({chatId, token, userId, setOtherUserDetails}) => {
     }
 
     // Fetch other user details
-    const fetchUserDetails = async () => {
+    const fetchUserDetails = useCallback( async () => {
         const otherUserId = getOtherUserId()
         if (!otherUserId) return
        
         try {
             const response = await axiosInterceptor.get(
-                `${baseUrl}/api/users/${otherUserId}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
+                `${baseUrl}/api/users/${otherUserId}`
             )
             setOtherUserDetails(response.data)
         } catch (error) {
             console.log("Error fetching user details:", error.response?.data)
         }
-    }
+    },[setOtherUserDetails,getOtherUserId])
 
     // Fetch chat details when chatId changes
     useEffect(() => {
         if (!chatId) return
         fetchUserChatDetails()
-    }, [chatId, token, userId])
+    }, [chatId,  userId,fetchUserChatDetails])
 
     // Fetch user details when chat details change
     useEffect(() => {

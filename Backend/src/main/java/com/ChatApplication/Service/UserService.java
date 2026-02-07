@@ -5,17 +5,23 @@ import com.ChatApplication.Entity.AuthRequest;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.UserStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
 public interface UserService {
+    UserDTO fetchCurrentUser();
     List<UserDTO> fetchAllUser();
     UserDTO fetchUser(String user_Id);
-    UserDTO signup(UserDTO userDTO);
+    UserDTO signup(UserDTO userDTO,MultipartFile imageFile)throws IOException;
+
+    // service method to get and save user image
+    UserDTO uploadUserImage(String userId, MultipartFile multipartFile)throws IOException;
+    User saveByPhoneNumber(String phoneNumber);
     UserDTO updateUser(String user_id, UserDTO userDTO);
-    void deleteUser(String user_id);
-    User authenticate(AuthRequest request);
+    void deleteUser(String user_id)throws IOException;
     boolean existsByPhoneNumber(String phoneNumber);
     User findByPhoneNumber(String phoneNumber);
     List<UserDTO> searchUser(String username);

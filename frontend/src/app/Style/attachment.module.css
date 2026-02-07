@@ -1,49 +1,60 @@
+/* ============================================================
+   attachment.module.css  — Dark attachment bubble
+   ============================================================ */
+
 .AttachmentContainer {
     display: flex;
-    justify-content: flex-start; /* or flex-end for own messages */
-    margin: 8px 0;
+    justify-content: flex-start;
+    margin: 6px 0;
 }
 
 .AttachmentBubble {
-    background-color: #14395e;
-    padding: 12px 16px;
-    border-radius: 12px;
-    color: white;
-    max-width: 300px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    background-color: #1b3a4b;
+    padding: 12px 14px;
+    border-radius: 14px;
+    color: #c8d6e5;
+    max-width: 280px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
     gap: 8px;
+    border: 1px solid #2a4a5c;
 }
 
 .FileInfo {
-    font-size: 14px;
+    font-size: 0.82rem;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 8px;
     word-break: break-word;
-    padding-bottom: 10px;
-    border-bottom: 1px solid lightgray;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #2a4a5c;
+    color: #8899aa;
+}
+
+.FileInfo svg {
+    color: #4fc3f7;
+    flex-shrink: 0;
 }
 
 .SaveButton {
     margin: auto;
     align-self: flex-start;
-    background-color: #3498db;
-    color: white;
+    background-color: #4fc3f7;
+    color: #0d1b2a;
     border: none;
-    padding: 6px 12px;
-    font-size: 13px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .SaveButton:hover {
-    background-color: #2980b9;
-    font-weight: 500;
+    background-color: #81d4fa;
 }
-.SaveButton:active{
-    transform: scale(0.95);
+.SaveButton:active {
+    transform: scale(0.94);
 }
