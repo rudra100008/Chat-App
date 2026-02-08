@@ -24,7 +24,7 @@ public class ChatNameController {
         ChatDisplayNameDTO  chatName = this.chatDisplayNameService.fetchChatName(chatId,userId);
         ChatDTO  fetchChat =  chatService.fetchUserChat(chatId);
         if(fetchChat.getChatType() == ChatType.GROUP){
-            throw  new IllegalArgumentException("");
+            throw  new IllegalArgumentException(fetchChat.getChatId() + " is GROUP chat");
         }
         return ResponseEntity.ok(chatName);
     }

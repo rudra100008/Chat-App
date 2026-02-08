@@ -1,6 +1,7 @@
 package com.ChatApplication.Security;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import java.io.IOException;
+import java.security.SignatureException;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Component
@@ -33,12 +37,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException
     {
         try{
+            List<String> allowedPaths = List.of("/auth/signup", "/auth/login");
             String path = request.getServletPath();
 
-            if(path.startsWith("/auth/") || path.startsWith("/server/")){
+            for(String allowedPath : allowedPaths) {
+                if (path.equals(allowedPath) || path.startsWith("/server/")) {
 
-                filterChain.doFilter(request,response);
-                return;
+                    filterChain.doFilter(request, response);
+                    return;
+                }
             }
            String jwt = null;
            if (request.getCookies() != null){
@@ -70,6 +77,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request,response);
         }catch (ExpiredJwtException e){
             sendErrorResponse(response,"token_expired","Token has expired. Please login again",HttpServletResponse.SC_UNAUTHORIZED);
+        }catch(MalformedJwtException e) {
+            sendErrorResponse(response, "invalid_token", "Invalid token format", HttpServletResponse.SC_UNAUTHORIZED);
+        }catch (Exception e) {
+            sendErrorResponse(response,"authentication_error","Authentication failed",HttpServletResponse.SC_UNAUTHORIZED);
         }
 
     }

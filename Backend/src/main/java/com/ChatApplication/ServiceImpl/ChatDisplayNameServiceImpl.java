@@ -21,7 +21,7 @@ public class ChatDisplayNameServiceImpl implements ChatDisplayNameService {
     @Override
     public ChatDisplayNameDTO fetchChatName(String chatId, String userId) {
         ChatDisplayName chatDisplayName = this.chatNameRepository.findByChatIdAndUserId(chatId,userId)
-                .orElseThrow(()-> new ResourceNotFoundException(" not found"));
+                .orElseThrow(()-> new ResourceNotFoundException("Chat not found for chatId:"+ chatId));
         return modelMapper.map(chatDisplayName,ChatDisplayNameDTO.class);
     }
 

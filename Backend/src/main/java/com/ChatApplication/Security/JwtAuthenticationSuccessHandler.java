@@ -45,8 +45,7 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
         response.setContentType("application/json");
 
         System.out.println("UserDetails: "+userDetails.toString());
-        User user = this.userRepository.findByPhoneNumber(userDetails.getUsername())
-                .orElseThrow(()-> new ResourceNotFoundException("username not found."));
+        User user =  (User) userDetails;
         userService.updateUserStatus(user.getUserId(), UserStatus.ONLINE);
         Map<String,Object> res = new HashMap<>(1);
         res.put("username",userDetails.getUsername());

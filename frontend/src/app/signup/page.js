@@ -5,7 +5,7 @@ import baseUrl from "../baseUrl";
 import styles from "../Style/SigupPage.module.css";
 import { useState } from "react";
 import Link from "next/link";
-import RoutePath from "../Component/RoutePath";
+import RoutePath from "../Component/PathAuth/RoutePath";
 
 export default function SignUp() {
   const router = useRouter();

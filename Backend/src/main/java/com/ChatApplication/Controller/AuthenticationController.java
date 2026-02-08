@@ -9,7 +9,6 @@ import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.CustomUserDetailService;
 import com.ChatApplication.Security.JwtAuthenticationSuccessHandler;
 import com.ChatApplication.Security.JwtService;
-import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorRequest;
@@ -20,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,10 +32,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -43,12 +42,12 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
+@Slf4j
 public class AuthenticationController {
     private final UserService userService;
     private final JwtService jwtService;
     private final TwoFactorAuthService twoFactorAuthService;
     private final CustomUserDetailService userDetailsService;
-    private final ImageService imageService;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtAuthenticationSuccessHandler authenticationSuccessHandler;
@@ -96,27 +95,27 @@ public ResponseEntity login(
         HttpServletRequest servletRequest
 ) {
     try{
-        System.out.println("=== LOGIN ATTEMPT ===");
-        System.out.println("Identifier: " + authRequest.getUserName());  // ✅ Changed
-        System.out.println("Password provided: " + (authRequest.getPassword() != null && !authRequest.getPassword().isEmpty()));
+        log.debug("=== LOGIN ATTEMPT ===");
+        log.debug("Identifier: {}", authRequest.getUserName());  // ✅ Changed
+        log.debug("Password provided: {} " , (authRequest.getPassword() != null && !authRequest.getPassword().isEmpty()));
 
         // Check if user exists in database
-        Optional<User> userByUsername = userRepository.findByUsername(authRequest.getUserName());  // ✅ Changed
-        Optional<User> userByPhone = userRepository.findByPhoneNumber(authRequest.getUserName());  // ✅ Changed
+        Optional<User> userByUsername = userRepository.findByUsername(authRequest.getUserName());  //
+        Optional<User> userByPhone = userRepository.findByPhoneNumber(authRequest.getUserName());  //
 
-        System.out.println("User found by username: " + userByUsername.isPresent());
-        System.out.println("User found by phone: " + userByPhone.isPresent());
+        log.debug("User found by username: {} ", userByUsername.isPresent());
+        log.debug("User found by phone: {}", userByPhone.isPresent());
 
         if (userByUsername.isPresent()) {
             User u = userByUsername.get();
-            System.out.println("User ID: " + u.getUserId());
-            System.out.println("Has password: " + (u.getPassword() != null && !u.getPassword().isEmpty()));
+            log.info("User ID: {}" , u.getUserId());
+            log.info("Has password: {}" , (u.getPassword() != null && !u.getPassword().isEmpty()));
         } else if (userByPhone.isPresent()) {
             User u = userByPhone.get();
-            System.out.println("User ID: " + u.getUserId());
-            System.out.println("Has password: " + (u.getPassword() != null && !u.getPassword().isEmpty()));
+            log.info("User ID: {}" , u.getUserId());
+            log.info("Has password: {}" , (u.getPassword() != null && !u.getPassword().isEmpty()));
         } else {
-            System.out.println(" User not found in database!");
+            log.debug(" User not found in database!");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "User not found"));
         }
@@ -128,7 +127,7 @@ public ResponseEntity login(
                 )
         );
 
-        System.out.println(" Authentication successful");
+        log.info(" Authentication successful");
 
         authenticationSuccessHandler.onAuthenticationSuccess(
                 servletRequest, servletResponse, authentication
@@ -142,11 +141,11 @@ public ResponseEntity login(
         return ResponseEntity.status(HttpStatus.OK).body(responseData);
 
     } catch(BadCredentialsException e) {
-        System.err.println(" Bad credentials: " + e.getMessage());
+        log.error(" Bad credentials: {} " , e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", "Invalid username or password"));
     } catch(Exception e) {
-        System.err.println("Login error: " + e.getMessage());
+        log.error("Login error: {} ", e.getMessage());
         e.printStackTrace();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", "Authentication failed: " + e.getMessage()));
@@ -220,30 +219,90 @@ public ResponseEntity login(
     }
 
 
+    @GetMapping("/logout")
+    public ResponseEntity<Map<String,String>> logout(
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse,
+            Authentication authentication
+    ){
+        if(authentication != null && authentication.isAuthenticated()){
+            User  u = (User) authentication.getPrincipal();
+
+            userService.updateUserStatus(u.getUserId(),UserStatus.OFFLINE);
+        }
+
+        Cookie cookie = new Cookie("token",null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+
+        servletResponse.addCookie(cookie);
+
+        Map<String,String> response = new HashMap<>();
+
+        response.put("message","Logout Successful");
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
 
     @GetMapping("/verify-token")
     public ResponseEntity<?> verifyToken(
-            @RequestParam("userId") String userId,
-            @RequestHeader("Authorization")String authorization
+            @RequestHeader(name = "Authorization", required = false)String authHeader,
+            HttpServletRequest request
     )
     {
-        if(authorization == null || !authorization.startsWith("Bearer ")){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization Header");
+        String token = null;
+        if(request.getCookies() != null){
+            log.debug("Number of Cookie: {}", Arrays.stream(request.getCookies()).count());
+            for(Cookie c: request.getCookies()){
+                if("token".equals(c.getName()) && c.getValue() != null && !c.getValue().trim().isEmpty()){
+                    token = c.getValue();
+                    break;
+                }
+            }
         }
-        String token = authorization.substring(7);
-        String username = jwtService.extractUsername(token);
-        if(username ==  null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
-        }
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        if(!jwtService.isTokenValid(token,userDetails)){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token is invalid");
+        if(token == null && authHeader != null  && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            log.info("Token found in Authorization Header");
+
         }
-        return ResponseEntity.ok(Map.of(
-                "isTokenValid", true,
-                "username", username
-        ));
+        if (token == null || token.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "isTokenValid", false,
+                            "message", "Token is missing"
+                    ));
+        }
+
+        String username;
+        try {
+            username = jwtService.extractUsername(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of(
+                            "isTokenValid", false,
+                            "message", "Invalid token"
+                    ));
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        boolean isTokenValid = jwtService.isTokenValid(token,userDetails);
+
+        User u = (User) userDetails;
+
+        Map<String,Object> res = new HashMap<>();
+        res.put("isTokenValid", isTokenValid);
+        res.put("userId", u.getUserId());
+
+        if(!isTokenValid){
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
 }

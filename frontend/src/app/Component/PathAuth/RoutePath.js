@@ -2,37 +2,44 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
-import styles from "../Style/route.module.css"; // Import CSS module
-import LogInPage from "../login/page";
+import styles from "../../Style/route.module.css"; // Import CSS module
 
 export default function RoutePath({ children }) {
   const [isLogIn, setIsLogIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout ,  isTokenValid, tokenValidationList, isAuthenticated, userId } = useAuth();
 
   const onLogoutClick = () => {
     logout();
-    router.push("/");
+    router.refresh();
   };
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
 
-    const userId = localStorage.getItem("userId");
-
-    if (userId) {
-      setIsLogIn(true);
-    } else {
-      setIsLogIn(false);
-      // Optionally redirect to home or login page if not logged in
-      // router.push('/');
+  useEffect(()=>{
+    if(typeof window === 'undefined') return;
+    if(userId){
+      isTokenValid();
     }
 
-    setIsLoading(false);
-  }, [router]);
+    setIsLoading(false)
+  },[userId,isTokenValid])
+
+  // useEffect(() => {
+  //   if (typeof window === "undefined") return;
+
+  //   if (userId) {
+  //     setIsLogIn(true);
+  //   } else {
+  //     setIsLogIn(false);
+  //     // Optionally redirect to home or login page if not logged in
+  //     // router.push('/');
+  //   }
+
+  //   setIsLoading(false);
+  // }, [router]);
 
   if (isLoading) {
     return (
@@ -41,8 +48,7 @@ export default function RoutePath({ children }) {
       </div>
     );
   }
-
-  if (isLogIn) {
+  else  if (isAuthenticated  && tokenValidationList.isTokenValid) {
     return (
       <div className={styles.container}>
         <div className={styles.dashboard}>
@@ -61,6 +67,5 @@ export default function RoutePath({ children }) {
       </div>
     );
   }
-
   return <>{children}</>;
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import axiosInterceptor from '../Component/Interceptor'
 import Link from 'next/link'
 import { useAuth } from '../context/AuthContext'
-import RoutePath from '../Component/RoutePath'
+import RoutePath from '../Component/PathAuth/RoutePath'
 
 export default function LogInPage() {
     const router = useRouter();

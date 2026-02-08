@@ -36,11 +36,6 @@ public class User  implements UserDetails {
     }
 
     @Override
-    public String getUsername() {
-        return this.phoneNumber;
-    }
-
-    @Override
     public boolean isAccountNonExpired() {
         return true;
     }

@@ -14,6 +14,7 @@ import {
   faRightFromBracket,
   faSignOut,
   faUser,
+  faX,
 } from "@fortawesome/free-solid-svg-icons";
 import GetUserImage from "../Component/GetUserImage";
 
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   const { userId, logout, isLoading } = useAuth();
   const { userLastSeen, userStatus } = useWebSocket();
   const [profile, setProfile] = useState({});
+  const [editProfile,setEditProfile] = useState({});
   const [userImageUrl, setUserImageUrl] = useState(null);
 
   const [notifStatus, setNotifStatus] = useState("Allow");
@@ -34,12 +36,14 @@ export default function ProfilePage() {
   const [activePanel, setActivePanel] = useState("profile");
 
   const notifRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const fetchCurrentUser = async () => {
     try {
       const data = await fetchUserData(logout);
       console.log("UserData: ", data);
       setProfile(data);
+      setEditProfile(data);
     } catch (err) {
       console.log("Error in profile1: ", err.response?.data);
     }
@@ -49,35 +53,46 @@ export default function ProfilePage() {
     fetchCurrentUser();
   }, []);
 
-  useEffect(() => {
-    const getUserImage = async () => {
-      if (!userId) return;
-      try {
-        const data = await fetchUserImage(userId);
-        const imageUrl = URL.createObjectURL(data);
-        setUserImageUrl(imageUrl);
-      } catch (err) {
-        console.log("Error in fetchUserImage: ", err);
-      }
-    };
-    if (userId) {
-      getUserImage();
-    }
-  }, [userId]);
-
   const handleSave = async (e) => {};
 
   const handleEdit = () => {
     setShowEditButton(false);
+    setEditProfile(profile)
   };
 
   const handleCancel = () => {
     setShowEditButton(true);
+    
   };
 
   const handleFieldChange = (field, value) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
+    setEditProfile((prev) => ({ ...prev, [field]: value }));
   };
+
+  const formatLastSeen = (lastSeen) =>{
+    return new Intl.DateTimeFormat('en-US',{
+      year:'numeric',
+      weekday: 'long',
+      month:'long',
+      day:'numeric',
+      hour:'numeric',
+      minute:'2-digit'
+    }).format(lastSeen);
+  }
+
+  const handleEditImageClick = () =>{
+    imageInputRef.current.click();
+  }
+
+  const handleImageChange = (event) =>{
+    const file = event.target.files[0];
+    if(!file) return;
+
+
+    setUserImageUrl(URL.createObjectURL(file));
+
+    event.target.value = "";
+  }
   return (
     <div className={styles.page}>
       <div className={styles.layout}>
@@ -228,16 +243,23 @@ export default function ProfilePage() {
                 className={styles.editClose}
                 onClick={() => setActivePanel(null)}
               >
-                ✕
+                <FontAwesomeIcon icon={faX}/>
               </button>
 
               {/* avatar + name/email */}
               <div className={styles.editAvatarHeader}>
                 <div className={styles.editAvatarRing}>
                   <GetUserImage userId={userId} size={58} />
-                  <span className={styles.editPencil}>
+                  <span onClick={handleEditImageClick} className={styles.editPencil}>
                     <FontAwesomeIcon icon={faPencil} />
                   </span>
+
+                  <input 
+                  name="userImage"
+                  type="file"
+                  ref={imageInputRef}
+                  onChange={handleImageChange}
+                  />
                 </div>
                 <div className={styles.editAvatarText}>
                   <p className={styles.userName}>{profile.username}</p>
@@ -258,7 +280,7 @@ export default function ProfilePage() {
                   <>
                     <input
                       className={styles.fieldValueEditable}
-                      value={profile.username}
+                      value={editProfile.username}
                       onChange={(e) =>
                         handleFieldChange("name", e.target.value)
                       }
@@ -280,7 +302,7 @@ export default function ProfilePage() {
                   <>
                     <input
                       className={styles.fieldValueEditable}
-                      value={profile.email}
+                      value={editProfile.email}
                       onChange={(e) =>
                         handleFieldChange("email", e.target.value)
                       }
@@ -303,9 +325,9 @@ export default function ProfilePage() {
                     <input
                       className={styles.fieldValueEditable}
                       placeholder="Add number"
-                      value={profile.phoneNumber}
+                      value={editProfile.phoneNumber}
                       onChange={(e) =>
-                        handleFieldChange("mobile", e.target.value)
+                        handleFieldChange("phoneNumber", e.target.value)
                       }
                       style={
                         !profile.phoneNumber
@@ -319,24 +341,32 @@ export default function ProfilePage() {
 
               <div className={styles.fieldDivider} />
 
-              {/* Location */}
+              {/*About Yourself */}
               <div className={styles.fieldRow}>
-                <span className={styles.fieldLabel}>Location</span>
+                <span className={styles.fieldLabel}>About Yourself</span>
                 {showEditButton ? (
                   <>
-                    <p>{profile.location}</p>
+                    <p>{profile.about || "N/A"} </p>
                   </>
                 ) : (
                   <>
                     <input
                       className={styles.fieldValueEditable}
-                      value={profile.location}
+                      value={editProfile.about || "Enter about yourself"}
                       onChange={(e) =>
-                        handleFieldChange("location", e.target.value)
+                        handleFieldChange("about", e.target.value)
                       }
                     />
                   </>
                 )}
+              </div>
+
+              <div className ={styles.fieldDivider} />
+
+              {/* LastSeen */}
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>LastSeen</span>
+                <p>{formatLastSeen(profile.lasSeen)}</p>
               </div>
 
               {/* Save button + Edit Button */}
