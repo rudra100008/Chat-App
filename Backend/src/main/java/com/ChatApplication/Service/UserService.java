@@ -1,6 +1,7 @@
 package com.ChatApplication.Service;
 
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.DTO.UserUpdateDTO;
 import com.ChatApplication.Entity.AuthRequest;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.UserStatus;
@@ -19,9 +20,11 @@ public interface UserService {
 
     // service method to get and save user image
     UserDTO uploadUserImage(String userId, MultipartFile multipartFile)throws IOException;
+    UserDTO updateUserImage(String userId,MultipartFile imageFile)throws IOException;
+
     User saveByPhoneNumber(String phoneNumber);
-    UserDTO updateUser(String user_id, UserDTO userDTO);
-    void deleteUser(String user_id)throws IOException;
+    UserDTO updateUser(String userId, UserUpdateDTO userUpdateDTO);
+    void deleteUser(String userId)throws IOException;
     boolean existsByPhoneNumber(String phoneNumber);
     User findByPhoneNumber(String phoneNumber);
     List<UserDTO> searchUser(String username);

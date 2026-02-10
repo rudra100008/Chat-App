@@ -6,7 +6,7 @@ import axiosInterceptor from "./Interceptor";
 import { useAuth } from "../context/AuthContext";
 import style from "../Style/image.module.css";
 
-export default function GetUserImage({ userId ,size = 40,className = ""}) {
+export default function GetUserImage({ userId ,size = 40}) {
     const [imageUrl, setImageUrl] = useState("");
 
     useEffect(() => {

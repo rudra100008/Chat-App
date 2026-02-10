@@ -1,6 +1,7 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.CreateChatDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.ChatType;
@@ -9,12 +10,15 @@ import com.ChatApplication.Service.ChatDisplayNameService;
 import com.ChatApplication.Service.ChatService;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,12 +46,19 @@ public class ChatController {
     private  String baseUploadDir;
 
 
-    @PostMapping()
-    public ResponseEntity<ChatDTO> createChat(
-            @RequestParam String phoneNumber,
-            @RequestParam String chatName){
+    @PostMapping
+    public ResponseEntity<?> createChat(
+            @Valid @RequestBody CreateChatDTO createChatDTO,
+            BindingResult result
+            ){
+        if(result.hasErrors()){
+            Map<String,Object> errResponse = new HashMap<>();
+            result.getFieldErrors()
+                    .forEach(f -> errResponse.put(f.getField(),f.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errResponse);
+        }
         User loginUser = this.authUtils.getLoggedInUsername();
-        User otherUser = this.userService.findByPhoneNumber(phoneNumber);
+        User otherUser = this.userService.findByPhoneNumber(createChatDTO.phoneNumber());
 
         List<String> participantsIds = new ArrayList<>();
         participantsIds.add(otherUser.getUserId());
@@ -62,8 +73,9 @@ public class ChatController {
         ChatDTO savedChat = this.chatService.createChat(chatDTO);
 
         String otherUserChatName =  loginUser.getUsername();
+        String chatName= createChatDTO.chatName();
         if(!StringUtils.hasText(chatName)){
-            chatName = otherUser.getPhoneNumber();
+             chatName = otherUser.getUsername();
         }
         this.chatDisplayNameService.saveChatName(savedChat.getChatId(), chatName, loginUser.getUserId());
         chatDisplayNameService.saveChatName(savedChat.getChatId(),otherUserChatName,otherUser.getUserId());

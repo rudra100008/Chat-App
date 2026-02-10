@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { createContext, useEffect, useState, useContext } from "react";
+import { createContext, useEffect, useState, useContext, useCallback } from "react";
 import { isTokenValidService, logoutService } from "../services/authService";
 
 const AuthContext = createContext();
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const isTokenValid = async () => {
+  const isTokenValid = useCallback( async () => {
     try {
       const data = await isTokenValidService();
 
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error("Error in isTokenValid: ", err.response?.data);
     }
-  };
+  },[]);
   const value = {
     userId,
     isLoading,

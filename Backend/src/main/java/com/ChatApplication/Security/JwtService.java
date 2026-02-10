@@ -63,6 +63,7 @@ public class JwtService {
         byte[] key = Base64.getDecoder().decode(securityKey);
         return Keys.hmacShaKeyFor(key);
     }
+
     private Claims extractAllClaim(String token){
         return Jwts
                 .parserBuilder() // give tools for opening the envelope

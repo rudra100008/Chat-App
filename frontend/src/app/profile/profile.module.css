@@ -1,11 +1,6 @@
-/* ============================================================
-   profile.module.css
-   ============================================================ */
-
-/* ── Page shell ── */
 .page {
   min-height: 100vh;
-  background-color: #3d8b8f;
+  background-color: #0f0f1e;
   padding: 60px 40px;
   box-sizing: border-box;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -30,10 +25,11 @@
 
 /* ── Shared card base ── */
 .card {
-  background: #ffffff;
+  background: #1a1a2e;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  border: 1px solid #2a2a3e;
 }
 
 /* ── Avatar header (shared by menu card & edit card) ── */
@@ -50,8 +46,8 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 3px solid #e8f0f1;
-  background-color: #ccc;
+  border: 3px solid #2a2a3e;
+  background-color: #2a2a3e;
 }
 
 .avatarRing img {
@@ -64,7 +60,7 @@
 .avatarText .userName {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #e8e8f0;
   margin: 0;
   line-height: 1.3;
 }
@@ -78,7 +74,7 @@
 /* ── Menu nav list ── */
 .menuDivider {
   height: 1px;
-  background: #eef1f3;
+  background: #2a2a3e;
   margin: 0 22px;
 }
 
@@ -99,7 +95,7 @@
 }
 
 .menuItem:hover {
-  background-color: #f4f9fa;
+  background-color: #252538;
 }
 
 .menuIcon {
@@ -108,7 +104,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5a6a7d;
+  color: #8a9bad;
   margin-right: 14px;
   flex-shrink: 0;
   font-size: 1.1rem;
@@ -117,7 +113,7 @@
 .menuLabel {
   font-size: 0.9rem;
   font-weight: 500;
-  color: #2c3e50;
+  color: #c8d0e0;
   flex: 1;
 }
 
@@ -126,7 +122,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #b0bec5;
+  color: #5a6a7d;
   font-size: 0.85rem;
 }
 
@@ -141,7 +137,7 @@
   transition: background 0.15s;
 }
 .notifBadge:hover {
-  background: #eef1f3;
+  background: #2a2a3e;
 }
 
 /* ── Notification dropdown (Allow / Mute) ── */
@@ -149,9 +145,10 @@
   position: absolute;
   top: calc(100% - 4px);
   right: 18px;
-  background: #fff;
+  background: #252538;
   border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a2a3e;
   z-index: 30;
   min-width: 100px;
   overflow: hidden;
@@ -171,14 +168,14 @@
   border: none;
   background: none;
   font-size: 0.84rem;
-  color: #2c3e50;
+  color: #c8d0e0;
   cursor: pointer;
   transition: background 0.15s;
   font-family: inherit;
 }
 
 .notifDropdown button:hover {
-  background: #f0f7f8;
+  background: #2a2a3e;
   color: #3d8b8f;
 }
 
@@ -193,7 +190,7 @@
 .settingsTitle {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #e8e8f0;
   margin: 0;
 }
 
@@ -207,11 +204,11 @@
   padding: 2px;
   transition: color 0.15s;
 }
-.settingsClose:hover { color: #2c3e50; }
+.settingsClose:hover { color: #c8d0e0; }
 
 .settingsDivider {
   height: 1px;
-  background: #eef1f3;
+  background: #2a2a3e;
   margin: 0 22px;
 }
 
@@ -228,19 +225,19 @@
 
 .settingsRowLabel {
   font-size: 0.87rem;
-  color: #2c3e50;
+  color: #c8d0e0;
   font-weight: 500;
 }
 
 .settingsSelect {
   appearance: none;
   -webkit-appearance: none;
-  background: #f4f9fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a9bad'/%3E%3C/svg%3E") no-repeat right 10px center;
-  border: 1px solid #e2e8ec;
+  background: #252538 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a9bad'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border: 1px solid #2a2a3e;
   border-radius: 8px;
   padding: 6px 30px 6px 12px;
   font-size: 0.82rem;
-  color: #2c3e50;
+  color: #c8d0e0;
   cursor: pointer;
   font-family: inherit;
   transition: border-color 0.18s;
@@ -258,9 +255,10 @@
 }
 
 .editCard {
-  background: #ffffff;
+  background: #1a1a2e;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a3e;
   padding: 28px 32px 32px;
   position: relative;
 }
@@ -278,7 +276,7 @@
   line-height: 1;
   transition: color 0.15s;
 }
-.editClose:hover { color: #2c3e50; }
+.editClose:hover { color: #c8d0e0; }
 
 /* avatar row inside edit card */
 .editAvatarHeader {
@@ -295,8 +293,8 @@
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
-  border: 3px solid #e8f0f1;
-  background-color: #ccc;
+  border: 3px solid #2a2a3e;
+  background-color: #2a2a3e;
 }
 
 .editAvatarRing img {
@@ -315,7 +313,7 @@
   height: 22px;
   background: #3d8b8f;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid #1a1a2e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -331,7 +329,7 @@
 .editAvatarText .userName {
   font-size: 1rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #e8e8f0;
   margin: 0;
 }
 
@@ -344,7 +342,7 @@
 /* ── Field rows (label left, value/input right) ── */
 .fieldDivider {
   height: 1px;
-  background: #eef1f3;
+  background: #2a2a3e;
   margin: 16px 0;
 }
 
@@ -354,16 +352,23 @@
   justify-content: space-between;
   padding: 10px 0;
 }
-
+.fieldRow p {
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap; 
+  text-align: left;
+  margin: 0;
+  color: #a8b8c4;
+}
 .fieldLabel {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: #c8d0e0;
 }
 
 .fieldValue {
   font-size: 0.88rem;
-  color: #5a6a7d;
+  color: #8a9bad;
   text-align: right;
   max-width: 55%;
   word-break: break-word;
@@ -372,7 +377,7 @@
 /* Clickable / editable value */
 .fieldValueEditable {
   font-size: 0.88rem;
-  color: #5a6a7d;
+  color: #a8b8c4;
   text-align: right;
   cursor: pointer;
   padding: 4px 8px;
@@ -387,19 +392,30 @@
 }
 
 .fieldValueEditable:hover {
-  border-color: #e2e8ec;
-  background: #f9fbfc;
+  border-color: #2a2a3e;
+  background: #252538;
 }
 
 .fieldValueEditable:focus {
   border-color: #3d8b8f;
-  background: #fff;
-  box-shadow: 0 0 0 2px rgba(61, 139, 143, 0.15);
+  background: #252538;
+  box-shadow: 0 0 0 2px rgba(61, 139, 143, 0.25);
+  color: #c8d0e0;
 }
 
+
+.aboutTextarea{
+  min-height: 60px;
+  min-width: 300px;
+  resize: vertical;
+  overflow-y:auto ;
+  padding: 8px 12px;
+  line-height: 1.5;
+  font-family: inherit;
+}
 /* placeholder hint (e.g. "Add number") */
 .fieldPlaceholder {
-  color: #a8b8c4;
+  color: #5a6a7d;
   font-style: italic;
 }
 
@@ -419,18 +435,18 @@
   cursor: pointer;
   font-family: inherit;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
 }
 
 .saveBtn:hover {
   background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 5px 16px rgba(59, 130, 246, 0.5);
 }
 
 .saveBtn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
 }
 
 
@@ -441,7 +457,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: gray;
+  background: #4a4a5e;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -451,18 +467,18 @@
   cursor: pointer;
   font-family: inherit;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 3px 10px rgba(74, 74, 94, 0.4);
 }
 
 .cancelBtn:hover {
-  background: rgb(97, 96, 96);
+  background: #5a5a6e;
   transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 5px 16px rgba(74, 74, 94, 0.5);
 }
 
 .cancelBtn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(74, 74, 94, 0.4);
 }
 
 /* ── Edit Change button ── */
@@ -472,7 +488,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
- background: #3b82f6;
+  background: #3b82f6;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -482,18 +498,18 @@
   cursor: pointer;
   font-family: inherit;
   transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s;
-  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
 }
 
 .editBtn:hover {
-   background: #2563eb;
+  background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 5px 16px rgba(59, 130, 246, 0.5);
 }
 
 .editBtn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
 }
 
 /* ── Responsive ── */

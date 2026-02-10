@@ -31,3 +31,32 @@ export const fetchUserImage = async(userId =0) =>{
         throw err;
     }
 }
+
+
+export const updateUserImageService = async(userId=0, imageFile) => {
+    try{
+        const formData = new FormData();
+        formData.append("imageFile",imageFile);
+        const response = await axiosInterceptor.patch(`/api/users/${userId}/updateImage`,formData,{
+            headers:{
+                "Content-Type": 'multipart/form-data'
+            }
+        })
+        console.log("Response in updateUserImageService:",response);
+        return response.data;
+    }catch(err){
+        console.error("Error in updateUserImageService: ",err)
+        throw err;
+    }
+}
+
+export const updateUserDataService = async(userId=0,userData={}) => {
+    try{
+        const response  = await axiosInterceptor.put(`api/users/${userId}/updateUserData`,userData);
+        console.log("Response of updateUserDataService: ",response);
+        return response.data;
+    }catch(err){
+        console.error("Error of updateUserData: ",err);
+        throw err;
+    }
+}

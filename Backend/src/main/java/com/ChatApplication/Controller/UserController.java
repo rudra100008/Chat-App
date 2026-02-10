@@ -1,8 +1,10 @@
 package com.ChatApplication.Controller;
 
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.DTO.UserUpdateDTO;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.UserStatus;
+import com.ChatApplication.Exception.ImageInvalidException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.FriendService;
@@ -11,15 +13,19 @@ import com.ChatApplication.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -89,14 +95,30 @@ public class UserController {
         }
     }
 
-
-    @PatchMapping("/{userId}")
-    public ResponseEntity<UserDTO> updateUser(
-            @PathVariable String userId,
-            @Valid @RequestBody UserDTO userDTO) {
-        UserDTO updatedUser = this.userService.updateUser(userId, userDTO);
-        return ResponseEntity.ok(updatedUser);
+    @PutMapping("/{userId}/updateUserData")
+    public ResponseEntity<?> updateUser(
+            @PathVariable("userId")String userId,
+            @Valid @RequestBody UserUpdateDTO updateDTO
+            ){
+        UserDTO u = this.userService.updateUser(userId,updateDTO);
+        return ResponseEntity.status(HttpStatus.OK).body(u);
     }
+
+
+    @PatchMapping(path = "/{userId}/updateImage",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> updateUserImage(
+            @PathVariable("userId")String userId,
+            @RequestParam("imageFile")MultipartFile imageFile
+    )
+    {
+        try{
+            UserDTO userDTO = this.userService.updateUserImage(userId,imageFile);
+            return ResponseEntity.status(HttpStatus.OK).body(userDTO);
+        }catch(IOException e){
+            throw new ImageInvalidException("Image update failed: "+ e.getMessage());
+        }
+    }
+
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<UserDTO> deleteUser(@PathVariable String userId)throws IOException {

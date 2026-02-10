@@ -11,6 +11,7 @@ import SearchUser from '../Component/SearchUser';
 import ChatInfoDisplay from '../Component/ChatInfoDisplay';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useChatManager } from '../hooks/useChatManager';
+import PathGuard from '../Component/PathAuth/PathGuard';
 
 export default function Chat() {
     const route = useRouter();
@@ -103,6 +104,7 @@ export default function Chat() {
     }
 
     return (
+        <PathGuard>
         <div className={style.body}>
             {showSearchBox && <SearchUser onError={handleErrorMessage} />}
             {showChatInfoBox && selectedChatInfo &&
@@ -145,5 +147,6 @@ export default function Chat() {
                 onLogout={logout}
             />
         </div>
+        </PathGuard>
     )
 }

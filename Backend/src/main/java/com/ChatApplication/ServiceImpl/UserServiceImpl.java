@@ -1,6 +1,7 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.DTO.UserUpdateDTO;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.UserStatus;
 import com.ChatApplication.Exception.AlreadyExistsException;
@@ -11,6 +12,7 @@ import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -29,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -49,7 +52,7 @@ public class UserServiceImpl implements UserService {
     private static final String ALREADY_EXISTS_MESSAGE = " already exists";
 
 
-    private void validateUsernameUniqueness(String currentUsername, String newUsername) {
+    private void validateUsernameUniquenessInDatabase(String currentUsername, String newUsername) {
         if (newUsername != null &&
                 !newUsername.equals(currentUsername) &&
                 Boolean.TRUE.equals(userRepository.existsByUsername(newUsername))) {
@@ -58,16 +61,16 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void validateEmailUniqueness(String currentEmail, String newEmail) {
+    private void validateEmailUniquenessInDatabase(String oldEmail, String newEmail) {
         if (newEmail != null &&
-                !newEmail.equals(currentEmail) &&
+                !newEmail.equals(oldEmail) &&
                 Boolean.TRUE.equals(userRepository.existsByEmail(newEmail))) {
             throw new AlreadyExistsException(newEmail + ALREADY_EXISTS_MESSAGE);
         }
     }
 
 
-    private void validatePhoneNumberUniqueness(String phoneNumber) {
+    private void validatePhoneNumberUniquenessInDatabase(String phoneNumber) {
         if (phoneNumber != null && userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new AlreadyExistsException(phoneNumber + ALREADY_EXISTS_MESSAGE);
         }
@@ -99,9 +102,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDTO signup(UserDTO userDTO,MultipartFile imageFile) throws  IOException{
         // Validate uniqueness for username, email, and phone number
-        validateUsernameUniqueness(null, userDTO.getUsername());
-        validateEmailUniqueness(null, userDTO.getEmail());
-        validatePhoneNumberUniqueness(userDTO.getPhoneNumber());
+        validateUsernameUniquenessInDatabase(null, userDTO.getUsername());
+        validateEmailUniquenessInDatabase(null, userDTO.getEmail());
+        validatePhoneNumberUniquenessInDatabase(userDTO.getPhoneNumber());
 
         if(imageFile == null || imageFile.isEmpty()){
             userDTO.setProfilePicture(DEFAULT_PROFILE_PICTURE);
@@ -142,10 +145,20 @@ public class UserServiceImpl implements UserService {
             User savedUser = this.userRepository.save(user);
 
             return this.mapper.map(savedUser,UserDTO.class);
-        }catch (IOException e){
-            throw  new ImageInvalidException("Failed to upload user image: " + e.getMessage());
+        }catch (IOException e) {
+            throw new ImageInvalidException("Failed to upload user image: " + e.getMessage());
         }
+    }
 
+
+    @Override
+    @Transactional
+    public UserDTO updateUserImage(String userId, MultipartFile imageFile) throws IOException {
+        User userToUpdate = authenticateUser(userId);
+
+        User updatedUser = updateImage(userToUpdate,imageFile);
+
+        return this.mapper.map(updatedUser,UserDTO.class);
     }
 
     @Override
@@ -160,41 +173,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserDTO updateUser(String userId, UserDTO userDTO) {
-        // Get loggedIn user and verify access
-        User loggedInUser = authUtils.getLoggedInUsername();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(userId + NOT_FOUND_MESSAGE));
+    public UserDTO updateUser(String userId, UserUpdateDTO userUpdateDTO) {
+        User user = authenticateUser(userId);
+        boolean isUpdated = false;
 
-        if (!Objects.equals(loggedInUser.getUserId(), user.getUserId())) {
-            throw new AccessDeniedException("You cannot update this profile");
+        if (userUpdateDTO.username() != null && !user.getUsername().equals(userUpdateDTO.username())) {
+            validateUsernameUniquenessInDatabase(user.getUsername(), userUpdateDTO.username());
+            user.setUsername(userUpdateDTO.username());
+            isUpdated = true;
         }
 
-        // Validate unique fields
-        validateUsernameUniqueness(user.getUsername(), userDTO.getUsername());
-        validateEmailUniqueness(user.getEmail(), userDTO.getEmail());
-
-        // Phone number cannot be updated
-        if (userDTO.getPhoneNumber() != null && !userDTO.getPhoneNumber().equals(user.getPhoneNumber())) {
-            throw new IllegalArgumentException("Phone number cannot be updated");
+        if (userUpdateDTO.email() != null && !user.getEmail().equals(userUpdateDTO.email())) {
+            validateEmailUniquenessInDatabase(user.getEmail(), userUpdateDTO.email());
+            user.setEmail(userUpdateDTO.email());
+            isUpdated = true;
         }
 
-        // Update profile picture
-        String profilePicture = (userDTO.getProfilePicture() == null || userDTO.getProfilePicture().isEmpty())
-                ? DEFAULT_PROFILE_PICTURE
-                : userDTO.getProfilePicture();
-        user.setProfilePicture(profilePicture);
+        if (userUpdateDTO.about() != null && !Objects.equals(user.getAbout(), userUpdateDTO.about())) {
+            user.setAbout(userUpdateDTO.about());
+            isUpdated = true;
+        }
 
-        // Update other fields if provided
-        Optional.ofNullable(userDTO.getUsername()).ifPresent(user::setUsername);
-        Optional.ofNullable(userDTO.getEmail()).ifPresent(user::setEmail);
-        Optional.ofNullable(userDTO.getStatus()).ifPresent(user::setStatus);
-        Optional.ofNullable(userDTO.getAbout()).ifPresent(user::setAbout);
-
-        // Always update last seen
-        user.setLastSeen(LocalDateTime.now());
-
-        User updatedUser = userRepository.save(user);
+        if(isUpdated) {
+            user.setLastSeen(LocalDateTime.now());
+        }
+        User updatedUser = isUpdated ? userRepository.save(user) : user;
         return mapper.map(updatedUser, UserDTO.class);
     }
 
@@ -273,6 +276,49 @@ public class UserServiceImpl implements UserService {
     private User getUserById(String userId){
         return this.userRepository.findById(userId)
                 .orElseThrow(()-> new ResourceNotFoundException("User not found"));
+    }
+
+    private User authenticateUser(String userId){
+        User loggedInUser = authUtils.getLoggedInUsername();
+        if(loggedInUser.getUserId().equals(userId)){
+            return loggedInUser;
+        }else{
+            throw new AccessDeniedException("You are not allowed to access this service");
+        }
+    }
+
+    private User updateImage(User user,MultipartFile imageFile){
+        String imageName = user.getProfilePicture();
+        try{
+            String baseUrl = baseUrlForImage + File.separator + "userImage";
+            if (imageFile != null && !imageFile.isEmpty()){
+                String imageUniqueName = this.imageService.uploadImage(baseUrl,imageFile);
+                user.setProfilePicture(imageUniqueName);
+
+                user = this.userRepository.save(user);
+
+                deleteOldImage(baseUrl,imageName);
+            }
+            return user;
+        }catch(IOException e){
+            throw new ImageInvalidException(String.format("Failed to update user image: %s",user.getUsername()));
+        }
+    }
+
+    private void deleteOldImage(String baseUrl,String imageName)throws IOException{
+        if(shouldDeleteImage(imageName)){
+            try {
+                this.imageService.deleteImage(baseUrl, imageName);
+            }catch (IOException e){
+                log.info("Failed to delete old image: {}",imageName, e);
+            }
+        }
+    }
+    private boolean shouldDeleteImage(String imageName){
+        return imageName != null
+                && !imageName.isEmpty()
+                && !"default.png".equals(imageName)
+                && !"defaultGroupChat.jpg".equals(imageName);
     }
 
 }

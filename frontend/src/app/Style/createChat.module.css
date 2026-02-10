@@ -1,5 +1,5 @@
 .Container {
-  background-color: #f7fafc;
+  background-color: #0f0f1e;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -8,12 +8,13 @@
 }
 
 .Form {
-  background-color: #ffffff;
+  background-color: #1a1a2e;
   width: 100%;
   max-width: 420px;
   padding: 3rem 2.5rem;
   border-radius: 1rem;
-  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.05);
+  border: 1px solid #2a2a3e;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
 }
 
@@ -31,43 +32,53 @@
   margin-bottom: 0.5rem;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #2d3748;
+  color: #c8d0e0;
 }
 
 .inputForm[type="tel"],
 .inputForm[type="text"] {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #2a2a3e;
   border-radius: 0.75rem;
   font-size: 0.95rem;
   padding: 0.75rem;
   transition: all 0.3s ease;
   width: 100%;
-  background-color: #f9fafb;
-  color: #2d3748;
+  background-color: #252538;
+  color: #e8e8f0;
+  box-sizing: border-box;
 }
 
 .inputForm[type="tel"]:focus,
 .inputForm[type="text"]:focus {
   outline: none;
-  border-color: #63b3ed;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  border-color: #3d8b8f;
+  background-color: #2a2a3e;
+  box-shadow: 0 0 0 3px rgba(61, 139, 143, 0.2);
 }
 
 .inputForm::placeholder {
-  color: #a0aec0;
+  color: #5a6a7d;
   font-weight: 400;
+}
+
+.validationError {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #fc8181;
+  min-height: 1rem;
 }
 
 .ButtonGroup {
   width: 100%;
   display: flex;
   justify-content: center;
+  gap: 12px;
+  margin-top: 0.5rem;
 }
 
-.ButtonGroup button {
-  background-color: #3182ce;
-  color: white;
+.ButtonGroup button[type="submit"] {
+  background-color: #3b82f6;
+  color: #fff;
   font-size: 1rem;
   font-weight: 500;
   padding: 0.75rem 1.5rem;
@@ -75,10 +86,19 @@
   border: none;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
+  box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3);
 }
 
-.ButtonGroup button:hover {
-  background-color: #2b6cb0;
+.ButtonGroup button[type="submit"]:hover {
+  background-color: #2563eb;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(50, 115, 220, 0.2);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.ButtonGroup button[type="submit"]:disabled {
+  background-color: #2a2a3e;
+  color: #5a6a7d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
