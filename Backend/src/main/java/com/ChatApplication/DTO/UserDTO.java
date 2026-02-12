@@ -38,6 +38,8 @@ public class UserDTO {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String profilePicture;
+    private String secureUrl;
+    private String publicId;
     private String userImageUrl;
 
     @NotBlank(message = "Phone number cannot be blank")

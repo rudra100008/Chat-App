@@ -6,10 +6,7 @@ import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Security.AuthUtils;
-import com.ChatApplication.Service.ChatDisplayNameService;
-import com.ChatApplication.Service.ChatService;
-import com.ChatApplication.Service.ImageService;
-import com.ChatApplication.Service.UserService;
+import com.ChatApplication.Service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
@@ -42,6 +39,7 @@ public class ChatController {
     private final UserService userService;
     private final AuthUtils authUtils;
     private final ImageService imageService;
+    private final CloudFileService cloudFileService;
     @Value("${image.upload.dir}")
     private  String baseUploadDir;
 

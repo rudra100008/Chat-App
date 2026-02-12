@@ -26,6 +26,8 @@ public class User  implements UserDetails {
     private String about;
     private String password;
     private String profilePicture;
+    private String secureUrl;
+    private String publicId;
     private String phoneNumber;
     private UserStatus status;
     private LocalDateTime lastSeen;

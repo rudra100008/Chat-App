@@ -22,6 +22,9 @@ public class Chat {
     private String chatId;
     private String  chatName;//only for GROUP chat
     private String chatImageUrl; // only for GROUP chat
+
+    private String publicId; // only for GROUP chat
+    private String secureUrl; // only for GROUP chat
     private ChatType chatType; //SINGLE,GROUP
     private List<User> participants;
     private LocalDateTime createdAt;

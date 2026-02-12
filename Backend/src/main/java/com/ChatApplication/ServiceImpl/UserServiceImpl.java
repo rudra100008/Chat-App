@@ -1,5 +1,6 @@
 package com.ChatApplication.ServiceImpl;
 
+import com.ChatApplication.DTO.CloudinaryResponse;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.DTO.UserUpdateDTO;
 import com.ChatApplication.Entity.User;
@@ -9,6 +10,7 @@ import com.ChatApplication.Exception.ImageInvalidException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.AuthUtils;
+import com.ChatApplication.Service.CloudFileService;
 import com.ChatApplication.Service.ImageService;
 import com.ChatApplication.Service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,7 @@ public class UserServiceImpl implements UserService {
     private final AuthUtils authUtils;
     private final SimpMessagingTemplate messagingTemplate;
     private final ImageService imageService;
+    private final CloudFileService cloudFileService;
 
     @Value("${image.upload.dir}")
     private String baseUrlForImage;
@@ -159,6 +162,32 @@ public class UserServiceImpl implements UserService {
         User updatedUser = updateImage(userToUpdate,imageFile);
 
         return this.mapper.map(updatedUser,UserDTO.class);
+    }
+
+    @Override
+    public UserDTO uploadUserImageInCloud(String userId, MultipartFile imageFile) throws IOException {
+        User user = authenticateUser(userId);
+        try{
+
+            CloudinaryResponse cloudinaryResponse = this.cloudFileService.uploadImageWithDetails(imageFile,"userImage");
+            user.setPublicId(cloudinaryResponse.publicId());
+            user.setSecureUrl(cloudinaryResponse.secureUrl());
+            User savedUser = this.userRepository.save(user);
+            return this.mapper.map(savedUser,UserDTO.class);
+        }catch (IOException e){
+            throw new ImageInvalidException("Failed to upload user image: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public UserDTO updateUserImageInCloud(String userId, MultipartFile imageFile) throws IOException {
+        User user = authenticateUser(userId);
+        return null;
+    }
+
+    @Override
+    public String getUserImageInCloud(String userId) throws IOException {
+        return "";
     }
 
     @Override
@@ -305,6 +334,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     private void deleteOldImage(String baseUrl,String imageName)throws IOException{
         if(shouldDeleteImage(imageName)){
             try {
@@ -321,4 +351,29 @@ public class UserServiceImpl implements UserService {
                 && !"defaultGroupChat.jpg".equals(imageName);
     }
 
+
+    private User  updateImageInCloud(User user, MultipartFile imageFile){
+        String publicId = user.getPublicId();
+        try{
+            if(imageFile != null && !imageFile.isEmpty()){
+                CloudinaryResponse cloudinaryResponse = this.cloudFileService.uploadImageWithDetails(imageFile,"userImage");
+                user.setPublicId(cloudinaryResponse.publicId());
+                user.setSecureUrl(cloudinaryResponse.secureUrl());
+                user = this.userRepository.save(user);
+
+                deleteOldImageInCloud(publicId);
+            }
+            return  user;
+        }catch (IOException e){
+            throw new ImageInvalidException(String.format("Failed to update user image in cloud: %s",user.getUsername()));
+        }
+    }
+
+    private void deleteOldImageInCloud(String publicId)throws IOException{
+        try{
+             this.cloudFileService.deleteImage(publicId);
+        }catch (IOException e){
+            log.info("Failed to delete old image: {}" ,e.getMessage());
+        }
+    }
 }

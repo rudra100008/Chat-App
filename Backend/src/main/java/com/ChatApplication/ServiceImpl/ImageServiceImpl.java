@@ -53,7 +53,7 @@ public class ImageServiceImpl implements ImageService {
     }
     @Override
     public String deleteImage(String uploadDir, String imageName) throws IOException {
-        if("default.png".equals(imageName) || "defaultGroupChat.jpg".equals(imageName)){
+        if(DEFAULT_IMAGES.contains(imageName)){
             return "Default image cannot be deleted";
         }
         Path path = Path.of(uploadDir,imageName);

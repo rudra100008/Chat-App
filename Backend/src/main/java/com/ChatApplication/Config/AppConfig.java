@@ -32,6 +32,8 @@ public class AppConfig  {
             chatDTO.setChatName(chat.getChatName());
             chatDTO.setChatId(chat.getChatId());
             chatDTO.setChatType(chat.getChatType());
+            chatDTO.setSecureUrl(chat.getSecureUrl());
+            chatDTO.setPublicId(chat.getPublicId());
             if(chat.getParticipants() != null){
                 chatDTO.setParticipantIds(chat.getParticipants()
                         .stream()

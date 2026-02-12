@@ -9,6 +9,7 @@ import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.CustomUserDetailService;
 import com.ChatApplication.Security.JwtAuthenticationSuccessHandler;
 import com.ChatApplication.Security.JwtService;
+import com.ChatApplication.Service.CloudFileService;
 import com.ChatApplication.Service.UserService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
 import com.ChatApplication.TwoFactorAuth.TwoFactorRequest;
