@@ -24,6 +24,7 @@ public class ChatDTO {
     private String secureUrl; // only for GROUP chat
 
     private ChatType chatType; // GROUP,SINGLE
+    @Builder.Default
     private List<String> participantIds =  new ArrayList<>();
     private LocalDateTime createdAt;
     private String lastMessage;

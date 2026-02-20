@@ -1,20 +1,23 @@
 package com.ChatApplication.ServiceImpl;
 
 import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.CloudinaryResponse;
+import com.ChatApplication.DTO.CreateChatDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.ChatType;
 import com.ChatApplication.Exception.AlreadyExistsException;
+import com.ChatApplication.Exception.ImageInvalidException;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.ChatRepository;
 import com.ChatApplication.Repository.MessageRepository;
 import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.AuthUtils;
-import com.ChatApplication.Service.ChatService;
-import com.ChatApplication.Service.FriendService;
+import com.ChatApplication.Service.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -24,9 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +46,12 @@ public class ChatServiceImpl implements ChatService {
     private final MongoTemplate mongoTemplate;
     private final AuthUtils authUtils;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CloudFileService cloudFileService;
+    private final ChatDisplayNameService chatDisplayNameService;
+    private final UserService userService;
 
+    @Value("${publicId.default.groupChat}")
+    private String groupImagePublicId;
     private static  final String NOT_FOUND = " not found.";
 
 
@@ -51,72 +62,31 @@ public class ChatServiceImpl implements ChatService {
         if(userId == null || userId.isEmpty()){
             throw new IllegalArgumentException("userID cannot be null or empty");
         }
-        User currentUser = this.userRepository.findById(userId)
-                .orElseThrow(()->new ResourceNotFoundException(userId+ NOT_FOUND));
-        List<Chat>  currentUserChat  = this.chatRepository.findByParticipants_UserIdIn(userId);
-        List<ChatDTO> chatDTOS = new ArrayList<>();
-        for(Chat chat: currentUserChat){
-            ChatDTO chatDTO = modelMapper.map(chat,ChatDTO.class);
+        User currentUser = authenticateUser(userId);
+        List<Chat>  currentUserChat  = getAllChatOfUser(currentUser);
 
-            if(chatDTO.getChatType()== ChatType.SINGLE){
-                User otherUser = chat.getParticipants().stream()
-                        .filter(user->!user.getUserId().equals(currentUser.getUserId()))
-                        .findFirst()
-                        .orElse(null);
-                if(otherUser != null){
-                    chatDTO.setChatName(otherUser.getUsername());
-                }
-            }
-            chatDTOS.add(chatDTO);
-        }
-        return  chatDTOS;
+        return currentUserChat.stream()
+                .map(chat -> this.modelMapper.map(chat,ChatDTO.class))
+                .toList();
     }
 
     @Override
-    @Transactional
-    public ChatDTO createChat(ChatDTO chatDTO) {
-        // Validate participant count
-        if(chatDTO.getParticipantIds().size() != 2) {
-            throw new IllegalArgumentException("There must be two users in the chat.");
-        }
+    public ChatDTO createChat(CreateChatDTO createChatDTO) {
 
-        // Validate logged in user is a participant
-        User loggedInUser = getLoggedInUser();
-        if (!chatDTO.getParticipantIds().contains(loggedInUser.getUserId())) {
-            throw new IllegalArgumentException("Logged in user must be a participant in the chat.");
-        }
+        Chat chat = saveChat(createChatDTO);
 
-        User otherUser = getOtherParticipant(chatDTO,loggedInUser);
-
-        if(chatExistsBetweenUsers(loggedInUser,otherUser)) {
-            throw new AlreadyExistsException("Chat between these users already exists.");
-        }
-        Chat chat = Chat.builder()
-                .chatName(otherUser.getUsername() + " & " + loggedInUser.getUsername())
-                .chatImageUrl(otherUser.getProfilePicture())
-                .chatType(ChatType.SINGLE)
-                .participants(List.of(loggedInUser,otherUser))
-                .build();
-
-        Chat savedChat = this.chatRepository.save(chat);
-
-        if(savedChat.getChatType() == ChatType.SINGLE){
-            String user1 = loggedInUser.getUserId();
-            String user2 = otherUser.getUserId();
-            friendService.addFriend(user1,user2);
-
-        }
-
+        User otherUser = getOtherUser(chat);
         messagingTemplate.convertAndSendToUser(
                 otherUser.getUserId(),
                 "/queue/chats",
                 Map.of(
                         "type","NEW_CHAT",
-                        "chat", chatToDTO(savedChat)
+                        "chat", chatToDTO(chat)
                 )
         );
-        return chatToDTO(savedChat);
+        return chatToDTO(chat);
     }
+
 
     @Override
     @Transactional
@@ -131,27 +101,24 @@ public class ChatServiceImpl implements ChatService {
         if (!chatDTO.getParticipantIds().contains(loggedInUsername.getUserId())){
             throw new IllegalArgumentException("Logged in user must be participants of the chat");
         }
-       List<User> participants = chatDTO.getParticipantIds()
-               .stream()
-               .map(userId->this.userRepository.findById(userId)
-                       .orElseThrow(()-> new ResourceNotFoundException(userId+" not found in server")))
-               .toList();
-        // saving the chat details in the database
 
+        // saving the chat details in the database
         Chat chat = Chat.builder()
                 .chatName(chatDTO.getChatName())
                 .chatType(chatDTO.getChatType())
                 .chatImageUrl(chatDTO.getChatImageUrl())
-                .participants(participants)
+                .publicId(groupImagePublicId)
+                .secureUrl(cloudFileService.getFileUrl(groupImagePublicId))
+                .participantIds(chatDTO.getParticipantIds())
                 .adminIds(new ArrayList<>(List.of(loggedInUsername.getUserId())))
                 .createdAt(chatDTO.getCreatedAt())
                 .build();
 
         Chat savedChat = this.chatRepository.save(chat);
 
-        for(User participant : chat.getParticipants()){
+        for(String id : chat.getParticipantIds()){
             messagingTemplate.convertAndSendToUser(
-                    participant.getUserId(),
+                    id,
                     "/queue/chats",
                     Map.of(
                             "type","NEW_CHAT",
@@ -169,23 +136,22 @@ public class ChatServiceImpl implements ChatService {
             throw new IllegalArgumentException("Chat Id and User Id is null or empty");
         }
         User loggedUser = getLoggedInUser();
-        Chat chat = getChat(chatId);
+        Chat chat = validateChatAccess(chatId, loggedUser.getUserId(), null);
 
         if(chat.getChatType() == ChatType.SINGLE){
             throw new IllegalArgumentException("Cannot add participants to a single chat");
         }
 
-        validateChatAccess(chatId,loggedUser.getUserId());
-
+        // already validated and fetched chat above
         User newUser =  getUser(userId);
-        if(chat.getParticipants().stream().anyMatch(user-> user.getUserId().equals(newUser.getUserId()))){
+        if(chat.getParticipantIds().stream().anyMatch(id-> id.equals(newUser.getUserId()))){
             throw new AlreadyExistsException("User " + newUser.getUsername() + " already exits in chat");
         }
 
         Query query = new Query(Criteria.where("_id").is(chatId));
-        Update update = new Update().addToSet("participants",newUser);
+        Update update = new Update().addToSet("participantIds",newUser.getUserId());
         mongoTemplate.updateFirst(query,update,Chat.class);
-        chat.getParticipants().add(newUser);
+        chat.getParticipantIds().add(newUser.getUserId());
         return chatToDTO(chat);
     }
 
@@ -197,12 +163,10 @@ public class ChatServiceImpl implements ChatService {
         }
         User loggedUser = getLoggedInUser();
 
-        validateChatAccess(chatId,loggedUser.getUserId());
-
-        Chat chat = this.chatRepository.findById(chatId)
-                .orElseThrow(()-> new ResourceNotFoundException(chatId+ NOT_FOUND));
-        return chat.getParticipants().stream()
-                .map(user -> modelMapper.map(user, UserDTO.class)).toList();
+        Chat chat = validateChatAccess(chatId, loggedUser.getUserId(), null);
+        return this.userRepository.findAllById(chat.getParticipantIds())
+                .stream().map(user -> modelMapper.map(user,UserDTO.class))
+                .toList();
     }
 
     @Override
@@ -210,7 +174,7 @@ public class ChatServiceImpl implements ChatService {
         if(!StringUtils.hasText(chatId) || !StringUtils.hasText(userId)){
             throw new IllegalArgumentException("ChatId and userId cannot be null or empty");
         }
-        return this.chatRepository.existsByChatIdAndParticipants_UserIdIn(chatId,userId);
+        return this.chatRepository.existsByChatIdAndParticipantIds(chatId,userId);
     }
 
     @Override
@@ -221,16 +185,14 @@ public class ChatServiceImpl implements ChatService {
         }
         User loggedUser = getLoggedInUser();
 
-        validateChatAccess(chatId,loggedUser.getUserId());
-
-        Chat chat =  this.chatRepository.findById(chatId)
-                .orElseThrow(()-> new ResourceNotFoundException(chatId + NOT_FOUND));
+        Chat chat = validateChatAccess(chatId, loggedUser.getUserId(), null);
         User user = this.userRepository.findById(userId)
-                .orElseThrow(()-> new ResourceNotFoundException(userId + NOT_FOUND));
-        if(chat.getParticipants().size()<=1){
+            .orElseThrow(()-> new ResourceNotFoundException(userId + NOT_FOUND));
+
+        if(chat.getParticipantIds().size()<=1){
             throw new IllegalStateException("Cannot remove the last participants instead delete the chat");
         }
-        chat.getParticipants().remove(user);
+        chat.getParticipantIds().remove(user.getUserId());
         Chat updatedChat = this.chatRepository.save(chat);
         return chatToDTO(updatedChat);
     }
@@ -243,10 +205,7 @@ public class ChatServiceImpl implements ChatService {
         }
         User loggedUser = getLoggedInUser();
 
-        validateChatAccess(chatId,loggedUser.getUserId());
-
-        Chat chat = this.chatRepository.findById(chatId)
-                .orElseThrow(()->new ResourceNotFoundException(chatId + NOT_FOUND));
+        Chat chat = validateChatAccess(chatId, loggedUser.getUserId(), null);
         if(chat.getChatType() == ChatType.GROUP) {
             if (!isUserAdmin(chat, loggedUser.getUserId())) {
                 throw new AccessDeniedException(loggedUser.getUsername() + " is not allowed to delete this group.");
@@ -264,30 +223,22 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ChatDTO fetchUserChat(String chatId) {
+    public ChatDTO fetchChatById(String chatId) {
         User loggedInUser = getLoggedInUser();
-        validateChatAccess(chatId, loggedInUser.getUserId());
-
-        Chat chat = this.chatRepository.findById(chatId)
-                .orElseThrow(() -> new ResourceNotFoundException("chat not found: " + chatId));
-        if (chat.getChatType() == ChatType.SINGLE) {
-            User user = chat.getParticipants().stream()
-                    .filter(p -> !p.getUserId().equals(loggedInUser.getUserId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (user != null) {
-                chat.setChatName(user.getUsername());
-            }
-        }
+        Chat chat = validateChatAccess(chatId, loggedInUser.getUserId(),"User is not allowed to access this chat");
 
         return chatToDTO(chat);
     }
+
     @Override
     public ChatDTO updateGroupChat(ChatDTO chatDTO){
         if(chatDTO.getChatType() == ChatType.GROUP) {
-            Chat oldChat = chatRepository.findById(chatDTO.getChatId())
-                    .orElseThrow(() -> new ResourceNotFoundException("chat not found" + chatDTO.getChatId()));
+            User loggedUser = getLoggedInUser();
+            Chat oldChat = validateChatAccess(chatDTO.getChatId(), loggedUser.getUserId(),"You are not allowed to update this chat.");
+            if (!isUserAdmin(oldChat, loggedUser.getUserId())) {
+                throw new AccessDeniedException(loggedUser.getUsername() + " is not allowed to update this group.");
+            }
+
             oldChat.setChatName(chatDTO.getChatName());
             oldChat.setChatImageUrl(chatDTO.getChatImageUrl());
             Chat newChat = chatRepository.save(oldChat);
@@ -299,27 +250,55 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    public ChatDTO updateGroupChatImageInCloud(String chatId, String userId, MultipartFile imageFile) {
+        try{
+            User user = authenticateUser(userId);
+            Chat chat = fetchChatByChatIdAndUserId(chatId,user.getUserId());
+            String oldPublicId = chat.getPublicId();
+            if(chat.getChatType() == ChatType.GROUP  &&  isUserAdmin(chat,user.getUserId())){
+                CloudinaryResponse cloudinaryResponse = this.cloudFileService.uploadImageWithDetails(imageFile,"groupChat");
+                chat.setPublicId(cloudinaryResponse.publicId());
+                chat.setSecureUrl(cloudinaryResponse.secureUrl());
+                chat = this.chatRepository.save(chat);
+
+                this.cloudFileService.deleteImage(oldPublicId);
+            }
+            return this.modelMapper.map(chat, ChatDTO.class);
+        }catch(IOException e){
+            throw new ImageInvalidException(String.format("Failed to update group image: %s",e.getMessage()));
+        }
+
+    }
+
+    @Override
+    public String fetchGroupImageSecureUrl(String chatId, String userId, MultipartFile imageFile) {
+        User user = authenticateUser(userId);
+        Chat chat =  fetchChatByChatIdAndUserId(chatId,user.getUserId());
+        return chat.getSecureUrl();
+    }
+
+    @Override
     public ChatDTO addAdminToChat(String chatId, String userId) {
         User loggedInUser = getLoggedInUser();
-        validateChatAccess(chatId,loggedInUser.getUserId());
-        Chat fetchChat = chatRepository.findById(chatId)
-                .orElseThrow(()-> new ResourceNotFoundException("Chat not found: "+ chatId));
+        Chat fetchChat = validateChatAccess(chatId, loggedInUser.getUserId(),"You are not allowed to add admin in group");
         List<String> admins = fetchChat.getAdminIds();
+        if (admins == null) {
+            admins = new ArrayList<>();
+        }
         if(!isUserAdmin(fetchChat,userId)){
-            admins.addLast(userId);
+            admins.add(userId);
         }else{
             throw new IllegalArgumentException("User is already an admin in chat");
         }
         fetchChat.setAdminIds(admins);
-        Chat saveChat = this.chatRepository.save(modelMapper.map(fetchChat,Chat.class));
+        Chat saveChat = this.chatRepository.save(fetchChat);
         return chatToDTO(saveChat);
     }
 
     @Override
     public ChatDTO removeUser(String chatId, String userId) {
         User loggedInUser = getLoggedInUser();
-        validateChatAccess(chatId,loggedInUser.getUserId());
-        Chat chat = getChat(chatId);
+        Chat chat = validateChatAccess(chatId, loggedInUser.getUserId(),"You are not allowed to remove user from group.");
         User user = getUser(userId);
         if(!isUserAdmin(chat,loggedInUser.getUserId())) {
             throw new IllegalArgumentException("Insufficient permissions to remove user from chat.");
@@ -327,9 +306,9 @@ public class ChatServiceImpl implements ChatService {
         if(chat.getAdminIds().contains(user.getUserId())){
             chat.getAdminIds().remove(user.getUserId());
         }
-        chat.setParticipants(chat.getParticipants()
+        chat.setParticipantIds(chat.getParticipantIds()
                 .stream()
-                .filter(p -> !p.getUserId().equals(user.getUserId()))
+                .filter(ids -> !ids.equals(user.getUserId()))
                 .toList());
         Chat updatedChat = chatRepository.save(chat);
 
@@ -343,7 +322,8 @@ public class ChatServiceImpl implements ChatService {
 //        Chat fetchChat = chatRepository.findById(chatId)
 //                .orElseThrow(()-> new ResourceNotFoundException("Chat not found: "+ chatId));
         if(chat.getChatType() == ChatType.GROUP) {
-            return chat.getAdminIds().contains(userId);
+            List<String> admins = chat.getAdminIds();
+            return admins != null && admins.contains(userId);
         }
         return false;
     }
@@ -368,22 +348,35 @@ public class ChatServiceImpl implements ChatService {
         return authUtils.getLoggedInUsername();
     }
 
-    private User getOtherParticipant(ChatDTO chatDTO,User currentUser){
-        return chatDTO.getParticipantIds().stream()
-                .map(userId-> userRepository.findById(userId)
-                        .orElseThrow(()-> new ResourceNotFoundException(userId + NOT_FOUND)))
-                .filter(user-> !user.getUserId().equals(currentUser.getUserId()))
-                .findFirst()
-                .orElseThrow(()-> new ResourceNotFoundException("Other participants not found"));
+//    private User getOtherParticipant(ChatDTO chatDTO,User currentUser){
+//        return chatDTO.getParticipantIds().stream()
+//                .map(userId-> userRepository.findById(userId)
+//                        .orElseThrow(()-> new ResourceNotFoundException(userId + NOT_FOUND)))
+//                .filter(user-> !user.getUserId().equals(currentUser.getUserId()))
+//                .findFirst()
+//                .orElseThrow(()-> new ResourceNotFoundException("Other participants not found"));
+//    }
+
+    private User getOtherUser(Chat chat){
+        User currentUser = this.authUtils.getLoggedInUsername();
+        if (chat.getParticipantIds().contains(currentUser.getUserId())){
+            String otherUserId = chat.getParticipantIds().stream()
+                    .filter(id -> !id.equals(currentUser.getUserId()))
+                    .findFirst()
+                    .orElseThrow(()-> new ResourceNotFoundException("Other participant not found"));
+            return  this.userService.fetchUserByUserId(otherUserId);
+        }else{
+            throw  new IllegalArgumentException("User is not in the chat");
+        }
     }
 
     private boolean chatExistsBetweenUsers(User user1, User user2){
         return mongoTemplate.exists(Query.query(
-                Criteria.where("chatType").is(ChatType.SINGLE)
-                        .andOperator(
-                                Criteria.where("participants").size(2),
-                                Criteria.where("participants").all(List.of(user1,user2))
-                        )
+            Criteria.where("chatType").is(ChatType.SINGLE)
+                .andOperator(
+                    Criteria.where("participantIds").size(2),
+                    Criteria.where("participantIds").all(List.of(user1.getUserId(), user2.getUserId()))
+                )
         ),Chat.class);
     }
 
@@ -393,7 +386,7 @@ public class ChatServiceImpl implements ChatService {
                 .chatName(chat.getChatName())
                 .chatImageUrl(chat.getChatImageUrl())
                 .chatType(chat.getChatType())
-                .participantIds(chat.getParticipants().stream().map(User::getUserId).toList())
+                .participantIds(chat.getParticipantIds())
                 .createdAt(chat.getCreatedAt())
                 .lastMessage(chat.getLastMessage())
                 .lastMessageTime(chat.getLastMessageTime())
@@ -402,10 +395,91 @@ public class ChatServiceImpl implements ChatService {
                 .build();
     }
 
-    private void validateChatAccess(String chatId,String userId){
-        if(!isUserInChat(chatId,userId)){
-            throw new AccessDeniedException("User does not have access to this chat");
+    private Chat validateChatAccess(String chatId,String userId,String message){
+        return this.chatRepository.findChatByChatIdAndUserId(chatId,userId)
+                .orElseThrow(()-> new AccessDeniedException(
+                        message == null
+                                ? "User does not have access to this chat."
+                                : message
+                ));
+    }
+
+    private User authenticateUser(String userId){
+        User user = this.authUtils.getLoggedInUsername();
+        if(user.getUserId().equals(userId)){
+            return user;
+        }else{
+            throw new AccessDeniedException("You are not allowed to access this service");
         }
+    }
+
+    private Chat fetchChatByChatIdAndUserId(String chatId,String userId){
+        return this.chatRepository.findChatByChatIdAndUserId(chatId,userId)
+                .orElseThrow(()-> new ResourceNotFoundException("Chat not found or user is not in chat"));
+    }
+
+    private List<User> getParticipants(List<String> participantIds){
+        List<User> users = this.userRepository.findAllById(participantIds);
+        if(users.size() != participantIds.size()){
+            List<String> foundIds = users.stream()
+                    .map(User::getUserId)
+                    .toList();
+
+            Set<String> missingIds = participantIds
+                    .stream()
+                    .filter(ids-> !foundIds.contains(ids))
+                    .collect(Collectors.toSet());
+            throw  new ResourceNotFoundException("Users not found: "+ missingIds);
+        }
+        return users;
+    }
+
+    private Chat saveChat(CreateChatDTO createChatDTO){
+        LocalDateTime now = LocalDateTime.now();
+        User loginUser = authenticateUser(createChatDTO.creatorId());
+        User otherUser = this.userRepository.findByPhoneNumber(createChatDTO.phoneNumber())
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("User not found with phoneNumber: %s",createChatDTO.phoneNumber())));
+
+        List<String>  participantIds = new ArrayList<>();
+        participantIds.add(loginUser.getUserId());
+        participantIds.add(otherUser.getUserId());
+
+        if(chatExistsBetweenUsers(loginUser,otherUser)){
+            throw new AlreadyExistsException(String.format("Chat already exits between %s and %s", loginUser.getUsername(),otherUser.getUsername()));
+        }
+        Chat  chat = Chat.builder()
+                .chatName(String.format("%s & %s",loginUser.getUsername(),otherUser.getUsername()))
+                .createdAt(now)
+                .participantIds(participantIds)
+                .chatType(ChatType.SINGLE)
+                .build();
+        Chat savedChat =  this.chatRepository.save(chat);
+
+        saveChatInUser(savedChat.getChatId(), loginUser,otherUser);
+        saveChatNameForBothUser(savedChat,loginUser,otherUser);
+        return  savedChat;
+    }
+
+    private void saveChatNameForBothUser(Chat chat,User user1,User user2){
+        if(!chat.getChatType().equals(ChatType.SINGLE) || chat.getParticipantIds().size() != 2){
+            throw new IllegalArgumentException("This is only for SINGLE chat");
+        }
+        this.chatDisplayNameService.saveChatName(chat.getChatId(),user1.getUsername(),user2.getUserId());
+        this.chatDisplayNameService.saveChatName(chat.getChatId(),user2.getUsername(),user1.getUserId());
+    }
+
+
+    private void saveChatInUser(String chatId,User currentUser,User otherUser){
+        currentUser.getChatIds().add(chatId);
+        otherUser.getChatIds().add(chatId);
+        this.userRepository.save(currentUser);
+        this.userRepository.save(otherUser);
+    }
+
+    private List<Chat> getAllChatOfUser(User loginUser){
+        List<String> chatIds = loginUser.getChatIds();
+
+        return this.chatRepository.findAllById(chatIds);
     }
 
 }

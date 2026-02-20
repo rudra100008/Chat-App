@@ -49,6 +49,8 @@ public class UserServiceImpl implements UserService {
 
     @Value("${image.upload.dir}")
     private String baseUrlForImage;
+    @Value("${publicId.default.userImage}")
+    private String userImagePublicId;
 
     private static final String DEFAULT_PROFILE_PICTURE = "default.png";
     private static final String NOT_FOUND_MESSAGE = " not found in the server";
@@ -111,6 +113,8 @@ public class UserServiceImpl implements UserService {
 
         if(imageFile == null || imageFile.isEmpty()){
             userDTO.setProfilePicture(DEFAULT_PROFILE_PICTURE);
+            userDTO.setPublicId(userImagePublicId);
+            userDTO.setSecureUrl(cloudFileService.getFileUrl(userImagePublicId));
         }
 
 
@@ -124,7 +128,7 @@ public class UserServiceImpl implements UserService {
 
         if(imageFile != null  && !imageFile.isEmpty()){
             try{
-                return uploadUserImage(savedUser.getUserId(),imageFile);
+                return uploadUserImageInCloud(user,imageFile);
             }catch (IOException e){
                 throw  new ImageInvalidException("Failed to upload user image: " + e.getMessage());
             }
@@ -165,8 +169,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO uploadUserImageInCloud(String userId, MultipartFile imageFile) throws IOException {
-        User user = authenticateUser(userId);
+    public UserDTO uploadUserImageInCloud(User user, MultipartFile imageFile) throws IOException {
         try{
 
             CloudinaryResponse cloudinaryResponse = this.cloudFileService.uploadImageWithDetails(imageFile,"userImage");
@@ -182,12 +185,31 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO updateUserImageInCloud(String userId, MultipartFile imageFile) throws IOException {
         User user = authenticateUser(userId);
-        return null;
+        try{
+            CloudinaryResponse cloudinaryResponse = this.cloudFileService.uploadImageWithDetails(imageFile,"userImage");
+            user.setPublicId(cloudinaryResponse.publicId());
+            user.setSecureUrl(cloudinaryResponse.secureUrl());
+
+            user = this.userRepository.save(user);
+            return this.mapper.map(user,UserDTO.class);
+        }catch(IOException e){
+            throw new ImageInvalidException("Failed to update user image in cloud: "+e.getMessage());
+        }
     }
 
     @Override
-    public String getUserImageInCloud(String userId) throws IOException {
-        return "";
+    public String getImageSecureUrlInCloud(String userId) throws IOException {
+        User user = this.userRepository.findById(userId)
+                .orElseThrow(()-> new ResourceNotFoundException("User not found"));
+        if (user.getSecureUrl() != null && !user.getSecureUrl().isEmpty()) {
+            String url = user.getSecureUrl();
+            if (url.contains("?")) {
+                url = url.substring(0, url.indexOf("?"));
+            }
+            return url;
+        }
+
+        return cloudFileService.getFileUrl(user.getPublicId());
     }
 
     @Override

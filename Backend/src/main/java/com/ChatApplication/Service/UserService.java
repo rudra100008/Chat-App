@@ -23,9 +23,9 @@ public interface UserService {
     UserDTO updateUserImage(String userId,MultipartFile imageFile)throws IOException;
 
     //service method to uploadUserImage and updateUserImag to cloud service
-    UserDTO uploadUserImageInCloud(String userId,MultipartFile imageFile)throws  IOException;
+    UserDTO uploadUserImageInCloud(User user,MultipartFile imageFile)throws  IOException;
     UserDTO updateUserImageInCloud(String userId, MultipartFile imageFile)throws IOException;
-    String getUserImageInCloud(String userId)throws IOException;
+    String getImageSecureUrlInCloud(String userId)throws IOException;
 
     User saveByPhoneNumber(String phoneNumber);
     UserDTO updateUser(String userId, UserUpdateDTO userUpdateDTO);

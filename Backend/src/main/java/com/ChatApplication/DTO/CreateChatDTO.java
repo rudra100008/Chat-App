@@ -10,6 +10,7 @@ public record CreateChatDTO(
                 regexp = "^(98|97)\\d{8}$",
                 message = "Invalid  mobile number"
         )
-        String phoneNumber
+        String phoneNumber,
+        String creatorId
 ) {
 }

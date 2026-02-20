@@ -153,10 +153,18 @@ public class CloudFileServiceImpl implements CloudFileService {
 
     private String generatePublicId(MultipartFile imageFile){
         String originalFileName = imageFile.getOriginalFilename();
-        if(originalFileName == null){
+        if(originalFileName == null || originalFileName.trim().isEmpty()){
             return "file_"+ System.currentTimeMillis();
         }
-        return UUID.randomUUID().toString()+"_" + originalFileName;
+
+        // Remove extension from original filename
+        String fileNameWithoutExtension = originalFileName;
+        int lastDotIndex = originalFileName.lastIndexOf(".");
+        if (lastDotIndex > 0) {
+            fileNameWithoutExtension = originalFileName.substring(0, lastDotIndex);
+        }
+
+        return UUID.randomUUID().toString() + "_" + fileNameWithoutExtension;
     }
 
 //    private boolean deleteImage(String publicId){

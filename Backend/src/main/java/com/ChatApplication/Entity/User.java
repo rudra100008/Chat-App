@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,6 +32,8 @@ public class User  implements UserDetails {
     private String phoneNumber;
     private UserStatus status;
     private LocalDateTime lastSeen;
+    @Builder.Default
+    private List<String> chatIds = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

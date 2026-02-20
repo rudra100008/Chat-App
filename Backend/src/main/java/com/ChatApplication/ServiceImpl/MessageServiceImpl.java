@@ -42,7 +42,7 @@ public class MessageServiceImpl implements MessageService {
 
 
     private void validateChatAccess(Chat chat,User user){
-        if(chat.getParticipants().stream().noneMatch(u-> u.getUserId().equals(user.getUserId()))){
+        if(chat.getParticipantIds().stream().noneMatch(id-> id.equals(user.getUserId()))){
             throw new AccessDeniedException("User does not have access to this chat");
         }
     }
@@ -118,7 +118,7 @@ public class MessageServiceImpl implements MessageService {
         if(chat.getChatType()== ChatType.SINGLE){
           validateBlockStatus(chat,senderId);
         }
-        if(chat.getParticipants().stream().noneMatch(user -> user.getUserId().equals(sender.getUserId()))){
+        if(chat.getParticipantIds().stream().noneMatch(id -> id.equals(sender.getUserId()))){
             throw new IllegalArgumentException(sender.getUsername() + " is not a participant of "+chat.getChatName());
         }
         Message message = Message.builder()
@@ -137,9 +137,9 @@ public class MessageServiceImpl implements MessageService {
         chat.setLastMessage(savedMessage.getContent());
         chat.setLastMessageTime(now);
         Chat updatedChat = chatRepository.save(chat);
-        for(User participant : chat.getParticipants()){
+        for(String userId : chat.getParticipantIds()){
             messagingTemplate.convertAndSendToUser(
-                    participant.getUserId(),
+                    userId,
                     "/queue/chat-update",
                     modelMapper.map(updatedChat, ChatDTO.class)
             );
@@ -220,17 +220,17 @@ public class MessageServiceImpl implements MessageService {
     //helper functions
 
     // this function gets otherUserId
-    private String getOtherUserId(List<User> participantIds,String senderId){
-        for ( User user: participantIds){
-            if(!user.getUserId().equals(senderId)){
-                return  user.getUserId();
+    private String getOtherUserId(List<String> participantIds,String senderId){
+        for ( String ids: participantIds){
+            if(!ids.equals(senderId)){
+                return  ids;
             }
         }
         throw new IllegalStateException("SINGLE chat must have two participants");
     }
 
     private void validateBlockStatus(Chat chat,String senderId){
-        String userId = getOtherUserId(chat.getParticipants(),senderId);
+        String userId = getOtherUserId(chat.getParticipantIds(),senderId);
         if(chat.getBlockedBy() != null && chat.getBlockedBy().contains(senderId)){
             throw new ForbiddenException("You have blocked this user.Unblock to send message");
         }

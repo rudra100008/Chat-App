@@ -55,28 +55,7 @@ public class ChatController {
                     .forEach(f -> errResponse.put(f.getField(),f.getDefaultMessage()));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errResponse);
         }
-        User loginUser = this.authUtils.getLoggedInUsername();
-        User otherUser = this.userService.findByPhoneNumber(createChatDTO.phoneNumber());
-
-        List<String> participantsIds = new ArrayList<>();
-        participantsIds.add(otherUser.getUserId());
-        participantsIds.add(loginUser.getUserId());
-
-        ChatDTO chatDTO = ChatDTO.builder()
-                .participantIds(participantsIds)
-                .chatType(ChatType.SINGLE)
-                .build();
-        chatDTO.setParticipantIds(participantsIds);
-        chatDTO.setChatType(ChatType.SINGLE);
-        ChatDTO savedChat = this.chatService.createChat(chatDTO);
-
-        String otherUserChatName =  loginUser.getUsername();
-        String chatName= createChatDTO.chatName();
-        if(!StringUtils.hasText(chatName)){
-             chatName = otherUser.getUsername();
-        }
-        this.chatDisplayNameService.saveChatName(savedChat.getChatId(), chatName, loginUser.getUserId());
-        chatDisplayNameService.saveChatName(savedChat.getChatId(),otherUserChatName,otherUser.getUserId());
+        ChatDTO savedChat = this.chatService.createChat(createChatDTO);
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
 
@@ -153,7 +132,7 @@ public class ChatController {
             @PathVariable("chatId")String chatId
     )
     {
-        ChatDTO chatDTO = this.chatService.fetchUserChat(chatId);
+        ChatDTO chatDTO = this.chatService.fetchChatById(chatId);
         return ResponseEntity.ok(chatDTO);
     }
 
@@ -162,8 +141,8 @@ public class ChatController {
             @RequestParam("chatId")String chatId
             ){
         String uploadDir = baseUploadDir + File.separator + "groupChat";
-        ChatDTO getUserChat = chatService.fetchUserChat(chatId);
-        String imageName = getUserChat.getChatImageUrl();
+        ChatDTO chatFetched = chatService.fetchChatById(chatId);
+        String imageName = chatFetched.getChatImageUrl();
 
         if(imageName == null || imageName.trim().isEmpty()){
            imageName = "defaultGroupChat.jpg";
@@ -198,7 +177,7 @@ public class ChatController {
         User currentUser = authUtils.getLoggedInUsername();
         String uploadDir = baseUploadDir + File.separator + "groupChat";
         String imageName;
-        ChatDTO  chatDTO = chatService.fetchUserChat(chatId);
+        ChatDTO  chatDTO = chatService.fetchChatById(chatId);
         if(!chatDTO.getAdminIds().contains(currentUser.getUserId())){
             return ResponseEntity
                     .status(HttpStatus.FORBIDDEN)
@@ -244,7 +223,7 @@ public class ChatController {
         try {
             User currentUser = authUtils.getLoggedInUsername();
             String uploadDir = baseUploadDir + File.separator + "groupChat";
-            ChatDTO chatDTO = chatService.fetchUserChat(chatId);
+            ChatDTO chatDTO = chatService.fetchChatById(chatId);
             if(!chatDTO.getAdminIds().contains(currentUser.getUserId())){
                 return ResponseEntity
                         .status(HttpStatus.FORBIDDEN)
@@ -281,7 +260,7 @@ public class ChatController {
             @PathVariable("chatId")String chatId,
             @RequestParam("chatName")String chatName
     ){
-        ChatDTO databaseChat = chatService.fetchUserChat(chatId);
+        ChatDTO databaseChat = chatService.fetchChatById(chatId);
         User currentUser = authUtils.getLoggedInUsername();
         if(databaseChat.getChatType() != ChatType.GROUP){
             return ResponseEntity

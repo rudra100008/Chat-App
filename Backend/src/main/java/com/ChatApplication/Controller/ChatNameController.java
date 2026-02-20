@@ -22,7 +22,7 @@ public class ChatNameController {
             @PathVariable("chatId")String chatId
     ){
         ChatDisplayNameDTO  chatName = this.chatDisplayNameService.fetchChatName(chatId,userId);
-        ChatDTO  fetchChat =  chatService.fetchUserChat(chatId);
+        ChatDTO  fetchChat =  chatService.fetchChatById(chatId);
         if(fetchChat.getChatType() == ChatType.GROUP){
             throw  new IllegalArgumentException(fetchChat.getChatId() + " is GROUP chat");
         }
@@ -36,7 +36,7 @@ public class ChatNameController {
             @RequestParam("chatName")String chatName
     ){
         ChatDisplayNameDTO chatDisplayNameDTO = this.chatDisplayNameService.saveChatName(chatId,chatName,userId);
-        ChatDTO  fetchChat =  chatService.fetchUserChat(chatId);
+        ChatDTO  fetchChat =  chatService.fetchChatById(chatId);
         if(fetchChat.getChatType() == ChatType.GROUP){
             throw  new IllegalArgumentException("Group chat has no chatName.");
         }

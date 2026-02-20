@@ -1,7 +1,9 @@
 package com.ChatApplication.Config;
 
 import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.Chat;
+import com.ChatApplication.Entity.Message;
 import com.ChatApplication.Entity.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -14,6 +16,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -25,28 +28,65 @@ public class AppConfig  {
     @Bean
     public ModelMapper mapper(){
         ModelMapper mapper = new ModelMapper();
+
+        mapper.getConfiguration()
+                .setMatchingStrategy(MatchingStrategies.STRICT)
+                .setSkipNullEnabled(true)
+                .setFieldMatchingEnabled(true);
+
         mapper.typeMap(Chat.class,ChatDTO.class).setPostConverter(context->{
             Chat chat = context.getSource();
             ChatDTO chatDTO = context.getDestination();
 
-            chatDTO.setChatName(chat.getChatName());
             chatDTO.setChatId(chat.getChatId());
+            chatDTO.setChatName(chat.getChatName());
+            chatDTO.setChatImageUrl(chat.getChatImageUrl());
             chatDTO.setChatType(chat.getChatType());
+            if(chat.getParticipantIds() != null){
+                chatDTO.setParticipantIds(chat.getParticipantIds());
+            }
+            chatDTO.setCreatedAt(chat.getCreatedAt());
+            chatDTO.setLastMessage(chat.getLastMessage());
+            chatDTO.setLastMessageTime(chat.getLastMessageTime());
+            chatDTO.setAdminIds(chat.getAdminIds());
+            chatDTO.setBlockedBy(chat.getBlockedBy());
             chatDTO.setSecureUrl(chat.getSecureUrl());
             chatDTO.setPublicId(chat.getPublicId());
-            if(chat.getParticipants() != null){
-                chatDTO.setParticipantIds(chat.getParticipants()
-                        .stream()
-                        .map(User::getUserId)
-                        .toList());
-            }
+
 
             return chatDTO;
         });
-        mapper.getConfiguration()
-                .setMatchingStrategy(MatchingStrategies.STANDARD)
-                .setSkipNullEnabled(true)
-                .setFieldMatchingEnabled(true);
+
+        mapper.typeMap(Message.class, MessageDTO.class).setPostConverter(context ->{
+            Message message = context.getSource();
+            MessageDTO messageDTO = context.getDestination();
+
+            if (message.getMessageId() != null){
+                messageDTO.setMessageId(message.getMessageId());
+            }
+
+            messageDTO.setContent(message.getContent());
+
+            messageDTO.setTimestamp(message.getTimestamp());
+            messageDTO.setRead(message.isRead());
+            messageDTO.setSenderId(
+                    message.getSender().getUserId() != null
+                            ? message.getSender().getUserId()
+                            : null
+            );
+            messageDTO.setChatId(
+                    message.getChat().getChatId() != null
+                            ? message.getChat().getChatId()
+                            : null
+            );
+
+            if(message.getAttachment() != null) {
+                messageDTO.setAttachment(message.getAttachment());
+            }
+
+            return messageDTO;
+        });
+
         return mapper;
     }
 
