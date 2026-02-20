@@ -19,11 +19,9 @@ export const fetchUserData = async (logout) => {
 };
 
 
-export const fetchUserImage = async(userId =0) =>{
+export const fetchUserImageSecureUrlService = async(userId =0) =>{
     try{
-        const response  = await axiosInterceptor.get(`/api/users/getUserImage/user/${userId}`,{
-            responseType:'blob'
-        });
+        const response  = await axiosInterceptor.get(`/api/users/${userId}/fetchImageUrl`);
         console.log("Response of fetchUserImage: ",response.data);
         return response.data;
     }catch(err){

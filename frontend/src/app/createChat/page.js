@@ -17,6 +17,7 @@ export default function CreateChat() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useNotification();
+  const {userId} = useAuth();
 
   const handleChatNameChange = (e) => {
     setChatName(e.target.value);
@@ -33,6 +34,7 @@ export default function CreateChat() {
       const createChatDTO = {
         chatName: chatName,
         phoneNumber: phoneNumber,
+        creatorId :  userId,
       };
 
       const response = await axiosInterceptor.post(
