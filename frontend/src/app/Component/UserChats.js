@@ -75,7 +75,6 @@ export default function UserChats({
     });
     },[chatInfos,activeTab,searchQuery,chatNames])
 
-
     if (isChatInfosLoading) {
         return (
             <div className={style.Container}>
@@ -83,7 +82,7 @@ export default function UserChats({
                 <div className={style.searchBarRow}>
                     <div className={style.searchBarInner}>
                         <FontAwesomeIcon icon={faSearch} />
-                        <input className={style.searchBarInput} placeholder="Search..." disabled />
+                        <input className={style.searchBarInput} placeholder="Search..." value="" disabled />
                     </div>
                 </div>
                 <p className={style.errorMessage}>Loading Chats...</p>
@@ -172,7 +171,7 @@ export default function UserChats({
                                     {chat.chatType === "SINGLE" ? (
                                         <GetUserImage userId={otherUserId} />
                                     ) : (
-                                        <GetGroupImage chatId={chat.chatId} selectedChatInfo={selectedChatInfo} />
+                                        <GetGroupImage chatId={chat.chatId} chatType={chat.chatType} />
                                     )}
                                 </div>
 

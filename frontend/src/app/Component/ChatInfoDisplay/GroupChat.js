@@ -14,7 +14,7 @@ import baseUrl from "@/app/baseUrl";
 import ErrorPrompt from "../ErrorPrompt";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchUserData } from "@/app/services/userService";
-import { deleteChat } from "@/app/services/chatServices";
+import { deleteChat, deleteGroupChat } from "@/app/services/chatServices";
 import { useNotification } from "@/app/context/NotificationContext";
 import { useWebSocket } from "@/app/context/WebSocketContext";
 
@@ -46,9 +46,9 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
     const file = event.target.files[0];
     if (file) {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("imageFile", file);
       await axiosInterceptor
-        .post(`${baseUrl}/api/chats/uploadChatImage/${chatData.chatId}`, formData, {
+        .patch(`${baseUrl}/api/chats/${chatData.chatId}/uploadGroupImage/user/${userId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })
         .then((res) => {
@@ -69,10 +69,18 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
   };
 
   const handleUpdateGroupChat = useCallback(async () => {
-    axiosInterceptor
+    const chatResponse = {
+      chatId: localChatData.chatId,
+      chatName: localChatData.chatName,
+      chatType: localChatData.chatType,
+      participantIds:localChatData.participantIds,
+      adminIds:localChatData.adminIds,
+      createdAt:localChatData.createdAt,
+    }
+   await axiosInterceptor
       .put(
-        `${baseUrl}/api/chats/updateGroupChat/${chatData.chatId}?chatName=${encodeURIComponent(localChatData.chatName)}`,
-        {}, {}
+        `${baseUrl}/api/chats/updateGroupChat/${chatData.chatId}`,
+        chatResponse, {}
       )
       .then((response) => {
         const newChatData = response.data;
@@ -87,7 +95,7 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
   }, [chatData, localChatData]);
 
   const fetchAdminUsername = async () => {
-    const promises = chatData.adminIds.map((admin) => fetchUserData(admin, logout));
+    const promises = chatData.adminIds.map(async (admin) => await fetchUserData(admin, logout));
     const users = await Promise.all(promises);
     const usernames = users.filter((u) => u != null).map((u) => u.username);
     setAdminUsernames(usernames);
@@ -95,7 +103,7 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
 
   const deleteUserChat = async () => {
     try {
-      const data = await deleteChat(chatData.chatId);
+      const data = await deleteGroupChat(chatData.chatId);
       success(data.message);
       setChatInfos((prev) => {
         if (!prev || !Array.isArray(prev)) return prev;
@@ -145,7 +153,7 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
 
       {/* Avatar + edit pencil */}
       <div className={style.image}>
-        <GetGroupImage chatId={chatData.chatId} selectedChatInfo={chatData} size={120} />
+        <GetGroupImage chatId={chatData.chatId} chatType={chatData.chatType} size={120} />
         <div className={style.faEdit}>
           <FontAwesomeIcon icon={faEdit} size="sm" onClick={handleEditChat} />
         </div>

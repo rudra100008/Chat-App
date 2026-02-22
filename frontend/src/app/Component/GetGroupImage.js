@@ -5,28 +5,28 @@ import { useEffect, useState } from "react";
 import axiosInterceptor from "./Interceptor";
 import baseUrl from "../baseUrl";
 import { useAuth } from "../context/AuthContext";
-const GetGroupImage = ({ chatId, selectedChatInfo, size = 40 }) => {
+const GetGroupImage = ({ chatId, chatType, size = 40 }) => {
     const [imageUrl, setImageUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [isImageLoaded,setIsImageLoaded] = useState(false);
     useEffect(() => {
 
         const fetchGroupImage = async () => {
+            if(!chatId || chatType !== "GROUP")return
             setLoading(true);
             try {
-                const response = await axiosInterceptor.get(`/api/chats/groupImage?chatId=${chatId}`, {
-                    responseType: "blob"
-                })
-                const url = URL.createObjectURL(response.data);
-                setImageUrl(url);
+                const response = await axiosInterceptor.get(`/api/chats/${chatId}/fetchGroupImage`)
+                console.log("fetchGroupImage response: ", response.data)
+                const {secureUrl} = response.data;
+                setImageUrl(secureUrl);
             } catch (error) {
-                console.log(error)
+                console.error("Error in fetchGroupImage: ",error);
             } finally {
                 setLoading(false);
             }
         }
         if (chatId) fetchGroupImage();
-    }, [chatId,selectedChatInfo])
+    }, [chatId])
 
     if (loading) {
         return (
@@ -43,6 +43,7 @@ const GetGroupImage = ({ chatId, selectedChatInfo, size = 40 }) => {
                         src={imageUrl}
                         alt="Group"
                         fill
+                        sizes="(max-width: 640px) 40px, 50px"
                         className={style.imageresponsive}
                         onLoad={()=> setIsImageLoaded(true)}
                     />

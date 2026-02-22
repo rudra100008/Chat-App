@@ -11,6 +11,7 @@ import SearchUser from '../Component/SearchUser';
 import ChatInfoDisplay from '../Component/ChatInfoDisplay';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useChatManager } from '../hooks/useChatManager';
+import { fetchChatNames } from '../services/chatServices';
 import PathGuard from '../Component/PathAuth/PathGuard';
 
 export default function Chat() {
@@ -91,6 +92,25 @@ export default function Chat() {
     useEffect(() => {
         if (userChat.chatId) fetchUserDetails();
     }, [userChat]);
+
+    // Fetch chat names for new chats received via WebSocket that don't have names yet
+    useEffect(() => {
+        const fetchNewChatNames = async () => {
+            if (!chatInfos || chatInfos.length === 0) return;
+            
+            const newChats = chatInfos.filter(chat => !chatNames[chat.chatId]);
+            if (newChats.length === 0) return;
+            
+            try {
+                const names = await fetchChatNames(newChats, userId);
+                setChatNames(prev => ({ ...prev, ...names }));
+            } catch (error) {
+                console.error("Error fetching chat names for new chats:", error);
+            }
+        };
+        
+        fetchNewChatNames();
+    }, [chatInfos, userId]);
 
     const handleErrorMessage = (message) => {
         setErrorMessage(message);

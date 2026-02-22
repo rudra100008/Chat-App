@@ -20,6 +20,7 @@ export const WebSocketProvider = ({ children }) => {
   const [userLastSeen, setUserLastSeen] = useState(null);
   const [userStatus, setUserStatus] = useState(null);
   const [chatInfos, setChatInfos] = useState([]);
+  const [chatNames, setChatNames] = useState({});
   const stompClientRef = useRef(null);
   const [userStatusMap, setUserStatusMap] = useState({});
   const reconnectTimeoutRef = useRef(null);
@@ -43,6 +44,7 @@ export const WebSocketProvider = ({ children }) => {
       webSocketFactory: () =>
         new SockJS(`${baseUrl}/server`, null, {
           withCredentials: true,
+          transports: ['websocket', 'xhr-polling'],
         }),
         reconnectDelay:5000, // 5 sec to automatically try to reconnect
         heartbeatIncoming:4000, // client excepts to receive a hearbeat from the server every 4 sec
@@ -93,10 +95,21 @@ export const WebSocketProvider = ({ children }) => {
           try{
              const payload = JSON.parse(message.body);
           if (payload.type === "NEW_CHAT") {
+            const newChat = payload.chat;
+            console.log("New chat received:", newChat.chatName, newChat.chatId);
+            
             setChatInfos((prev) => {
-              const exits = prev?.some(chat=> chat.chatId === payload.chat.chatId);
-              return exits ? prev : [...prev, payload.chat];
+              const exists = prev?.some(chat=> chat.chatId === newChat.chatId);
+              return exists ? prev : [...prev, newChat];
             });
+            
+            // Immediately store the chat name from the payload
+            if (newChat.chatName) {
+              setChatNames((prev) => ({
+                ...prev,
+                [newChat.chatId]: newChat.chatName
+              }));
+            }
           }
           }catch(err){
             console.error("Error parsing chat message",err);
@@ -151,6 +164,8 @@ export const WebSocketProvider = ({ children }) => {
     document.addEventListener("visibilitychange",handleVisiblityChange)
 
     return ()=>{
+    chatNames,
+    setChatNames,
       document.removeEventListener("visibilitychange",handleVisiblityChange)
     }
   },[connectWebSocket,isWebSocketConnected,userId])

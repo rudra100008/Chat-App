@@ -45,9 +45,15 @@ export default function ChatHeader({
           <GetUserImage userId={otherUserDetails.userId} />
           <p className={style.chatName}>{chatName}</p>
         </div>
-      ) : (
+      ) : userChat.chatType === "GROUP" ? (
         <div className={style.chatHeaderInfo}>
-          <GetGroupImage chatId={chatId} />
+          <GetGroupImage chatId={chatId} chatType={userChat.chatType} />
+          <p className={style.chatName}>{chatName}</p>
+        </div>
+      ) : (
+        // chatType not yet loaded — render a small placeholder instead of calling image endpoints
+        <div className={style.chatHeaderInfo}>
+          <div style={{ width: 40, height: 40 }} />
           <p className={style.chatName}>{chatName}</p>
         </div>
       )}

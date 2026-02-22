@@ -65,11 +65,12 @@ export const fetchUserChatsWithNames = async (userId,router,logout) => {
     }
 };
 
-export const deleteChat = async(chatId)=>{
+export const deleteGroupChat = async(chatId)=>{
     try{
-        const response = await axiosInterceptor.delete(`/api/chats/delete/${chatId}`);
+        const response = await axiosInterceptor.delete(`/api/chats/groupChat/${chatId}`);
         return response.data;
     }catch(err){
         console.log("Error responsein chatService: ",err.response.data)
+        throw err;
     }
 }

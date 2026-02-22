@@ -31,6 +31,7 @@ export default function GetUserImage({ userId ,size = 40}) {
                     src={imageUrl}
                     alt="User"
                     fill
+                    sizes="(max-width: 640px) 40px, 50px"
                     className={style.imageresponsive}
                 />
                 </div>

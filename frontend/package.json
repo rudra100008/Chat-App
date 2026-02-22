@@ -14,15 +14,16 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@stomp/stompjs": "^7.0.0",
     "axios": "^1.7.9",
-    "next": "^14.1.4",
+    "framer-motion": "^12.34.3",
+    "next": "^16.1.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "eslint-config-next": "14.1.4",
+    "eslint": "^10.0.1",
+    "eslint-config-next": "^0.2.4",
     "postcss": "^8",
     "tailwindcss": "^3.4.1"
   }
