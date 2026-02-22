@@ -16,6 +16,7 @@ import java.util.List;
 public class FriendDTO {
     private String id;
     private String userId; // the id that owns the friend
+    @Builder.Default
     private List<String> friendIds = new ArrayList<>();
     private LocalDateTime updatedAt;
 }

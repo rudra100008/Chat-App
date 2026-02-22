@@ -20,6 +20,7 @@ public class Friend {
     @MongoId
     private String id;
     private String userId;
+    @Builder.Default
     private List<String> friendIds = new ArrayList<>();
     private LocalDateTime updatedAt;
 }

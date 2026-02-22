@@ -1,15 +1,15 @@
 package com.ChatApplication.Controller;
 
-import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.ChatResponse;
 import com.ChatApplication.DTO.CreateChatDTO;
 import com.ChatApplication.DTO.UserDTO;
 import com.ChatApplication.Entity.User;
 import com.ChatApplication.Enum.ChatType;
+import com.ChatApplication.Exception.ImageInvalidException;
 import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,23 +54,23 @@ public class ChatController {
                     .forEach(f -> errResponse.put(f.getField(),f.getDefaultMessage()));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errResponse);
         }
-        ChatDTO savedChat = this.chatService.createChat(createChatDTO);
+        ChatResponse savedChat = this.chatService.createChat(createChatDTO);
         return new ResponseEntity<>(savedChat, HttpStatus.OK);
     }
 
     @PostMapping("/groupChat/{chatName}")
-    public ResponseEntity<ChatDTO> createGroupChat(
+    public ResponseEntity<ChatResponse> createGroupChat(
             @PathVariable("chatName") String chatName,
             @RequestBody List<String> participantIds){
         User loggedInUser = authUtils.getLoggedInUsername();
         participantIds.add(loggedInUser.getUserId());
-        ChatDTO chatDTO = ChatDTO.builder()
+        ChatResponse chatResponse = ChatResponse.builder()
                 .chatName(chatName)
                 .participantIds(participantIds)
                 .chatType(ChatType.GROUP)
                 .createdAt(LocalDateTime.now())
                 .build();
-        ChatDTO savedGroupChat = this.chatService.createGroupChat(chatDTO);
+        ChatResponse savedGroupChat = this.chatService.createGroupChat(chatResponse);
         return ResponseEntity.ok(savedGroupChat);
     }
 
@@ -84,18 +83,18 @@ public class ChatController {
 
     // get all the chat of the user
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ChatDTO>> fetchUserChat(@PathVariable("userId") String userId){
-        List<ChatDTO> fetchedChats = this.chatService.fetchUserChats(userId);
+    public ResponseEntity<List<ChatResponse>> fetchUserChat(@PathVariable("userId") String userId){
+        List<ChatResponse> fetchedChats = this.chatService.fetchUserChats(userId);
         return ResponseEntity.ok(fetchedChats);
     }
 
     //add Participants in the
     @PatchMapping("/{chatId}/user/{userId}")
-    public ResponseEntity<ChatDTO> addParticipants(
+    public ResponseEntity<ChatResponse> addParticipants(
             @PathVariable("chatId")String chatId,
             @PathVariable("userId") String userId
     ){
-        ChatDTO updatedChat = this.chatService.addParticipants(chatId,userId);
+        ChatResponse updatedChat = this.chatService.addParticipants(chatId,userId);
         return ResponseEntity.ok(updatedChat);
     }
 
@@ -111,29 +110,29 @@ public class ChatController {
     }
 
     @PatchMapping("/deleteParticipants/{chatId}/user/{userId}")
-    public ResponseEntity<ChatDTO> removeParticipants(
+    public ResponseEntity<ChatResponse> removeParticipants(
             @PathVariable("chatId")String chatId,
             @PathVariable("userId")String userId
     ){
-        ChatDTO chatDTO = this.chatService.deleteParticipants(chatId,userId);
-        return ResponseEntity.ok(chatDTO);
+        ChatResponse chatResponse = this.chatService.deleteParticipants(chatId,userId);
+        return ResponseEntity.ok(chatResponse);
     }
 
-    @DeleteMapping("/delete/{chatId}")
-    public ResponseEntity<Map<?,?>> removeChat(
+    @DeleteMapping("/groupChat/{chatId}")
+    public ResponseEntity<Map<?,?>> deleteGroupChat(
             @PathVariable("chatId")String chatId
     ){
-        this.chatService.deleteChat(chatId);
-        return  ResponseEntity.status(HttpStatus.OK).body(Map.of("message","Chat deleted successfully."));
+        this.chatService.deleteGroupChat(chatId);
+        return  ResponseEntity.status(HttpStatus.OK).body(Map.of("message","Group chat deleted successfully."));
     }
 
     @GetMapping("/chatDetails/{chatId}")
-    public ResponseEntity<ChatDTO> getUserChat(
+    public ResponseEntity<ChatResponse> getUserChat(
             @PathVariable("chatId")String chatId
     )
     {
-        ChatDTO chatDTO = this.chatService.fetchChatById(chatId);
-        return ResponseEntity.ok(chatDTO);
+        ChatResponse chatResponse = this.chatService.fetchChatById(chatId);
+        return ResponseEntity.ok(chatResponse);
     }
 
     @GetMapping(value = "/groupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
@@ -141,7 +140,7 @@ public class ChatController {
             @RequestParam("chatId")String chatId
             ){
         String uploadDir = baseUploadDir + File.separator + "groupChat";
-        ChatDTO chatFetched = chatService.fetchChatById(chatId);
+        ChatResponse chatFetched = chatService.fetchChatById(chatId);
         String imageName = chatFetched.getChatImageUrl();
 
         if(imageName == null || imageName.trim().isEmpty()){
@@ -170,118 +169,45 @@ public class ChatController {
         }
     }
 
-    @PostMapping(value = "/uploadChatImage/{chatId}",consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Object> uploadGroupImage(
+
+    @PatchMapping("/{chatId}/uploadGroupImage/user/{userId}")
+    public ResponseEntity<?> uploadGroupImageInCloud(
             @PathVariable("chatId") String chatId,
-            @RequestParam(value = "image",required = false)MultipartFile imageFile){
-        User currentUser = authUtils.getLoggedInUsername();
-        String uploadDir = baseUploadDir + File.separator + "groupChat";
-        String imageName;
-        ChatDTO  chatDTO = chatService.fetchChatById(chatId);
-        if(!chatDTO.getAdminIds().contains(currentUser.getUserId())){
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY,"Only group admin can remove group Image."));
-        }
-        if(chatDTO.getChatType() != ChatType.GROUP){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY, "Image upload is allowed for only Group Chat"));
-        }
-        if(imageFile == null || imageFile.isEmpty()){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY,"Image file is required"));
-        }
-
-            try{
-                String currentChatImageUrl = chatDTO.getChatImageUrl();
-                if(chatDTO.getChatImageUrl() != null && !currentChatImageUrl.trim().isEmpty()){
-                    imageService.deleteImage(uploadDir,currentChatImageUrl);
-                }
-                imageName = imageService.uploadImage(uploadDir,imageFile);
-            }catch (IOException e){
-                return ResponseEntity
-                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Map.of(ERROR_KEY, e.getMessage()));
-            }catch (Exception e){
-                return ResponseEntity
-                        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Map.of(ERROR_KEY,"Unexcepted error occurred: "+e.getMessage()));
-            }
-
-        chatDTO.setChatImageUrl(imageName);
-        ChatDTO  updatedChat = chatService.updateGroupChat(chatDTO);
-        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(updatedChat);
-    }
-
-    @DeleteMapping(value = "/removeChatImage/{chatId}")
-    public ResponseEntity<Object> removeChatImage(@PathVariable("chatId")String chatId){
-        try {
-            User currentUser = authUtils.getLoggedInUsername();
-            String uploadDir = baseUploadDir + File.separator + "groupChat";
-            ChatDTO chatDTO = chatService.fetchChatById(chatId);
-            if(!chatDTO.getAdminIds().contains(currentUser.getUserId())){
-                return ResponseEntity
-                        .status(HttpStatus.FORBIDDEN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Map.of(ERROR_KEY,"Only group admin can remove group Image."));
-            }
-            if(chatDTO.getChatType() != ChatType.GROUP){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Map.of(ERROR_KEY, "Image removal is allowed for only Group Chat"));
-            }
-            if(chatDTO.getChatImageUrl() == null || chatDTO.getChatImageUrl().isEmpty()){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Map.of(ERROR_KEY,"Image file is null"));
-            }
-            this.imageService.deleteImage(uploadDir,chatDTO.getChatImageUrl());
-            chatDTO.setChatImageUrl(null);
-            ChatDTO updatedChat = chatService.updateGroupChat(chatDTO);
-            return  ResponseEntity.status(HttpStatus.OK)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(updatedChat);
-
-        }catch (Exception e){
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY,"Unexcepted error occurred: "+e.getMessage()));
+            @PathVariable("userId")String userId,
+            @RequestParam("imageFile")MultipartFile imageFile
+    ){
+        try{
+            ChatResponse chatResponse = this.chatService.updateGroupChatImageInCloud(chatId,userId,imageFile);
+            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(chatResponse);
+        }catch (IOException e){
+            throw new ImageInvalidException(String.format("Failed to update group image: %s",e.getMessage()));
         }
     }
+
+    @GetMapping("/{chatId}/fetchGroupImage")
+    public ResponseEntity<?> fetchGroupImage(
+            @PathVariable("chatId")String chatId
+    ){
+        try{
+            String secureUrl = this.chatService.fetchGroupImageSecureUrl(chatId);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Map.of(
+                            "chatId",chatId,
+                            "secureUrl",secureUrl
+                    ));
+        }catch (IOException e){
+            throw new ImageInvalidException(String.format("Failed to fetch group image: %s",e.getMessage()));
+        }
+    }
+
+
 
     @PutMapping(value = "/updateGroupChat/{chatId}")
     public ResponseEntity<Object> updateGroupChat(
             @PathVariable("chatId")String chatId,
-            @RequestParam("chatName")String chatName
+            @RequestBody ChatResponse chatResponse
     ){
-        ChatDTO databaseChat = chatService.fetchChatById(chatId);
-        User currentUser = authUtils.getLoggedInUsername();
-        if(databaseChat.getChatType() != ChatType.GROUP){
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY,"This is allowed for only Group Chat."));
-        }
-        if (chatName == null || chatName.trim().isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY, "Chat name cannot be empty"));
-        }
-        if(!databaseChat.getAdminIds().contains(currentUser.getUserId())){
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(ERROR_KEY,"Only group Admin can update the chat"));
-        }
-        databaseChat.setChatName(chatName);
-        ChatDTO updatedChat = chatService.updateGroupChat(databaseChat);
+        ChatResponse updatedChat = chatService.updateGroupChat(chatResponse);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -289,20 +215,20 @@ public class ChatController {
     }
 
     @PutMapping("/promoteUserToAdmin")
-    public ResponseEntity<ChatDTO> promoteUserToAdmin(
+    public ResponseEntity<ChatResponse> promoteUserToAdmin(
             @RequestParam("chatId")String chatId,
             @RequestParam("userId") String userId
     ){
-        ChatDTO chat = this.chatService.addAdminToChat(chatId,userId);
+        ChatResponse chat = this.chatService.addAdminToChat(chatId,userId);
         return ResponseEntity.ok(chat);
     }
 
-    @PutMapping("/removeUser")
-    public ResponseEntity<ChatDTO> removeUser(
-            @RequestParam("chatId") String chatId,
-            @RequestParam("userId")String userId
-    ){
-        ChatDTO chat= this.chatService.removeUser(chatId,userId);
-        return ResponseEntity.ok(chat);
-    }
+//    @PutMapping("/removeUser")
+//    public ResponseEntity<ChatResponse> removeUser(
+//            @RequestParam("chatId") String chatId,
+//            @RequestParam("userId")String userId
+//    ){
+//        ChatResponse chat= this.chatService.removeUser(chatId,userId);
+//        return ResponseEntity.ok(chat);
+//    }
 }

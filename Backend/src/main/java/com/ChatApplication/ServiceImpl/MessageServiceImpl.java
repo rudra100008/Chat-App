@@ -1,6 +1,6 @@
 package com.ChatApplication.ServiceImpl;
 
-import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.ChatResponse;
 import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.*;
 import com.ChatApplication.Enum.ChatType;
@@ -13,7 +13,6 @@ import com.ChatApplication.Security.AuthUtils;
 import com.ChatApplication.Service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -141,7 +140,7 @@ public class MessageServiceImpl implements MessageService {
             messagingTemplate.convertAndSendToUser(
                     userId,
                     "/queue/chat-update",
-                    modelMapper.map(updatedChat, ChatDTO.class)
+                    modelMapper.map(updatedChat, ChatResponse.class)
             );
         }
        return modelMapper.map(savedMessage, MessageDTO.class);

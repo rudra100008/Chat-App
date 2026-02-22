@@ -20,6 +20,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserDTO {
     private String userId;
     @NotBlank(message = "username cannot be blank")
@@ -42,14 +43,13 @@ public class UserDTO {
     private String profilePicture;
     private String secureUrl;
     private String publicId;
-    private String userImageUrl;
 
     @NotBlank(message = "Phone number cannot be blank")
     @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Invalid phone number format")
     private String phoneNumber;
     private UserStatus status;
     private LocalDateTime lastSeen;
-
+    @Builder.Default
     private List<String> chatIds = new ArrayList<>();
 
 }

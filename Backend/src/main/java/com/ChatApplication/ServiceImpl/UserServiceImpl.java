@@ -23,6 +23,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -201,8 +202,14 @@ public class UserServiceImpl implements UserService {
     public String getImageSecureUrlInCloud(String userId) throws IOException {
         User user = this.userRepository.findById(userId)
                 .orElseThrow(()-> new ResourceNotFoundException("User not found"));
-        if (user.getSecureUrl() != null && !user.getSecureUrl().isEmpty()) {
+        if (StringUtils.hasText(user.getSecureUrl())) {
             String url = user.getSecureUrl();
+            if (url.contains("?")) {
+                url = url.substring(0, url.indexOf("?"));
+            }
+            return url;
+        }else if(StringUtils.hasText(user.getPublicId())){
+            String url = this.cloudFileService.getFileUrl(user.getPublicId());
             if (url.contains("?")) {
                 url = url.substring(0, url.indexOf("?"));
             }

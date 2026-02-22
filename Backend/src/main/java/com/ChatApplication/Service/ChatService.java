@@ -1,41 +1,42 @@
 package com.ChatApplication.Service;
 
-import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.ChatResponse;
 import com.ChatApplication.DTO.CreateChatDTO;
 import com.ChatApplication.DTO.UserDTO;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
 public interface ChatService {
     // get all the chats of a user
-    List<ChatDTO> fetchUserChats(String userId);
+    List<ChatResponse> fetchUserChats(String userId);
     //create a chat with two users
-    ChatDTO createChat(CreateChatDTO createChatDTO);
-    ChatDTO createGroupChat(ChatDTO chatDTO);
+    ChatResponse createChat(CreateChatDTO createChatDTO);
+    ChatResponse createGroupChat(ChatResponse chatResponse);
     // add participants in the chat
-    ChatDTO addParticipants(String chatId,String userId);
+    ChatResponse addParticipants(String chatId, String userId);
     // get all the participants in the chat
     List<UserDTO> fetchChatParticipants(String chatId);
     //check if the user is in chat or not
     boolean isUserInChat(String chatId,String userId);
     //removes the participants from the chat
-    ChatDTO deleteParticipants(String chatId,String userId);
-    void deleteChat(String chatId);
+    ChatResponse deleteParticipants(String chatId, String userId);
+    void deleteGroupChat(String chatId);
     //get single chat of the user
-    ChatDTO fetchChatById(String chatId);
+    ChatResponse fetchChatById(String chatId);
     //update the group chat
-    ChatDTO updateGroupChat(ChatDTO chatDTO);
+    ChatResponse updateGroupChat(ChatResponse chatResponse);
+
     // update group chat image
-    ChatDTO updateGroupChatImageInCloud(String chatId,String userId, MultipartFile imageFile);
+    ChatResponse updateGroupChatImageInCloud(String chatId, String userId, MultipartFile imageFile)throws IOException;
+    // fetch group chat image
+    String fetchGroupImageSecureUrl(String chatId)throws IOException;
 
-    String fetchGroupImageSecureUrl(String chatId, String userId, MultipartFile imageFile);
+    ChatResponse addAdminToChat(String chatId, String userId);
 
-    ChatDTO addAdminToChat(String chatId,String userId);
-
-    ChatDTO removeUser(String chatId, String userId);
+//    ChatResponse removeUser(String chatId, String userId);
 
 }

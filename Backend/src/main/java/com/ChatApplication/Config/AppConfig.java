@@ -1,23 +1,14 @@
 package com.ChatApplication.Config;
 
-import com.ChatApplication.DTO.ChatDTO;
+import com.ChatApplication.DTO.ChatResponse;
 import com.ChatApplication.DTO.MessageDTO;
 import com.ChatApplication.Entity.Chat;
 import com.ChatApplication.Entity.Message;
-import com.ChatApplication.Entity.User;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.ChannelRegistration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
 
 @Configuration
 @RequiredArgsConstructor
@@ -34,27 +25,27 @@ public class AppConfig  {
                 .setSkipNullEnabled(true)
                 .setFieldMatchingEnabled(true);
 
-        mapper.typeMap(Chat.class,ChatDTO.class).setPostConverter(context->{
+        mapper.typeMap(Chat.class, ChatResponse.class).setPostConverter(context->{
             Chat chat = context.getSource();
-            ChatDTO chatDTO = context.getDestination();
+            ChatResponse chatResponse = context.getDestination();
 
-            chatDTO.setChatId(chat.getChatId());
-            chatDTO.setChatName(chat.getChatName());
-            chatDTO.setChatImageUrl(chat.getChatImageUrl());
-            chatDTO.setChatType(chat.getChatType());
+            chatResponse.setChatId(chat.getChatId());
+            chatResponse.setChatName(chat.getChatName());
+            chatResponse.setChatImageUrl(chat.getChatImageUrl());
+            chatResponse.setChatType(chat.getChatType());
             if(chat.getParticipantIds() != null){
-                chatDTO.setParticipantIds(chat.getParticipantIds());
+                chatResponse.setParticipantIds(chat.getParticipantIds());
             }
-            chatDTO.setCreatedAt(chat.getCreatedAt());
-            chatDTO.setLastMessage(chat.getLastMessage());
-            chatDTO.setLastMessageTime(chat.getLastMessageTime());
-            chatDTO.setAdminIds(chat.getAdminIds());
-            chatDTO.setBlockedBy(chat.getBlockedBy());
-            chatDTO.setSecureUrl(chat.getSecureUrl());
-            chatDTO.setPublicId(chat.getPublicId());
+            chatResponse.setCreatedAt(chat.getCreatedAt());
+            chatResponse.setLastMessage(chat.getLastMessage());
+            chatResponse.setLastMessageTime(chat.getLastMessageTime());
+            chatResponse.setAdminIds(chat.getAdminIds());
+            chatResponse.setBlockedBy(chat.getBlockedBy());
+            chatResponse.setSecureUrl(chat.getSecureUrl());
+            chatResponse.setPublicId(chat.getPublicId());
 
 
-            return chatDTO;
+            return chatResponse;
         });
 
         mapper.typeMap(Message.class, MessageDTO.class).setPostConverter(context ->{

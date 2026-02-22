@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChatDTO {
+public class ChatResponse {
     private String chatId;
     private String chatName;
 

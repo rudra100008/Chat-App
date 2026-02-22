@@ -35,7 +35,6 @@ public class UserController {
     @GetMapping("/current-user")
     public ResponseEntity<UserDTO> getCurrentUser(){
         UserDTO user = this.userService.fetchCurrentUser();
-        user.setUserImageUrl(getUserImageUrl(user.getUserId()));
         return ResponseEntity.ok(user);
     }
 
