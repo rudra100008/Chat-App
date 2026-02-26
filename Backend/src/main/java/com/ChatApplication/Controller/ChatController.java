@@ -195,6 +195,15 @@ public class ChatController {
                             "chatId",chatId,
                             "secureUrl",secureUrl
                     ));
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("Error", e.getMessage()));
+        }catch (org.springframework.security.access.AccessDeniedException e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("Error", e.getMessage()));
+        }catch (com.ChatApplication.Exception.ResourceNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("Error", e.getMessage()));
         }catch (IOException e){
             throw new ImageInvalidException(String.format("Failed to fetch group image: %s",e.getMessage()));
         }
