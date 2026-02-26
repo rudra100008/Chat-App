@@ -1,6 +1,4 @@
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+
 import baseUrl from "../baseUrl";
 import Message from "./chat/Message";
 

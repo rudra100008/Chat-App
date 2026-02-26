@@ -10,9 +10,13 @@ const GetGroupImage = ({ chatId, chatType, size = 40 }) => {
     const [loading, setLoading] = useState(false);
     const [isImageLoaded,setIsImageLoaded] = useState(false);
     useEffect(() => {
+        // Early return if not a group chat or missing chatId
+        if(!chatId || chatType !== "GROUP") {
+            setImageUrl(""); // Clear image URL when switching to non-group chat
+            return;
+        }
 
         const fetchGroupImage = async () => {
-            if(!chatId || chatType !== "GROUP")return
             setLoading(true);
             try {
                 const response = await axiosInterceptor.get(`/api/chats/${chatId}/fetchGroupImage`)
@@ -21,12 +25,14 @@ const GetGroupImage = ({ chatId, chatType, size = 40 }) => {
                 setImageUrl(secureUrl);
             } catch (error) {
                 console.error("Error in fetchGroupImage: ",error);
+                setImageUrl(""); // Clear on error
             } finally {
                 setLoading(false);
             }
         }
-        if (chatId) fetchGroupImage();
-    }, [chatId])
+        
+        fetchGroupImage();
+    }, [chatId, chatType])
 
     if (loading) {
         return (

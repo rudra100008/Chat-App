@@ -31,7 +31,7 @@ export const fetchChatNames = async (chats, userId) => {
 };
 
 
-export const fetchUserChats = async (userId,logout) => {
+export const fetchUserChatsService = async (userId,logout) => {
     if (!userId ) {
         throw new Error("User ID is required");
     }
@@ -51,9 +51,10 @@ export const fetchUserChats = async (userId,logout) => {
     }
 };
 
+
 export const fetchUserChatsWithNames = async (userId,router,logout) => {
     try {
-        const chats = await fetchUserChats(userId,logout);
+        const chats = await fetchUserChatsService(userId,logout);
         const chatNames = await fetchChatNames(chats, userId);
 
         return {

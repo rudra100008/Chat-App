@@ -142,7 +142,7 @@ export default function ChatContainer({
       <ChatHeader
         otherUserDetails={otherUserDetails}
         chatId={chatId}
-        userChat={userChat}
+        setOtherUserDetails={setOtherUserDetails}
         onLogout={onLogout}
         chatName={chatName}
       />

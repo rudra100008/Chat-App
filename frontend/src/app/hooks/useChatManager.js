@@ -27,7 +27,7 @@ export const useChatManager = () => {
             setChatNames(chatNames);
             setChatInfos(chats);
         } catch (error) {
-            console.log("UseChatManager: ", error.response?.data);
+            console.log("UseChatManager: ", error);
             if (error.response && error.response.status === 403) {
                 logout();
             } else {

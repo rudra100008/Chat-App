@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { WebSocketProvider } from "./context/WebSocketContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationBar from "./Component/NotificationBar";
+import { ChatDetailProvider } from "./context/ChatDetailContext";
 
 export default function RootLayout({ children }) {
   return (
@@ -20,8 +21,10 @@ export default function RootLayout({ children }) {
         <NotificationProvider>
           <AuthProvider>
             <WebSocketProvider>
-              <NotificationBar />
-              {children}
+              <ChatDetailProvider>
+                <NotificationBar />
+                {children}
+              </ChatDetailProvider>
             </WebSocketProvider>
           </AuthProvider>
         </NotificationProvider>

@@ -4,17 +4,19 @@ import GetGroupImage from "../GetGroupImage";
 import GetUserImage from "../GetUserImage";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
+import useChatDetails from "@/app/hooks/useChatDetails";
 
 export default function ChatHeader({
   otherUserDetails,
-  userChat,
   chatId,
   onLogout,
   chatName,
+  setOtherUserDetails
 }) {
   const { userId } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const menuRef = useRef(null);
+  const {userChat} = useChatDetails({chatId,userId,setOtherUserDetails});
 
 
   const handleProfileClick = useCallback(() => {
@@ -47,7 +49,7 @@ export default function ChatHeader({
         </div>
       ) : userChat.chatType === "GROUP" ? (
         <div className={style.chatHeaderInfo}>
-          <GetGroupImage chatId={chatId} chatType={userChat.chatType} />
+          <GetGroupImage chatId={userChat.chatId} chatType={userChat.chatType} />
           <p className={style.chatName}>{chatName}</p>
         </div>
       ) : (
