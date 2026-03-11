@@ -11,12 +11,11 @@ export default function ChatHeader({
   chatId,
   onLogout,
   chatName,
-  setOtherUserDetails
 }) {
   const { userId } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const menuRef = useRef(null);
-  const {userChat} = useChatDetails({chatId,userId,setOtherUserDetails});
+  const { userChat } = useChatDetails({ chatId, userId });
 
 
   const handleProfileClick = useCallback(() => {
@@ -42,7 +41,7 @@ export default function ChatHeader({
 
   return (
     <div className={style.chatHeader}>
-      {userChat.chatType === "SINGLE" ? (
+      {userChat.chatType === "SINGLE" && otherUserDetails ? (
         <div className={style.chatHeaderInfo}>
           <GetUserImage userId={otherUserDetails.userId} />
           <p className={style.chatName}>{chatName}</p>

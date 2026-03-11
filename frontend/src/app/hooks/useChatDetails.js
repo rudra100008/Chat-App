@@ -3,8 +3,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import axiosInterceptor from '../Component/Interceptor'
 import baseUrl from '../baseUrl'
+import { fetchChatDetailService } from '../services/chatServices'
 
-const useChatDetails = ({chatId, userId, setOtherUserDetails}) => {
+/**
+ * useChatDetails - Manages individual chat and user details fetching
+ * @param {string} chatId - The chat ID to fetch details for
+ * @param {string} userId - Current user ID
+ * @returns {Object} Chat details and user details
+ */
+const useChatDetails = ({ chatId, userId }) => {
     const [userChat, setUserChat] = useState({
         chatId: "",
         chatName: "",
@@ -12,21 +19,28 @@ const useChatDetails = ({chatId, userId, setOtherUserDetails}) => {
         participantIds: [],
         messageIds: []
     })
+    const [otherUserDetails, setOtherUserDetails] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
 
     // Fetch chat details
     const fetchUserChatDetails = useCallback(async () => {
-        if (!chatId ) return
+        if (!chatId) return
+        setLoading(true)
         try {
-            const response = await axiosInterceptor.get(
-                `/api/chats/chatDetails/${chatId}`)
-            setUserChat(response.data)
-        } catch (error) {
-            console.log("Error fetching chat details:", error.response?.data)
+            const data = await fetchChatDetailService(chatId)
+            setUserChat(data)
+            setError(null)
+        } catch (err) {
+            console.log("Error fetching chat details:", err.response?.data)
+            setError(err.response?.data?.message || "Failed to fetch chat details")
+        } finally {
+            setLoading(false)
         }
-    },[chatId])
+    }, [chatId])
 
     // Get other user ID (for 1-1 chats)
-    const getOtherUserId = () => {
+    const getOtherUserId = useCallback(() => {
         if (!userChat.participantIds || userChat.participantIds.length === 0) {
             return null
         }
@@ -36,37 +50,47 @@ const useChatDetails = ({chatId, userId, setOtherUserDetails}) => {
         }
         
         return userChat.participantIds.find(pId => pId !== userId)
-    }
+    }, [userChat.participantIds, userChat.chatType, userId])
 
     // Fetch other user details
-    const fetchUserDetails = useCallback( async () => {
+    const fetchUserDetails = useCallback(async () => {
         const otherUserId = getOtherUserId()
-        if (!otherUserId) return
+        if (!otherUserId) {
+            setOtherUserDetails(null)
+            return
+        }
        
         try {
             const response = await axiosInterceptor.get(
                 `${baseUrl}/api/users/${otherUserId}`
             )
             setOtherUserDetails(response.data)
-        } catch (error) {
-            console.log("Error fetching user details:", error.response?.data)
+            setError(null)
+        } catch (err) {
+            console.log("Error fetching user details:", err.response?.data)
+            setError(err.response?.data?.message || "Failed to fetch user details")
         }
-    },[setOtherUserDetails,getOtherUserId])
+    }, [getOtherUserId])
 
     // Fetch chat details when chatId changes
     useEffect(() => {
-        if (!chatId) return
         fetchUserChatDetails()
-    }, [chatId,  userId,fetchUserChatDetails])
+    }, [chatId, fetchUserChatDetails])
 
     // Fetch user details when chat details change
     useEffect(() => {
         if (userChat.chatId) {
             fetchUserDetails()
         }
-    }, [userChat])
+    }, [userChat.chatId, fetchUserDetails])
 
-    return { userChat }
+    return { 
+        userChat: userChat || {},
+        otherUserDetails: otherUserDetails || null,
+        loading,
+        error,
+        getOtherUserId
+    }
 }
 
 export default useChatDetails

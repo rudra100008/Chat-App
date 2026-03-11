@@ -5,36 +5,27 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser, faEllipsisV, faGear, faSearch, faUser, faUserGroup } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import GetUserImage from "./GetUserImage";
-import { useRouter } from "next/navigation";
-import { fetchUserChatsWithNames } from "../services/chatServices";
 import GetGroupImage from "./GetGroupImage";
 import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../context/WebSocketContext";
-import { useNotification } from "../context/NotificationContext";
+import { useChatDetailsContext } from "../context/ChatDetailContext";
 
 
 export default function UserChats({
     onChatSelect,
-    setShowSearchBox,
-    setShowChatInfoBox,
-    selectedChatInfo,
-    setSelectedChatInfo,
-    loadUserChats,
     chatNames,
-    handleChatInfoToggle,
-    handleSearchToggle,
-    isChatInfosLoading
-
+    handleChatInfoToggle
 }) {
-    const router = useRouter();
     const { userId } = useAuth();
-    const {error} = useNotification();
     const { chatInfos, userStatusMap } = useWebSocket();
+    const { chats: contextChats } = useChatDetailsContext();
     const [selectedChat, setSelectedChat] = useState(null);
     const [showbox, setShowBox] = useState(false);
-     const [activeTab, setActiveTab] = useState("all"); // all | groups | contacts
+    const [activeTab, setActiveTab] = useState("all"); // all | groups | contacts
     const [searchQuery, setSearchQuery] = useState("");
 
+    // Use WebSocket chatInfos if available, fallback to context chats
+    const displayChats = (chatInfos && chatInfos.length > 0) ? chatInfos : (contextChats || []);
 
     const getOtherUser = (chat) => {
         return chat.participantIds.filter(pIds => pIds !== userId)[0];
@@ -50,19 +41,8 @@ export default function UserChats({
         setShowBox((prevState) => !prevState);
     }
 
-    useEffect(() => {
-        if (!userId ) {
-            error("login again");
-            setTimeout(()=>{
-                router.push('/')
-            },1000)
-        }
-        loadUserChats();
-    }, [userId])
-
-
-    const filteredChats = useMemo(()=>{
-        return (chatInfos || []).filter((chat) => {
+    const filteredChats = useMemo(() => {
+        return (displayChats || []).filter((chat) => {
     
         if (activeTab === "groups" && chat.chatType !== "GROUP") return false;
         if (activeTab === "contacts" && chat.chatType !== "SINGLE") return false;
@@ -73,22 +53,7 @@ export default function UserChats({
         }
         return true;
     });
-    },[chatInfos,activeTab,searchQuery,chatNames])
-
-    if (isChatInfosLoading) {
-        return (
-            <div className={style.Container}>
-                {/* Search bar */}
-                <div className={style.searchBarRow}>
-                    <div className={style.searchBarInner}>
-                        <FontAwesomeIcon icon={faSearch} />
-                        <input className={style.searchBarInput} placeholder="Search..." value="" disabled />
-                    </div>
-                </div>
-                <p className={style.errorMessage}>Loading Chats...</p>
-            </div>
-        )
-    }
+    }, [displayChats, activeTab, searchQuery, chatNames])
 
     return (
         <div className={style.Container}>

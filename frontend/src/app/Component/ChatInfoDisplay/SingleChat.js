@@ -34,18 +34,23 @@ const SingleChat = ({ otherUserId, otherUserData, lastSeen, status, formatLastSe
                 {}, {}
             )
             const newChatName = response?.data;
+            if (!newChatName) {
+                console.error("No chat name returned from server");
+                return;
+            }
+            const updatedChatName = newChatName.chatname || newChatName;
             setLocalChatData(prev=>({
                 ...prev,
-                chatName: newChatName.chatname
+                chatName: updatedChatName
             }))
             setChatData(prev =>({
                 ...prev,
-                chatName: newChatName.chatname
+                chatName: updatedChatName
             }))
             loadUserChats();
             setShowEditChatName(false);
         }catch(error){
-            console.log(error.response.data)
+            console.log("Error updating chat name:", error.response?.data || error.message)
         }
     },[chatData, localChatData])
 

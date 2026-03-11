@@ -11,6 +11,7 @@ import { useAuth } from "./AuthContext";
 import { Client, } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import baseUrl from "../baseUrl";
+import { fetchUserChatsWithNames } from "../services/chatServices";
 
 const WebSocketContext = createContext();
 
@@ -54,6 +55,18 @@ export const WebSocketProvider = ({ children }) => {
       onConnect: () => {
         console.log("WebSocket connected successfully ");
         setIsWebSocketConnected(true);
+
+        // Load initial chats when connected
+        const loadInitialChats = async () => {
+          try {
+            const { chats, chatNames: loadedChatNames } = await fetchUserChatsWithNames(userId);
+            setChatInfos(chats);
+            setChatNames(loadedChatNames);
+          } catch (err) {
+            console.error("Error loading initial chats on WebSocket connect:", err);
+          }
+        };
+        loadInitialChats();
 
         client.subscribe("/topic/user-status", (message) => {
           try{
@@ -164,8 +177,6 @@ export const WebSocketProvider = ({ children }) => {
     document.addEventListener("visibilitychange",handleVisiblityChange)
 
     return ()=>{
-    chatNames,
-    setChatNames,
       document.removeEventListener("visibilitychange",handleVisiblityChange)
     }
   },[connectWebSocket,isWebSocketConnected,userId])
@@ -177,6 +188,8 @@ export const WebSocketProvider = ({ children }) => {
     isWebSocketConnected,
     chatInfos,
     setChatInfos,
+    chatNames,
+    setChatNames,
     userStatusMap,
     setUserStatusMap,
   };

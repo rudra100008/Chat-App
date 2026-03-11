@@ -1,172 +1,84 @@
-"use client"
-import { useCallback, useEffect, useState } from 'react'
-import style from '../Style/chat.module.css'
-import baseUrl from '../baseUrl';
-import axiosInterceptor from '../Component/Interceptor';
-import { useRouter } from 'next/navigation';
-import UserChats from '../Component/UserChats';
-import ChatContainer from '../Component/chat/ChatContainer';
-import { useAuth } from '../context/AuthContext';
-import SearchUser from '../Component/SearchUser';
-import ChatInfoDisplay from '../Component/ChatInfoDisplay';
-import { useWebSocket } from '../context/WebSocketContext';
-import { useChatManager } from '../hooks/useChatManager';
-import { fetchChatNames } from '../services/chatServices';
-import PathGuard from '../Component/PathAuth/PathGuard';
+"use client";
+import { useState } from "react";
+import style from "../Style/chat.module.css";
+import UserChats from "../Component/UserChats";
+import ChatContainer from "../Component/chat/ChatContainer";
+import { useAuth } from "../context/AuthContext";
+import SearchUser from "../Component/SearchUser";
+import ChatInfoDisplay from "../Component/ChatInfoDisplay";
+import { useWebSocket } from "../context/WebSocketContext";
+import { useChatManager } from "../hooks/useChatManager";
+import useChatDetails from "../hooks/useChatDetails";
+import PathGuard from "../Component/PathAuth/PathGuard";
+import { useRouter } from "next/navigation";
 
 export default function Chat() {
-    const route = useRouter();
-    const { userId, logout, isLoading, isInitialized } = useAuth()
-    const [error, setError] = useState(null);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [otherUserDetails, setOtherUserDetails] = useState([]);
-    const { userStatusMap, setUserStatusMap } = useWebSocket();
-    const [userChat, setUserChat] = useState({
-        chatId: "",
-        chatName: "",
-        chatType: "",
-        participantIds: [],
-    })
+  const router = useRouter();
+  const { userId, isLoading, isInitialized } = useAuth();
+  const [errorMessage, setErrorMessage] = useState("");
 
-    const {
-        chatId,
-        chatName,
-        chatNames,
-        chatInfos,
-        showSearchBox,
-        showChatInfoBox,
-        selectedChatInfo,
-        isChatInfosLoading,
+  // UI state and chat data from contexts
+  const {
+    selectedChatId,
+    showSearchBox,
+    showChatInfoBox,
+    selectedChatInfo,
+    setShowSearchBox,
+    setShowChatInfoBox,
+    setSelectedChatInfo,
+    chatNames = {},
+    handleChatInfoToggle,
+    onChatSelect,
+  } = useChatManager();
 
-        setChatId,
-        setChatName,
-        setChatNames,
-        setChatInfos,
-        setShowSearchBox,
-        setShowChatInfoBox,
-        setSelectedChatInfo,
-        setIsChatInfosLoading,
+  // Chat and user details for selected chat
+  const { userChat, otherUserDetails, getOtherUserId } = useChatDetails({
+    chatId: selectedChatId,
+    userId,
+  });
 
-        loadUserChats,
-        handleChatInfoToggle,
-        handleSearchToggle,
-        onChatSelect
-    } = useChatManager();
+  const { userStatusMap = {}, setUserStatusMap } = useWebSocket();
 
-    const otherUserId = () => {
-        return selectedChatInfo.participantIds.find(pId => pId !== userId);
-    }
+  const otherUserId = selectedChatId ? getOtherUserId() : null;
 
-    const fetchUserChatDetails = useCallback(async () => {
-        if (!chatId) return;
-        try {
-            const response = await axiosInterceptor.get(`/api/chats/chatDetails/${chatId}`)
-            setUserChat(response.data);
-        } catch (error) {
-            console.log("Error: ", error.response?.data)
-        }
-    }, [chatId])
+  const handleErrorMessage = (message) => {
+    setErrorMessage(message);
+  };
 
-    const getOtherUserId = () => {
-        if (!userChat.participantIds || userChat.participantIds.length === 0) return [];
-        if (userChat.chatType === 'GROUP') return null;
-        return userChat.participantIds.filter(pIds => pIds !== userId)[0];
-    }
+  if (!isInitialized || isLoading) {
+    return <div className={style.loading}>Loading authentication....</div>;
+  }
 
-    const fetchUserDetails = async () => {
-        const otherUserIds = getOtherUserId();
-        if (!otherUserIds) return
-        try {
-            const response = await axiosInterceptor.get(`/api/users/${otherUserIds}`, {})
-            setOtherUserDetails(response.data);
-        } catch (error) {
-            console.log("Error in fetchUserDetails: ", error.response?.data);
-            setOtherUserDetails([]);
-        }
-    }
-
-    useEffect(() => {
-        if (chatId) fetchUserChatDetails();
-    }, [userId, chatId, isLoading, fetchUserChatDetails, route])
-
-    useEffect(() => {
-        if (userChat.chatId) fetchUserDetails();
-    }, [userChat]);
-
-    // Fetch chat names for new chats received via WebSocket that don't have names yet
-    useEffect(() => {
-        const fetchNewChatNames = async () => {
-            if (!chatInfos || chatInfos.length === 0) return;
-            
-            const newChats = chatInfos.filter(chat => !chatNames[chat.chatId]);
-            if (newChats.length === 0) return;
-            
-            try {
-                const names = await fetchChatNames(newChats, userId);
-                setChatNames(prev => ({ ...prev, ...names }));
-            } catch (error) {
-                console.error("Error fetching chat names for new chats:", error);
-            }
-        };
-        
-        fetchNewChatNames();
-    }, [chatInfos, userId]);
-
-    const handleErrorMessage = (message) => {
-        setErrorMessage(message);
-    }
-
-    if (!isInitialized || isLoading) {
-        return <div className={style.loading}>Loading authentication....</div>
-    }
-    if (error) {
-        return <div className={style.error}>{error}</div>
-    }
-
-    return (
-        <PathGuard>
-        <div className={style.body}>
-            {showSearchBox && <SearchUser onError={handleErrorMessage} />}
-            {showChatInfoBox && selectedChatInfo &&
-                <ChatInfoDisplay
-                    lastSeen={userStatusMap[otherUserId()]?.lastSeen || null}
-                    status={userStatusMap[otherUserId()]?.status || null}
-                    userStatusMap={userStatusMap}
-                    setUserStatusMap={setUserStatusMap}
-                    userId={userId}
-                    chatData={selectedChatInfo}
-                    setChatData={setSelectedChatInfo}
-                    loadUserChats={loadUserChats}
-                    onClose={() => setShowChatInfoBox(false)}
-                />
-            }
-            <div className={style.UserChat}>
-                <UserChats
-                    onChatSelect={onChatSelect}
-                    setShowSearchBox={setShowSearchBox}
-                    setShowChatInfoBox={setShowChatInfoBox}
-                    setSelectedChatInfo={setSelectedChatInfo}
-                    selectedChatInfo={selectedChatInfo}
-                    chatId={chatId}
-                    userStatusMap={userStatusMap}
-                    loadUserChats={loadUserChats}
-                    chatNames={chatNames}
-                    setChatNames={setChatNames}
-                    handleChatInfoToggle={handleChatInfoToggle}
-                    handleSearchToggle={handleSearchToggle}
-                    chatInfos={chatInfos}
-                    isChatInfosLoading={isChatInfosLoading}
-                />
-            </div>
-            <ChatContainer
-                chatId={chatId}
-                userId={userId}
-                chatName={chatName}
-                setOtherUserDetails={setOtherUserDetails}
-                otherUserDetails={otherUserDetails}
-                onLogout={logout}
-            />
+  return (
+    <PathGuard>
+      <div className={style.body}>
+        {showSearchBox && <SearchUser onError={handleErrorMessage} />}
+        {showChatInfoBox && selectedChatInfo && (
+          <ChatInfoDisplay
+            lastSeen={userStatusMap[otherUserId]?.lastSeen || null}
+            status={userStatusMap[otherUserId]?.status || null}
+            userStatusMap={userStatusMap}
+            setUserStatusMap={setUserStatusMap}
+            userId={userId}
+            chatData={selectedChatInfo}
+            setChatData={setSelectedChatInfo}
+            onClose={() => setShowChatInfoBox(false)}
+          />
+        )}
+        <div className={style.UserChat}>
+          <UserChats
+            onChatSelect={onChatSelect}
+            chatNames={chatNames}
+            handleChatInfoToggle={handleChatInfoToggle}
+          />
         </div>
-        </PathGuard>
-    )
+        <ChatContainer
+          chatId={selectedChatId}
+          userId={userId}
+          chatName={chatNames[selectedChatId] || ""}
+          otherUserDetails={otherUserDetails}
+        />
+      </div>
+    </PathGuard>
+  );
 }

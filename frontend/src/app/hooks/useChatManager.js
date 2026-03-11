@@ -1,45 +1,30 @@
 
 import { useRouter } from "next/navigation"
 import { useCallback, useState } from "react"
-import { useWebSocket } from "../context/WebSocketContext";
-import { fetchUserChatsWithNames } from "../services/chatServices";
 import { useAuth } from "../context/AuthContext";
+import { useWebSocket } from "../context/WebSocketContext";
+import { useChatDetailsContext } from "../context/ChatDetailContext";
 
-
+/**
+ * useChatManager - Manages UI state for the chat interface
+ * Chat data state is managed by contexts (WebSocketContext, ChatDetailContext)
+ */
 export const useChatManager = () => {
     const router = useRouter();
-    const [isChatInfosLoading, setIsChatInfosLoading] = useState(true);
     const { userId, logout } = useAuth();
-    const [chatId,setChatId] = useState('');
-    const [chatNames, setChatNames] = useState({});
-    const [chatName,setChatName] = useState('');
+    
+    // UI state only
+    const [selectedChatId, setSelectedChatId] = useState('');
     const [showSearchBox, setShowSearchBox] = useState(false);
     const [showChatInfoBox, setShowChatInfoBox] = useState(false);
     const [selectedChatInfo, setSelectedChatInfo] = useState(null);
-    const { setChatInfos, chatInfos } = useWebSocket();
-
-
-    const loadUserChats = useCallback(async () => {
-        if (!userId) return;
-        setIsChatInfosLoading(true);
-        try {
-            const { chats, chatNames } = await fetchUserChatsWithNames(userId, router, logout);
-            setChatNames(chatNames);
-            setChatInfos(chats);
-        } catch (error) {
-            console.log("UseChatManager: ", error);
-            if (error.response && error.response.status === 403) {
-                logout();
-            } else {
-                console.log("UseChatManager: ", error.response?.data);
-            }
-        }finally{
-            setIsChatInfosLoading(false);
-        }
-    }, [userId, router, logout, setChatInfos])
-
+    
+    // Get data from contexts (read-only)
+    const { chatInfos = [], chatNames = {} } = useWebSocket();
+    const { chats = [] } = useChatDetailsContext();
 
     const handleChatInfoToggle = useCallback((chatDetails) => {
+        if (!chatDetails?.chatId) return;
         const isSame = selectedChatInfo?.chatId === chatDetails.chatId;
         if(isSame){
             setSelectedChatInfo(null);
@@ -51,35 +36,35 @@ export const useChatManager = () => {
                 chatName : chatNames[chatDetails.chatId]
             })
         }
-    },[selectedChatInfo,chatNames])
+    },[selectedChatInfo, chatNames])
+    
     const handleSearchToggle = () => {
         setShowSearchBox(prev => !prev);
     }
-    const onChatSelect = (selectedChatId,selectedChatName) => {
-        setChatId(selectedChatId);
-        setChatName(selectedChatName);
+    
+    const onChatSelect = (selectedChatId, selectedChatName) => {
+        setSelectedChatId(selectedChatId);
     } 
-    return{
-        chatId,
-        chatName,
-        chatNames,
-        chatInfos,
+    
+    return {
+        // UI state
+        selectedChatId,
         showSearchBox,
         showChatInfoBox,
         selectedChatInfo,
-        isChatInfosLoading,
-       
-
-        setChatId,
-        setChatName,
-        setChatNames,
-        setChatInfos,
+        
+        // Setters for UI state
+        setSelectedChatId,
         setShowSearchBox,
         setShowChatInfoBox,
         setSelectedChatInfo,
-        setIsChatInfosLoading,
-
-        loadUserChats,
+        
+        // Data from contexts
+        chatInfos,
+        chatNames,
+        chats,
+        
+        // UI handlers
         handleChatInfoToggle,
         handleSearchToggle,
         onChatSelect

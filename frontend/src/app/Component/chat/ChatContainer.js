@@ -8,19 +8,18 @@ import useMessages from "@/app/hooks/useMessage";
 import useChatDetails from "@/app/hooks/useChatDetails";
 import { useRouter } from "next/navigation";
 import useChatWebSocket from "@/app/hooks/useChatWebSocket";
+import { useAuth } from "@/app/context/AuthContext";
 import axiosInterceptor from "../Interceptor";
 import baseUrl from "@/app/baseUrl";
 
 export default function ChatContainer({
   chatId,
   userId,
-  setOtherUserDetails,
   otherUserDetails,
-  onLogout,
   chatName,
 }) {
-  
   const router = useRouter();
+  const { logout } = useAuth();
   const [value, setValue] = useState("");
   const [currentChatId, setCurrentChatId] = useState(null);
 
@@ -40,7 +39,7 @@ export default function ChatContainer({
     setMessages,
     router,
   });
-  const { userChat } = useChatDetails({ chatId, userId, setOtherUserDetails });
+  const { userChat } = useChatDetails({ chatId, userId });
   const fileRef = useRef(null);
 
   const onChange = (e) => {
@@ -142,8 +141,7 @@ export default function ChatContainer({
       <ChatHeader
         otherUserDetails={otherUserDetails}
         chatId={chatId}
-        setOtherUserDetails={setOtherUserDetails}
-        onLogout={onLogout}
+        onLogout={logout}
         chatName={chatName}
       />
       {chatId ? (

@@ -75,3 +75,16 @@ export const deleteGroupChat = async(chatId)=>{
         throw err;
     }
 }
+
+
+
+export const fetchChatDetailService = async (chatId) =>{
+    try{
+        const response = await axiosInterceptor.get(`/api/chats/chatDetails/${chatId}`);
+
+        return response.data;
+    }catch(err){
+        console.log("Error in fetchChatDetailService" , err);
+        throw err;
+    }
+}
