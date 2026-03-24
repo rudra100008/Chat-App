@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -18,6 +19,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.nio.file.AccessDeniedException;
 import java.util.Map;
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
@@ -31,7 +33,12 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
 
             try {
                 String jwt = null;
-                if (httpRequest.getCookies() != null) {
+                String authHeader = httpRequest.getHeader("Authorization");
+                if(authHeader != null && authHeader.startsWith("Bearer ")){
+                    jwt = authHeader.substring(7);
+                    log.info("Token found in Authorization Header");
+                }
+                if (jwt == null && httpRequest.getCookies() != null) {
                     for (Cookie cookie : httpRequest.getCookies()) {
                         if ("token".equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().trim().isEmpty()) {
                             jwt = cookie.getValue();

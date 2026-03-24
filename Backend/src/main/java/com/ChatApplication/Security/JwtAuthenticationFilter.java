@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 jwt = authHeader.substring(7);
-                log.info("✓ Token found in Authorization header");
+                log.info("Token found in Authorization header");
             }
 
             if (jwt == null && request.getCookies() != null){
