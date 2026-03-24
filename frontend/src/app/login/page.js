@@ -34,7 +34,7 @@ export default function LogInPage() {
             
             if (response?.data) {
                 const { userId ,token} = response.data;
-                login(userId);
+                login(userId,token);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");
                 router.push("/chat");

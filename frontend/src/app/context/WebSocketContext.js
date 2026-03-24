@@ -27,6 +27,8 @@ export const WebSocketProvider = ({ children }) => {
   const reconnectTimeoutRef = useRef(null);
 
   const connectWebSocket = useCallback(() => {
+    if(typeof window === 'undefined') return
+    const token = localStorage.getItem("token");
     if (!userId){
       console.log("No userId,skipping Websocket connection");
       return;
@@ -43,10 +45,10 @@ export const WebSocketProvider = ({ children }) => {
 
     const client = new Client({
       webSocketFactory: () =>
-        new SockJS(`${baseUrl}/server`, null, {
-          withCredentials: true,
-          transports: ['websocket', 'xhr-polling'],
-        }),
+        new SockJS(`${baseUrl}/server`),
+        connectHeaders: {
+          Authorization : `Bearer ${token}`
+        },
         reconnectDelay:5000, // 5 sec to automatically try to reconnect
         heartbeatIncoming:4000, // client excepts to receive a hearbeat from the server every 4 sec
         heartbeatOutgoing:4000, // client send a heartbeat to server every 4 secs
@@ -204,19 +206,7 @@ export const WebSocketProvider = ({ children }) => {
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
   if (context === undefined) {
-    console.warn("useWebSocket called outside WebSocketProvider - returning fallback");
-    return {
-      userLastSeen: null,
-      userStatus: null,
-      stompClientRef: { current: null },
-      isWebSocketConnected: false,
-      chatInfos: [],
-      setChatInfos: () => {},
-      chatNames: {},
-      setChatNames: () => {},
-      userStatusMap: {},
-      setUserStatusMap: () => {},
-    };
+    throw new Error("useWebSocket must be used within WebSocketProvider.");
   }
   return context;
 };

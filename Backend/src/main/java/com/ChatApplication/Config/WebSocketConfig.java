@@ -33,11 +33,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
          registry.addEndpoint("/server")
                  .addInterceptors(handshakeInterceptor)
-                 .setAllowedOriginPatterns("*")
+                 .setAllowedOriginPatterns("http://localhost:3000")
                  .withSockJS()
-                 .setWebSocketEnabled(true)
-                 .setSuppressCors(false)
-                 .setSessionCookieNeeded(true);
+                 .setSessionCookieNeeded(false);
     }
 
 
