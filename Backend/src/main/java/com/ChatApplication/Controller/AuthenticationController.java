@@ -9,12 +9,7 @@ import com.ChatApplication.Repository.UserRepository;
 import com.ChatApplication.Security.CustomUserDetailService;
 import com.ChatApplication.Security.JwtAuthenticationSuccessHandler;
 import com.ChatApplication.Security.JwtService;
-import com.ChatApplication.Service.CloudFileService;
 import com.ChatApplication.Service.UserService;
-import com.ChatApplication.TwoFactorAuth.TwoFactorAuthService;
-import com.ChatApplication.TwoFactorAuth.TwoFactorRequest;
-import com.ChatApplication.TwoFactorAuth.TwoFactorResponse;
-import com.ChatApplication.TwoFactorAuth.TwoFactorVerification;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,7 +42,6 @@ import java.util.Optional;
 public class AuthenticationController {
     private final UserService userService;
     private final JwtService jwtService;
-    private final TwoFactorAuthService twoFactorAuthService;
     private final CustomUserDetailService userDetailsService;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
@@ -153,71 +147,9 @@ public ResponseEntity login(
     }
 }
 
-    @PostMapping("/login-phone")
-    public ResponseEntity<?> loginPhone(
-            @Valid @RequestBody TwoFactorRequest request,
-            BindingResult result
-    )
-    {
-        if(result.hasErrors()){
-            Map<String,Object> error = new HashMap<>();
-            result.getFieldErrors().forEach(f-> error.put(f.getField(),f.getDefaultMessage()));
-            return ResponseEntity.badRequest().body(error);
-        }
-        boolean initiated = this.twoFactorAuthService.initiateVerification(request.getPhoneNumber());
 
-        TwoFactorResponse response = new TwoFactorResponse();
-        response.setPhoneNumber(request.getPhoneNumber());
-        response.setMessage(initiated ? "Verification code sent successfully":"Failed to send verification code");
-        response.setPhoneVerified(false);
-        response.setTwoFactorEnabled(false);
-        return ResponseEntity.ok(response);
-    }
 
-    @PostMapping("/verify-phone")
-    public ResponseEntity<?> verifyVerificationCode(
-            @Valid @RequestBody TwoFactorVerification verificationRequest,
-            BindingResult result,
-            HttpServletResponse servletResponse
-    )
-    {
-        if(result.hasErrors()){
-            Map<String,Object> errorRes = new HashMap<>();
-            result.getFieldErrors()
-                    .forEach(fieldError -> errorRes.put(fieldError.getField(),fieldError.getDefaultMessage()));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
-        }
-        boolean verified = this.twoFactorAuthService
-                .verifyCode(verificationRequest.getPhoneNumber(),verificationRequest.getVerificationCode());
 
-        if (!verified) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Verification code is incorrect"));
-        }
-
-        User user = this.userService.saveByPhoneNumber(verificationRequest.getPhoneNumber());
-        UserDetails userDetails = this.userDetailsService.loadUserByUsername(user.getPhoneNumber());
-        String token = this.jwtService.generateToken(userDetails);
-
-        Cookie cookie = new Cookie("token",token);
-        cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60);
-        cookie.setSecure(false);
-        cookie.setHttpOnly(true);
-
-        servletResponse.addCookie(cookie);
-        userService.updateLastSeen(user.getUserId());
-        userService.updateUserStatus(user.getUserId(), UserStatus.ONLINE);
-        TwoFactorResponse response = TwoFactorResponse.builder()
-                .phoneVerified(true)
-                .twoFactorEnabled(true)
-                .message("Phone Number verified successfully")
-                .phoneVerifiedAt(LocalDateTime.now())
-                .phoneNumber(verificationRequest.getPhoneNumber())
-                .build();
-
-        return  ResponseEntity.status(HttpStatus.OK).body(response);
-    }
 
 
     @GetMapping("/logout")

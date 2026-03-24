@@ -12,6 +12,7 @@ import Image from "next/image";
 import styles from "./profile.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faArrowLeft,
   faBell,
   faChevronRight,
   faCog,
@@ -22,8 +23,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import GetUserImage from "../Component/GetUserImage";
 import PathGuard from "../Component/PathAuth/PathGuard";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { userId, logout, isLoading } = useAuth();
   const { userLastSeen, userStatus } = useWebSocket();
   const [profile, setProfile] = useState({});
@@ -142,6 +145,16 @@ export default function ProfilePage() {
                   <p className={styles.userEmail}>{profile?.email}</p>
                 </div>
               </div>
+
+              <div className={styles.menuDivider} />
+              
+              <button
+                className={styles.backBtn}
+                onClick={() => router.push("/chat")}
+              >
+                <FontAwesomeIcon icon={faArrowLeft} />
+                <span>Back to Chat</span>
+              </button>
 
               <div className={styles.menuDivider} />
 
