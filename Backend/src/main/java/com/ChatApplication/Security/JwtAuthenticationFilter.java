@@ -32,6 +32,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException
     {
         try{
+
+            if(request.getMethod().equalsIgnoreCase("OPTIONS")){
+                filterChain.doFilter(request,response);
+                return;
+            }
             List<String> allowedPaths = List.of("/auth/signup", "/auth/login");
             String path = request.getServletPath();
 
