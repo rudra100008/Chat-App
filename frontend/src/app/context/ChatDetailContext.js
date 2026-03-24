@@ -2,6 +2,7 @@
 import { createContext, useState, useEffect, useContext } from "react";  // ← Consistent imports
 import { fetchUserChatsService } from "../services/chatServices";
 import { useAuth } from "./AuthContext";
+import { styles } from '@/app/Style/pathguard.module.css';
 
 const chatDetailContext = createContext();
 
@@ -9,22 +10,34 @@ const chatDetailContext = createContext();
 export const ChatDetailProvider = ({ children }) => {
     // all chats of a user
     const [chats, setChats] = useState([]);
-    const { userId, logout } = useAuth();
+    const { userId, logout,isAuthenticated,isLoading } = useAuth();
     
     const getChats =  async () => {
-        if (!userId) return;
+        if (!isAuthenticated || !userId){
+            console.log("Not Authenticated, skipping getChats");
+        }
+
         try {
             const data = await fetchUserChatsService(userId, logout);
             console.log("ChatDetailContext - fetched chats: ", data)
             setChats(data);
         } catch(err) {
             console.error("Error in getChats: ", err.response?.data || err.message);
+
+            if(err.reponse?.status === 401 && err.response?.data?.error === 'token_expired'){
+                console.log("Token expired during chat fetch,logging out");
+                logout();
+            }
         }
     }
 
     useEffect(() => {
-        getChats();
-    }, [userId])
+        if(isAuthenticated && userId){
+            getChats();
+        }else{
+            setChats([]);
+        }
+    }, [userId,isAuthenticated])
 
     const value = {
         chats,

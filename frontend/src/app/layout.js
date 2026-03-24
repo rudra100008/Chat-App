@@ -1,11 +1,49 @@
-import localFont from "next/font/local";
+"use client"
 import "./globals.css"; // Import the AuthProvider
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WebSocketProvider } from "./context/WebSocketContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationBar from "./Component/NotificationBar";
 import { ChatDetailProvider } from "./context/ChatDetailContext";
 
+
+
+function ConditionalWebSocket({children}){
+
+  const {isAuthenticated,isLoading} = useAuth();
+
+  if(isLoading){
+    return <div>Loading....</div>
+  }
+
+  if(isAuthenticated){
+    return (
+      <WebSocketProvider>
+        <ChatDetailProvider>
+        {children}
+        </ChatDetailProvider>
+      </WebSocketProvider>
+    )
+  }
+
+  return <>{children}</>
+}
+
+function AppProvider({ children }){
+
+  return (
+    <NotificationProvider>
+      <AuthProvider>
+        
+          <ConditionalWebSocket>
+            <NotificationBar />
+            {children}
+          </ConditionalWebSocket>
+        
+      </AuthProvider>
+    </NotificationProvider>
+  )
+}
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
@@ -18,16 +56,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <div id="portal-root" />
-        <NotificationProvider>
-          <AuthProvider>
-            <WebSocketProvider>
-              <ChatDetailProvider>
-                <NotificationBar />
-                {children}
-              </ChatDetailProvider>
-            </WebSocketProvider>
-          </AuthProvider>
-        </NotificationProvider>
+        <AppProvider>{children}</AppProvider>
       </body>
     </html>
   );

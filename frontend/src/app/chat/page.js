@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import style from "../Style/chat.module.css";
 import UserChats from "../Component/UserChats";
 import ChatContainer from "../Component/chat/ChatContainer";
@@ -14,9 +14,18 @@ import { useRouter } from "next/navigation";
 
 export default function Chat() {
   const router = useRouter();
-  const { userId, isLoading, isInitialized } = useAuth();
+  const { userId, isLoading, isInitialized, isAuthenticated } = useAuth();
   const [errorMessage, setErrorMessage] = useState("");
 
+  if (!isInitialized || isLoading) {
+    return <div className={style.loading}>Loading authentication....</div>;
+  }
+
+  if (!isAuthenticated) {
+    // Redirect immediately without rendering any hooks
+    router.push("/");
+    return <div className={style.loading}>Redirecting to login...</div>;
+  }
   // UI state and chat data from contexts
   const {
     selectedChatId,
@@ -44,10 +53,6 @@ export default function Chat() {
   const handleErrorMessage = (message) => {
     setErrorMessage(message);
   };
-
-  if (!isInitialized || isLoading) {
-    return <div className={style.loading}>Loading authentication....</div>;
-  }
 
   return (
     <PathGuard>

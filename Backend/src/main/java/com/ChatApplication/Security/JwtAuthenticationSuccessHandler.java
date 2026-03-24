@@ -51,6 +51,7 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
         res.put("username",userDetails.getUsername());
         res.put("userId",user.getUserId());
         res.put("message","Login Successful");
+        res.put("token",token);
 
         request.setAttribute("AUTH_RESPONSE_DATA",res);
     }

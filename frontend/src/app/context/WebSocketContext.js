@@ -204,7 +204,19 @@ export const WebSocketProvider = ({ children }) => {
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
   if (context === undefined) {
-    throw new Error("useWebSocket must be used within WebSocketProvider.");
+    console.warn("useWebSocket called outside WebSocketProvider - returning fallback");
+    return {
+      userLastSeen: null,
+      userStatus: null,
+      stompClientRef: { current: null },
+      isWebSocketConnected: false,
+      chatInfos: [],
+      setChatInfos: () => {},
+      chatNames: {},
+      setChatNames: () => {},
+      userStatusMap: {},
+      setUserStatusMap: () => {},
+    };
   }
   return context;
 };

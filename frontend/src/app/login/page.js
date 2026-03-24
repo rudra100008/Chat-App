@@ -33,7 +33,7 @@ export default function LogInPage() {
             );
             
             if (response?.data) {
-                const { userId } = response.data;
+                const { userId ,token} = response.data;
                 login(userId);
                 setUser({ userName: "", password: "" });
                 console.log("Login Successfully");

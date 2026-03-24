@@ -13,33 +13,52 @@ export const AuthProvider = ({ children }) => {
   const [tokenValidationList, setTokenValidationList] = useState({});
 
   useEffect(() => {
+    const validateAuth = async () =>{
     if (typeof window !== "undefined") {
       const storedUserId = localStorage.getItem("userId");
 
       if (storedUserId) {
-        setUserId(storedUserId);
+        try{
+          const isValid = await isTokenValidService();
+          if(isValid && isValid.isTokenValid){
+            setUserId(storedUserId);
+          }else{
+            console.log("Token expired, clearing localStorage")
+            localStorage.removeItem("userId");
+          }
+        }catch(err){
+          console.log("Error in validating token",err);
+          localStorage.removeItem("userId");
+          localStorage.removeItem("token")
+        }
       }
     }
-    setIsLoading(false);
+      setIsLoading(false);
     setIsInitialized(true);
+  }
+
+
+  validateAuth();
   }, []);
 
-  const login = (newUserId) => {
+  const login = (newUserId,token) => {
     if (typeof window === "undefined") return;
     localStorage.setItem("userId", newUserId);
+    localStorage.setItem("token",token);
     setUserId(newUserId);
   };
 
   const logout = async() => {
     if (typeof window !== "undefined") {
       try {
-        const data = await logoutService();
-        console.log(data.message);
-        localStorage.removeItem("userId");
-        setUserId("");
-        router.push("/");
+        await logoutService();
       } catch (err) {
         console.error("Error in logout(): ", err.response.data);
+      }finally{
+        localStorage.removeItem("userId");
+        localStorage.removeItem("token");
+        setUserId("");
+        router.push("/");
       }
     }
   };

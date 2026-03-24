@@ -1,4 +1,3 @@
-
 import baseUrl from "../baseUrl";
 import Message from "./chat/Message";
 
@@ -16,13 +15,21 @@ const axiosInterceptor = axios.create({
 
 axiosInterceptor.interceptors.request.use(
   (config) => {
+    console.log("Request URL:", config.url);
+    console.log("With credentials:", config.withCredentials);
+    const token = localStorage.getItem("token");
+    console.log("hasToken: ", token !== null);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log("✓ Authorization header added to request");
+    }
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
-export const setUpAxiosInterceptor = () => {
+
   axiosInterceptor.interceptors.response.use(
     (response) => {
       return response;
@@ -44,8 +51,8 @@ export const setUpAxiosInterceptor = () => {
         console.log(error.response);
       }
       return Promise.reject(error);
-    }
+    },
   );
-};
+
 
 export default axiosInterceptor;

@@ -26,12 +26,7 @@ export default function PathGuard({children}) {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className={styles.loadingSection}>
-        <p>Please login to access this page</p>
-        <p className={styles.loading}>Redirecting to login...</p>
-      </div>
-    );
+    return null;
   }
 
   return <>{children}</>
