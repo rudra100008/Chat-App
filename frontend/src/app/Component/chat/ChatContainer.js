@@ -21,6 +21,7 @@ export default function ChatContainer({
   const { logout } = useAuth();
   const [value, setValue] = useState("");
   const [currentChatId, setCurrentChatId] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
   const {
     messages,
@@ -49,38 +50,35 @@ export default function ChatContainer({
     fileRef.current.click();
   };
 
-  const handleAttachmentChange = async (e) => {
-    const file = e.target.files[0];
+ const handleAttachmentChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const formData = new FormData();
-    formData.append("senderId", userId);
-    formData.append("chatId", chatId);
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("senderId", userId);
+  formData.append("chatId", chatId);
+  formData.append("file", file);
 
-    if (file) {
-      await axiosInterceptor
-        .post(`/api/attachments/upload`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch((error) => {
-          if (error.response) {
-            console.log("Backend error:", error.response.data);
-          } else if (error.request) {
-            alert(
-              "Upload failed: File may be larger than 25MB or server did not respond.",
-            );
-            console.error("No response received:", error.message);
-          } else {
-            console.error("Error in setting up the request:", error.message);
-          }
-        });
+  setIsSending(true);
+  try {
+    const response = await axiosInterceptor.post(`/api/attachments/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    console.log(response.data);
+  } catch (error) {
+    if (error.response) {
+      console.log("Backend error:", error.response.data);
+    } else if (error.request) {
+      alert("Upload failed: File may be larger than 25MB or server did not respond.");
+      console.error("No response received:", error.message);
+    } else {
+      console.error("Error in setting up the request:", error.message);
     }
-  };
+  } finally {
+    setIsSending(false);
+    e.target.value = ""; // reset file input so same file can be re-uploaded
+  }
+};
 
   useEffect(() => {
     if (chatId && chatId !== currentChatId) {
@@ -89,48 +87,30 @@ export default function ChatContainer({
     }
   }, [chatId, currentChatId]);
 
-  const onSend = useCallback(() => {
-    console.log("=== SEND MESSAGE DEBUG ===");
-    console.log("message send:", value);
-    console.log("connected:", connected);
-    console.log("chatId:", chatId);
+ const onSend = useCallback(() => {
+  if (!value.trim() || !connected) return;
 
-    if (!value.trim() || !connected) {
-      console.log("Early return: no value or not connected");
-      return;
-    }
+  const messageDTO = {
+    senderId: userId,
+    chatId: chatId,
+    content: value.trim(),
+  };
+  const chatClient = stompClient;
+  if (!chatClient?.active) return;
 
-    const messageDTO = {
-      senderId: userId,
-      chatId: chatId,
-      content: value.trim(),
-    };
-    const chatClient = stompClient;
-
-    console.log("Chat client details:", {
-      exists: !!chatClient,
-      active: chatClient?.active,
-      connected: chatClient?.connected,
+  setIsSending(true);
+  try {
+    chatClient.publish({
+      destination: "/app/chat.sendMessage",
+      body: JSON.stringify(messageDTO),
     });
-
-    if (!chatClient?.active) {
-      console.log("Chat client not ready");
-      return;
-    }
-
-    try {
-      console.log("Sending message via chat client:", messageDTO);
-      chatClient.publish({
-        destination: "/app/chat.sendMessage",
-        body: JSON.stringify(messageDTO),
-      });
-
-      console.log("Message sent successfully");
-      setValue("");
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  }, [value, connected, chatId, userId, stompClient]);
+    setValue("");
+  } catch (error) {
+    console.error("Failed to send message:", error);
+  } finally {
+    setIsSending(false);
+  }
+}, [value, connected, chatId, userId, stompClient]);
 
   if (error) {
     return <div className={style.error}>{error}</div>;
@@ -163,6 +143,7 @@ export default function ChatContainer({
             handleAttachmentChange={handleAttachmentChange}
             handleAttachmentClick={handleAttachmentClick}
             connected={connected}
+            isSending={isSending} 
           />
         </>
       ) : (
