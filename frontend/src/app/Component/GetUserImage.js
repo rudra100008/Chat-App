@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import baseUrl from "../baseUrl";
 import axiosInterceptor from "./Interceptor";
 import { useAuth } from "../context/AuthContext";
 import style from "../Style/image.module.css";

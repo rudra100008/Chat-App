@@ -9,8 +9,6 @@ import {
 } from "react";
 import { useAuth } from "./AuthContext";
 import { Client, } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
-import baseUrl from "../baseUrl";
 import { fetchUserChatsWithNames } from "../services/chatServices";
 
 const WebSocketContext = createContext();

@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import style from '../../Style/attachment.module.css'
 import { faFile } from '@fortawesome/free-solid-svg-icons';
 import axiosInterceptor from '../Interceptor';
-import baseUrl from '@/app/baseUrl';
 import { useAuth } from '@/app/context/AuthContext';
 
 const AttachmentDisplay = ({ message }) => {
@@ -14,8 +13,8 @@ const AttachmentDisplay = ({ message }) => {
 
     const downloadAttachment = async () =>{
         console.log("Downloading: ",message.attachment.url);
-        console.log("Full URL:", `${baseUrl}/${message.attachment?.url}`);
-        await axiosInterceptor.get(`${baseUrl}/${message.attachment.url}`,{
+        console.log("Full URL:", `/${message.attachment?.url}`);
+        await axiosInterceptor.get(`/${message.attachment.url}`,{
             responseType:'blob'
         }).then((res)=>{
             const blob = res.data;

@@ -2,7 +2,6 @@
 "use client"
 import { useState, useEffect, useCallback } from 'react'
 import axiosInterceptor from '../Component/Interceptor'
-import baseUrl from '../baseUrl'
 import { fetchChatDetailService } from '../services/chatServices'
 
 /**
@@ -62,7 +61,7 @@ const useChatDetails = ({ chatId, userId }) => {
        
         try {
             const response = await axiosInterceptor.get(
-                `${baseUrl}/api/users/${otherUserId}`
+                `/api/users/${otherUserId}`
             )
             setOtherUserDetails(response.data)
             setError(null)

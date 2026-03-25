@@ -3,7 +3,6 @@ import Image from "next/image";
 import style from "../Style/image.module.css";
 import { useEffect, useState } from "react";
 import axiosInterceptor from "./Interceptor";
-import baseUrl from "../baseUrl";
 import { useAuth } from "../context/AuthContext";
 const GetGroupImage = ({ chatId, chatType, size = 40 }) => {
     const [imageUrl, setImageUrl] = useState("");

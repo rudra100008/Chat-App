@@ -1,6 +1,5 @@
 "use client"
 import { faL } from "@fortawesome/free-solid-svg-icons";
-import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 
 const { useState, useRef, useCallback, useEffect } = require("react")

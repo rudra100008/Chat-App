@@ -5,7 +5,6 @@ import GetUserImage from '../GetUserImage';
 import { faClock, faEnvelope, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axiosInterceptor from '../Interceptor';
-import baseUrl from '@/app/baseUrl';
 import { useAuth } from '@/app/context/AuthContext';
 
 
@@ -30,7 +29,7 @@ const SingleChat = ({ otherUserId, otherUserData, lastSeen, status, formatLastSe
     const handleUpdateChatName = useCallback(async () =>{
         try{
             const response = await axiosInterceptor.put(
-                `${baseUrl}/api/chatName/updateChatName/${userId}/chat/${chatData.chatId}?chatName=${encodeURIComponent(localChatData.chatName)}`,
+                `/api/chatName/updateChatName/${userId}/chat/${chatData.chatId}?chatName=${encodeURIComponent(localChatData.chatName)}`,
                 {}, {}
             )
             const newChatName = response?.data;

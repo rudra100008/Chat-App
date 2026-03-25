@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import useChatWebSocket from "@/app/hooks/useChatWebSocket";
 import { useAuth } from "@/app/context/AuthContext";
 import axiosInterceptor from "../Interceptor";
-import baseUrl from "@/app/baseUrl";
 
 export default function ChatContainer({
   chatId,
@@ -60,7 +59,7 @@ export default function ChatContainer({
 
     if (file) {
       await axiosInterceptor
-        .post(`${baseUrl}/api/attachments/upload`, formData, {
+        .post(`/api/attachments/upload`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },

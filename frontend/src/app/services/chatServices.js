@@ -1,5 +1,4 @@
 // services/chatService.js
-import baseUrl from "../baseUrl";
 import axiosInterceptor from "../Component/Interceptor";
 
 

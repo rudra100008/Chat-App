@@ -4,7 +4,6 @@ import style from "../Style/chatInfoDisplay.module.css"
 import { faClose, faEnvelope, faPhone } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
 import axiosInterceptor from "./Interceptor";
-import baseUrl from "../baseUrl";
 import { useWebSocket } from "../context/WebSocketContext";
 import SingleChat from "./ChatInfoDisplay/SingleChat";
 import GroupChat from "./ChatInfoDisplay/GroupChat";
@@ -34,7 +33,7 @@ const ChatInfoDisplay = ({ userId, chatData, setChatData, onClose, lastSeen, sta
     const fetchOtherUser = async () => {
         const otherUserId = chatData.participantIds.find(pId => pId !== userId);
         try {
-            const response = await axiosInterceptor.get(`${baseUrl}/api/users/${otherUserId}`)
+            const response = await axiosInterceptor.get(`/api/users/${otherUserId}`)
             console.log(response.data);
             setUserStatusMap(prev => ({
                 ...prev,

@@ -5,7 +5,6 @@ import style from '../Style/search.module.css'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import axiosInterceptor from "./Interceptor";
-import baseUrl from "../baseUrl";
 import ErrorPrompt from "./ErrorPrompt";
 
 export default function SearchUser({ onError }) {

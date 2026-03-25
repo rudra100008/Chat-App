@@ -10,7 +10,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import axiosInterceptor from "../Interceptor";
-import baseUrl from "@/app/baseUrl";
 import ErrorPrompt from "../ErrorPrompt";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchUserData } from "@/app/services/userService";
@@ -48,7 +47,7 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
       const formData = new FormData();
       formData.append("imageFile", file);
       await axiosInterceptor
-        .patch(`${baseUrl}/api/chats/${chatData.chatId}/uploadGroupImage/user/${userId}`, formData, {
+        .patch(`/api/chats/${chatData.chatId}/uploadGroupImage/user/${userId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })
         .then((res) => {
@@ -79,7 +78,7 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
     }
    await axiosInterceptor
       .put(
-        `${baseUrl}/api/chats/updateGroupChat/${chatData.chatId}`,
+        `/api/chats/updateGroupChat/${chatData.chatId}`,
         chatResponse, {}
       )
       .then((response) => {

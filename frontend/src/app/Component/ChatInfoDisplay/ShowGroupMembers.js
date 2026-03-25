@@ -3,7 +3,6 @@ import { useAuth } from "@/app/context/AuthContext";
 import style from "../../Style/chatInfoDisplay.module.css";
 import { useCallback, useEffect, useState } from "react";
 import axiosInterceptor from "../Interceptor";
-import baseUrl from "@/app/baseUrl";
 import GetUserImage from "../GetUserImage";
 import MemberDetail from "./MemberDetail";
 const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
@@ -19,7 +18,7 @@ const ShowGroupMembers = ({ chatData, setChatData, userStatusMap }) => {
     const fetchParticipants = async () => {
         try {
             const requests = chatData?.participantIds.map((pId) =>
-                axiosInterceptor.get(`${baseUrl}/api/users/${pId}`, {
+                axiosInterceptor.get(`/api/users/${pId}`, {
                     
                 })
             )

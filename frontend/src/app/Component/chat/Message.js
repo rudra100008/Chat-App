@@ -4,7 +4,6 @@ import style from '../../Style/chat.module.css'
 import SingleChatMessage from './SingleChatMessage';
 import GroupChatMessage from './GroupChatMessage';
 import axiosInterceptor from '../Interceptor';
-import baseUrl from '@/app/baseUrl';
 
 export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, initialLoad }) {
     const messageEndRef = useRef(null);

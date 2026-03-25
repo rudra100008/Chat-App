@@ -3,8 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import style from '../../Style/chatInput.module.css'
 import { faPaperclip } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useRef } from 'react';
-import axiosInterceptor from '../Interceptor';
-import baseUrl from '@/app/baseUrl';
 import { useAuth } from '@/app/context/AuthContext';
 
 const ChatInput = ({ value, onSend, onChange, fileRef, handleAttachmentChange, handleAttachmentClick, connected }) => {
