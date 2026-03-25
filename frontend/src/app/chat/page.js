@@ -52,11 +52,14 @@ export default function Chat() {
 
   const handleErrorMessage = (message) => {
     setErrorMessage(message);
+    // Auto-clear after 5 seconds
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   return (
     <PathGuard>
       <div className={style.body}>
+        {errorMessage && <div className={style.error}>{errorMessage}</div>}
         {showSearchBox && <SearchUser onError={handleErrorMessage} />}
         {showChatInfoBox && selectedChatInfo && (
           <ChatInfoDisplay

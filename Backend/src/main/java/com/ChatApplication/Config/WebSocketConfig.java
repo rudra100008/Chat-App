@@ -33,7 +33,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
          registry.addEndpoint("/server")
                  .addInterceptors(handshakeInterceptor)
-                 .setAllowedOriginPatterns("*");
+                 .setAllowedOriginPatterns("https://chat-app-pied-pi-36.vercel.app/");
     }
 
 
