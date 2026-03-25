@@ -23,7 +23,16 @@ public class CloudFileServiceImpl implements CloudFileService {
     private static final Set<String> DEFAULT_IMAGES = Set.of("default.png", "defaultGroupChat.jpg");
 
     private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final long MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
+    private static final Map<String, List<String>> ALLOWED_ATTACHMENT = new HashMap<>();
+    static{
+        ALLOWED_ATTACHMENT.put("documents", List.of("pdf", "doc", "docx", "txt", "rtf"));
+        ALLOWED_ATTACHMENT.put("presentations", List.of("ppt", "pptx"));
+        ALLOWED_ATTACHMENT.put("images", List.of("jpg", "jpeg", "png", "gif", "bmp", "svg"));
+        ALLOWED_ATTACHMENT.put("audio", List.of("mp3", "wav", "aac", "flac"));
+        ALLOWED_ATTACHMENT.put("video", List.of("mp4", "avi", "mkv", "mov", "wmv"));
+    }
     @Value("${publicId.default.userImage}")
     private String userImagePublicId;
     @Value("${publicId.default.groupChat}")
@@ -118,6 +127,64 @@ public class CloudFileServiceImpl implements CloudFileService {
         return MediaType.IMAGE_JPEG;
     }
 
+    @Override
+    public String uploadAttachment(String folder, MultipartFile file) throws IOException {
+        CloudinaryResponse response = uploadAttachmentWithDetails(folder, file);
+        return response.secureUrl();
+    }
+
+    @Override
+    public CloudinaryResponse uploadAttachmentWithDetails(String folder, MultipartFile file) throws IOException {
+        validateAttachment(file);
+        String publicId = generatePublicId(file);
+
+        // Determine resource_type based on file extension
+        String extension = getFileExtension(file.getOriginalFilename());
+        String resourceType = resolveResourceType(extension);
+
+        Map<String, Object> uploadOptions = new HashMap<>();
+        if (folder != null && !folder.isEmpty()) {
+            uploadOptions.put("folder", folder);
+        }
+        uploadOptions.put("public_id", publicId);
+        uploadOptions.put("resource_type", resourceType);
+
+        Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                file.getBytes(),
+                uploadOptions
+        );
+
+        return new CloudinaryResponse(
+                (String) uploadResult.get("public_id"),
+                (String) uploadResult.get("secure_url"),
+                (String) uploadResult.get("url"),
+                (String) uploadResult.get("folder"),
+                file.getOriginalFilename()
+        );
+    }
+
+    @Override
+    public String deleteAttachment(String publicId) throws IOException, Exception {
+        if (publicId == null || publicId.trim().isEmpty()) {
+            return "Failed to delete: publicId cannot be null or empty";
+        }
+
+        // Try deleting as each resource type since attachments can be any type
+        String[] resourceTypes = {"image", "video", "raw"};
+        for (String resourceType : resourceTypes) {
+            Map<?, ?> deleteResult = cloudinary.uploader().destroy(
+                    publicId,
+                    ObjectUtils.asMap("resource_type", resourceType)
+            );
+            String result = (String) deleteResult.get("result");
+            if ("ok".equals(result)) {
+                return "Attachment deleted successfully: " + publicId;
+            }
+        }
+
+        return "Failed to delete attachment: " + publicId;
+    }
+
 
     // helper method
     private void validateImage(MultipartFile file){
@@ -142,7 +209,37 @@ public class CloudFileServiceImpl implements CloudFileService {
         }
 
     }
+    private void validateAttachment(MultipartFile file){
+        if( file == null ||file.isEmpty()){
+            throw new RuntimeException("File cannot be empty");
+        }
+        if(file.getSize()>MAX_FILE_SIZE){
+            throw new RuntimeException("File cannot be large cannot than 25MB");
+        }
+        String filename = file.getOriginalFilename();
+        if(filename == null || filename.trim().isEmpty()){
+            throw new RuntimeException("File name cannot be empty");
+        }
+        String extension = getFileExtension(filename);
+        if (ALLOWED_ATTACHMENT.values().stream().noneMatch(list -> list.contains(extension))){
+            throw new RuntimeException(String.format("%s is not allowed", extension));
+        }
+    }
 
+
+    private String resolveResourceType(String extension) {
+        List<String> videoExtensions = List.of("mp4", "avi", "mkv", "mov", "wmv");
+        List<String> audioExtensions = List.of("mp3", "wav", "aac", "flac");
+        List<String> imageExtensions = List.of("jpg", "jpeg", "png", "gif", "bmp", "svg");
+
+        if (videoExtensions.contains(extension) || audioExtensions.contains(extension)) {
+            return "video"; // Cloudinary uses "video" for both video and audio
+        } else if (imageExtensions.contains(extension)) {
+            return "image";
+        } else {
+            return "raw"; // for documents: pdf, doc, ppt, txt, etc.
+        }
+    }
     private String getFileExtension(String fileName){
         int lastDotIndex = fileName.lastIndexOf(".");
         if(lastDotIndex == -1 || lastDotIndex == fileName.length() - 1){

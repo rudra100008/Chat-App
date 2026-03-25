@@ -16,4 +16,8 @@ public interface CloudFileService {
     String deleteImage(String publicId)throws IOException;
     CloudinaryFileInfo getFileInfoByPublicId(String publicId) throws IOException,Exception;
     MediaType determineMediaType(String fileName);
+
+    String uploadAttachment(String folder,MultipartFile file)throws IOException;
+    CloudinaryResponse uploadAttachmentWithDetails(String folder, MultipartFile file)throws IOException;
+    String deleteAttachment(String publicId)throws IOException,Exception;
 }

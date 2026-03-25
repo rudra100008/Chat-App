@@ -19,6 +19,8 @@ public class Attachment {
     private String attachmentId;
     private String fileName;
     private String fileType;
+    private String secureUrl;
+    private String publicId;
 
     @JsonProperty("url")
     public String getUrl(){

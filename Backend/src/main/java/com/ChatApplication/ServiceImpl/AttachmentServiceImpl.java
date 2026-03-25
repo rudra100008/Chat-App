@@ -1,11 +1,14 @@
 package com.ChatApplication.ServiceImpl;
 
+import com.ChatApplication.DTO.CloudinaryResponse;
 import com.ChatApplication.Entity.Attachment;
 import com.ChatApplication.Exception.ResourceNotFoundException;
 import com.ChatApplication.Repository.AttachmentRepository;
 import com.ChatApplication.Service.AttachmentService;
+import com.ChatApplication.Service.CloudFileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +35,8 @@ public class AttachmentServiceImpl implements AttachmentService {
     private  final AttachmentRepository attachmentRepository;
     @Value("${file.upload.dir}")
     private String uploadDir;
+
+    private final CloudFileService cloudFileService;
 
     private static final Map<String, List<String>> FILE_CATEGORIES = new HashMap<>();
     static{
@@ -103,6 +111,108 @@ public class AttachmentServiceImpl implements AttachmentService {
             throw new RuntimeException("Could not delete file "+ attachment.getAttachmentId() + ". Please try again",e);
         }
     }
+
+    @Override
+    public Attachment uploadAttachmentToCloud(MultipartFile file) throws IOException, Exception {
+        try {
+            validateAttachment(file);
+
+            String originalFileName = cleanFileName(file.getOriginalFilename());
+            if (originalFileName == null) {
+                throw new IllegalArgumentException("Invalid file name.");
+            }
+            String extension = getExtension(originalFileName);
+            if (!isExtensionAllowed(extension)) {
+                throw new IllegalArgumentException("Oops! This file type isn't allowed. Please choose a supported format.");
+            }
+            String fileCategory = getFileCategories(extension);
+            if (fileCategory == null) {
+                throw new IllegalArgumentException("Unsupported file type. Upload a valid format.");
+            }
+
+            // REMOVED: uniqueFileName was generated but never used — Cloudinary handles naming internally
+            CloudinaryResponse cloudinaryResponse = cloudFileService.uploadAttachmentWithDetails(fileCategory, file);
+
+            Attachment attachment = Attachment.builder()
+                    .fileName(cloudinaryResponse.originalFileName()) // use the name returned from Cloudinary
+                    .publicId(cloudinaryResponse.publicId())
+                    .secureUrl(cloudinaryResponse.secureUrl())
+                    .fileType(file.getContentType())
+                    .build();
+
+            return attachmentRepository.save(attachment);
+
+        } catch (IOException e) {
+            throw new IOException(String.format("Failed to upload file (%s): %s", file.getContentType(), e.getMessage()));
+        } catch (Exception e) {
+            throw new Exception("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Resource downloadAttachmentFromCloud(String attachmentId) throws IOException {
+        if (!StringUtils.hasText(attachmentId)) {
+            throw new IllegalArgumentException("Attachment ID cannot be null or empty");
+        }
+
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attachment not found: " + attachmentId));
+
+        String secureUrl = attachment.getSecureUrl();
+        if (!StringUtils.hasText(secureUrl)) {
+            throw new IllegalStateException("No cloud URL found for attachment: " + attachmentId);
+        }
+
+        try {
+            URL url = new URL(secureUrl);
+            URLConnection connection = url.openConnection();
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(10000);
+
+            InputStream inputStream = connection.getInputStream();
+            byte[] fileBytes = inputStream.readAllBytes();
+            inputStream.close();
+
+            return new ByteArrayResource(fileBytes) {
+                @Override
+                public String getFilename() {
+                    return attachment.getFileName();
+                }
+            };
+
+        } catch (IOException e) {
+            throw new IOException("Failed to download attachment from cloud: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteAttachmentInCloud(String attachmentId) throws IOException {
+        if (!StringUtils.hasText(attachmentId)) {
+            throw new IllegalArgumentException("Attachment ID cannot be null or empty");
+        }
+
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attachment not found: " + attachmentId));
+
+        String publicId = attachment.getPublicId();
+        if (!StringUtils.hasText(publicId)) {
+            throw new IllegalStateException("No public ID found for attachment: " + attachmentId);
+        }
+
+        try {
+            String result = cloudFileService.deleteAttachment(publicId);
+            if (result.startsWith("Failed")) {
+                throw new IOException("Cloudinary deletion failed: " + result);
+            }
+            attachmentRepository.delete(attachment);
+
+        } catch (IOException e) {
+            throw new IOException("Failed to delete attachment from cloud: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error while deleting attachment: " + e.getMessage());
+        }
+    }
+
     @Override
     public Resource downloadAttachment(String attachmentId) {
         if(!StringUtils.hasText(attachmentId)){
