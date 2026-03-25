@@ -43,11 +43,8 @@ export const WebSocketProvider = ({ children }) => {
 
 
 
-    // Convert HTTP(S) baseUrl to WS(S) for the brokerURL
-    const wsBaseUrl = baseUrl.replace(/^http/, 'ws');
-    
     const client = new Client({
-        brokerURL: `${wsBaseUrl}/server?token=${token}`,
+        brokerURL: `wss://chat-app-c4hv.onrender.com/server?token=${token}`,
         connectHeaders: {
           Authorization : `Bearer ${token}`
         },
