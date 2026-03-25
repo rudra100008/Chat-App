@@ -15,8 +15,17 @@ public class CorsConfigurationMethod {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedMethods(List.of("GET","POST","PUT","OPTIONS","DELETE","PATCH"));
-        cors.setAllowedOrigins(List.of("http://localhost:3000"));
-        cors.setAllowedHeaders(List.of("Authorization","Content-Type","Accept"));
+        cors.setAllowedOriginPatterns(List.of("*"));
+        cors.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Upgrade",           // ← required for WebSocket
+                "Connection",        // ← required for WebSocket
+                "Sec-WebSocket-Key", // ← required for WebSocket
+                "Sec-WebSocket-Version", // ← required for WebSocket
+                "Sec-WebSocket-Extensions"
+        ));
         cors.setMaxAge(3600L);
         cors.setExposedHeaders(List.of("Set-Cookie","Authorization","X-XSRF-TOKEN"));
         cors.setAllowCredentials(true);

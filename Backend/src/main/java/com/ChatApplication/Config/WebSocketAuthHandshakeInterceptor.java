@@ -25,57 +25,82 @@ import java.util.Map;
 public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
+
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        if(request instanceof ServletServerHttpRequest) {
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+        if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
             HttpServletRequest httpRequest = servletRequest.getServletRequest();
 
             try {
                 String jwt = null;
+
+                // 1. Try Authorization header
                 String authHeader = httpRequest.getHeader("Authorization");
-                if(authHeader != null && authHeader.startsWith("Bearer ")){
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     jwt = authHeader.substring(7);
-                    log.info("Token found in Authorization Header");
+                    log.info("Token found in Authorization header");
                 }
+
+                // 2. Try query parameter (?token=xxx) — browser WebSocket uses this
+                if (jwt == null) {
+                    jwt = httpRequest.getParameter("token");
+                    if (jwt != null && !jwt.trim().isEmpty()) {
+                        log.info("Token found in query parameter");
+                    }
+                }
+
+                // 3. Try cookie
                 if (jwt == null && httpRequest.getCookies() != null) {
                     for (Cookie cookie : httpRequest.getCookies()) {
-                        if ("token".equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().trim().isEmpty()) {
+                        if ("token".equals(cookie.getName()) &&
+                                cookie.getValue() != null &&
+                                !cookie.getValue().trim().isEmpty()) {
                             jwt = cookie.getValue();
+                            log.info("Token found in cookie");
                             break;
                         }
                     }
                 }
-                if (jwt != null){
-                    String username = jwtService.extractUsername(jwt);
-                    if(username != null){
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                        if (jwtService.isTokenValid(jwt, userDetails)){
-                            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities()
-                            );
-                            attributes.put("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
-                            attributes.put("USER_PRINCIPAL", auth);
-                            attributes.put("USERNAME", username);
-                            attributes.put("TOKEN", jwt);
-                            SecurityContextHolder.getContext().setAuthentication(auth);
-                            return true;
-                        }else{
-                            throw new AccessDeniedException("Invalid token");
-                        }
-                    }else{
-                        throw new AccessDeniedException("Unauthorized WebSocket connection");
-                    }
+                if (jwt == null || jwt.trim().isEmpty()) {
+                    log.warn("No token found in WebSocket handshake request");
+                    return false;
                 }
-            }catch (ExpiredJwtException e){
-                throw new AccessDeniedException("Token expired");
-            }catch (Exception e) {
 
-                throw new AccessDeniedException("Authentication failed");
+                String username = jwtService.extractUsername(jwt);
+                if (username == null) {
+                    log.warn("Could not extract username from token");
+                    return false;
+                }
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    attributes.put("USER_PRINCIPAL", auth);
+                    attributes.put("USERNAME", username);
+                    attributes.put("TOKEN", jwt);
+                    log.info("WebSocket handshake authenticated for: {}", username);
+                    return true;
+                }
+
+                log.warn("Token validation failed for user: {}", username);
+                return false;
+
+            } catch (ExpiredJwtException e) {
+                log.warn("Expired token during WebSocket handshake");
+                return false;
+            } catch (Exception e) {
+                log.error("Handshake error: {}", e.getMessage());
+                return false;
             }
         }
-
         return false;
     }
 

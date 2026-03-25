@@ -33,7 +33,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
          registry.addEndpoint("/server")
                  .addInterceptors(handshakeInterceptor)
-                 .setAllowedOriginPatterns("http://localhost:3000");
+                 .setAllowedOriginPatterns("*");
     }
 
 
