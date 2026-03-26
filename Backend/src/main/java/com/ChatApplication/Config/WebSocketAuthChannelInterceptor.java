@@ -3,11 +3,11 @@ package com.ChatApplication.Config;
 import com.ChatApplication.Security.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -19,17 +19,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
-import org.springframework.util.MultiValueMap;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class WebSocketAuthInterceptor implements ChannelInterceptor {
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthInterceptor.class);
-
+@Slf4j
+public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
@@ -42,28 +36,31 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             return message; // Ignore messages without valid headers
         }
 
-        logger.debug("Processing WebSocket message: {}", stompHeaderAccessor.getCommand());
+        log.debug("Processing WebSocket message: {}", stompHeaderAccessor.getCommand());
         if (StompCommand.CONNECT.equals(stompHeaderAccessor.getCommand())) {
             try {
                 String token = null;
-               String cookieHeader = stompHeaderAccessor.getFirstNativeHeader("Cookie");
-                if(cookieHeader != null && !cookieHeader.isEmpty()){
-                    logger.debug("Cookie header: {}", cookieHeader);
-                    String[] cookies = cookieHeader.split(";");
-                    for (String cookie : cookies ){
-                        cookie = cookie.trim();
-                        if (cookie.startsWith("token=")){
-                            token = cookie.substring(6);
 
-                            break;
-                        }
-                    }
+                String authHeader = stompHeaderAccessor.getFirstNativeHeader("Authorization");
+
+                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                    log.warn("No Authorization header in STOMP CONNECT");
+                    throw new MessagingException("Unauthorized");
                 }
-                System.out.println("Token: "+ token);
-                String username = jwtService.extractUsername(token);
 
-                if (username != null) {
-                    logger.debug("Extracted username from token: {}", username);
+                token = authHeader.substring(7);
+
+                log.info("Token received");
+                String username = jwtService.extractUsername(token);
+                if(username == null){
+                    log.info("username is null when extracting from token");
+                    throw new MessagingException("Invalid token.");
+
+
+                }
+
+
+                    log.debug("Extracted username from token: {}", username);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                     if (jwtService.isTokenValid(token, userDetails)) {
@@ -73,20 +70,17 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
                         stompHeaderAccessor.setUser(auth); // Attach authentication to the WebSocket session
                         SecurityContextHolder.getContext().setAuthentication(auth);
-                        logger.info("WebSocket authentication successful for user: {}", username);
+                        log.info("WebSocket authentication successful for user: {}", username);
                     } else {
-                        logger.warn("Invalid JWT token for user: {}", username);
+                        log.warn("Invalid JWT token for user: {}", username);
                         throw new AccessDeniedException("Invalid token" );
                     }
-                } else {
-                    logger.warn("Failed to extract username from JWT token" );
-                    throw new AccessDeniedException("Unauthorized WebSocket connection" );
-                }
+
             }catch (ExpiredJwtException e){
-                throw new MessagingException("Jwt expired: "+e.getMessage());
+                throw new MessagingException("Token expired: "+e.getMessage());
             }
             catch (Exception e) {
-                logger.error("Error during WebSocket authentication", e);
+                log.error("Error during WebSocket authentication", e);
                 throw new AccessDeniedException("WebSocket authentication failed" );
             }
         }

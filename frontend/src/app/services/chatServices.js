@@ -87,3 +87,14 @@ export const fetchChatDetailService = async (chatId) =>{
         throw err;
     }
 }
+
+
+export const fetchAdminsDataService = async(chatId) =>{
+    try{
+        const response = await axiosInterceptor.get(`/api/chats/${chatId}/admins`);
+        return response.data;
+    }catch(err){
+        console.log("Error in fetching admin data: ",err);
+        throw err;
+    }
+}

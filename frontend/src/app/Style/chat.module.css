@@ -194,6 +194,77 @@
     flex-shrink: 0;
 }
 
+/* ── Date separator ── */
+.dateSeparator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 8px;
+    color: #4a5568;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.dateSeparator::before,
+.dateSeparator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #2a3a5c, transparent);
+}
+
+/* ── Message grouping ── */
+.grouped {
+    margin-bottom: 1px !important; /* tighter spacing for grouped messages */
+}
+
+/* Bubble tail — only on last in group */
+.SentMessage.lastInGroup {
+    border-bottom-right-radius: 4px;
+}
+.ReceivedMessage.lastInGroup {
+    border-bottom-left-radius: 4px;
+}
+
+/* No tail for grouped bubbles */
+.SentMessage.groupedBubble {
+    border-bottom-right-radius: 18px;
+}
+.ReceivedMessage.groupedBubble {
+    border-bottom-left-radius: 18px;
+}
+
+/* ── Avatar slot (keeps alignment even when avatar hidden) ── */
+.AvatarSlot {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+/* ── Read receipt ── */
+.ReadReceipt {
+    margin-left: 4px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.3s ease;
+}
+.ReadReceipt.read {
+    color: #4fc3f7;
+}
+
+/* ── Empty state ── */
+.EmptyState {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #3a4a5c;
+    font-size: 0.88rem;
+    font-style: italic;
+}
+
 /* ── Chat header bar ── */
 .chatHeader {
     display: flex;

@@ -10,10 +10,10 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
@@ -44,7 +45,7 @@ public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHan
         response.setStatus(HttpStatus.OK.value());
         response.setContentType("application/json");
 
-        System.out.println("UserDetails: "+userDetails.toString());
+        log.info("UserDetails: "+userDetails.toString());
         User user =  (User) userDetails;
         userService.updateUserStatus(user.getUserId(), UserStatus.ONLINE);
         Map<String,Object> res = new HashMap<>(1);

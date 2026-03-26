@@ -15,7 +15,7 @@ public class CorsConfigurationMethod {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedMethods(List.of("GET","POST","PUT","OPTIONS","DELETE","PATCH"));
-        cors.setAllowedOriginPatterns(List.of("https://chat-app-pied-pi-36.vercel.app"));
+        cors.setAllowedOriginPatterns(List.of("https://chat-app-pied-pi-36.vercel.app","http://localhost:3000"));
         cors.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",

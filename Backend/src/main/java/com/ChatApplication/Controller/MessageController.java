@@ -28,7 +28,7 @@ public class MessageController {
     private final MessageService messageService;
     private final SimpMessagingTemplate messagingTemplate;
     private static final String PAGE_NUMBER = "0";
-    private static final String PAGE_SIZE =   "10";
+    private static final String PAGE_SIZE =   "20";
 
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Valid @Payload MessageDTO messageDTO,

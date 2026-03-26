@@ -3,6 +3,7 @@ package com.ChatApplication.Service;
 import com.ChatApplication.DTO.ChatResponse;
 import com.ChatApplication.DTO.CreateChatDTO;
 import com.ChatApplication.DTO.UserDTO;
+import com.ChatApplication.Entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,8 +36,11 @@ public interface ChatService {
     // fetch group chat image
     String fetchGroupImageSecureUrl(String chatId)throws IOException;
 
+    // fetch all admins data in a chats
+    List<UserDTO> fetchAdminsInChat(String chatId);
     ChatResponse addAdminToChat(String chatId, String userId);
 
-//    ChatResponse removeUser(String chatId, String userId);
+    // method to remove user from group chat
+    ChatResponse removeUserFromChat(String chatId, String userId);
 
 }

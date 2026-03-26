@@ -20,7 +20,7 @@ export const handlePromoteUser = async(logout,user,chatData) =>{
 
 export const handleRemoveUser = async (logout,user,chatData) => {
     try{
-        const response = await axiosInterceptor.put(`/api/chats/removeUser?chatId=${chatData.chatId}&userId=${user.userId}`
+        const response = await axiosInterceptor.delete(`/api/chats/${chatData.chatId}/removeUser/${user.userId}?`
             ,{}
         )
         console.log("ChatData: ",response.data)

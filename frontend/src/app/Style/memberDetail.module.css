@@ -161,3 +161,91 @@
   background: #6d28d9 !important;
   transform: translateY(-1px) !important;
 }
+
+
+/* ── Error text ── */
+.errorText {
+  font-size: 0.78rem;
+  color: #ef5350;
+  background: rgba(239, 83, 80, 0.1);
+  border: 1px solid rgba(239, 83, 80, 0.25);
+  border-radius: 8px;
+  padding: 6px 12px;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Success button state ── */
+.successButton {
+  background: #2e7d32 !important;
+  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.35) !important;
+  cursor: default;
+}
+
+/* ── Inline confirm ── */
+.confirmInline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  animation: popIn 0.18s ease;
+}
+
+.confirmText {
+  font-size: 0.83rem;
+  color: #c8d6e5;
+  text-align: center;
+  margin: 0;
+}
+.confirmText strong {
+  color: #ef5350;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.confirmBtn {
+  flex: 1;
+  padding: 0.55rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.confirmBtn:active {
+  transform: scale(0.95);
+}
+.confirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirmYes {
+  background: #c0392b;
+  color: white;
+}
+.confirmYes:hover:not(:disabled) {
+  background: #a93226;
+}
+
+.confirmNo {
+  background: rgba(255,255,255,0.07);
+  color: #c8d6e5;
+  border: 1px solid #2a3a5c;
+}
+.confirmNo:hover:not(:disabled) {
+  background: rgba(255,255,255,0.12);
+}

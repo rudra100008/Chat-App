@@ -13,6 +13,7 @@ const useMessages = ({userId,chatId})=>{
     const [totalPage,setTotalPage] = useState(null);
     const observer = useRef(null);
     const currentChatIdRef = useRef(null);
+    const isFetchingRef = useRef(false);
 
 
     const removeDuplicateMessage =(messageArray) => {
@@ -72,9 +73,10 @@ const useMessages = ({userId,chatId})=>{
     },[userId,chatId])
 
     const fetchOlderMessages= useCallback(async()=>{
-        if(loading || page <= 0 || !hasMore) return ;
+        if(loading || page <= 0 || !hasMore || isFetchingRef.current) return ;
+
+        isFetchingRef.current = true;
         setLoading(true);
-        console.log("\n--------fetching Older Messages----------\n")
         try{
             const previousPage = page - 1;
             const response = await  axiosInterceptor.get(
@@ -97,13 +99,14 @@ const useMessages = ({userId,chatId})=>{
             console.log("Error occured fetching older messages:\n",error.response.data)
         }finally{
             setLoading(false)
+            isFetchingRef.current = false;
         }
     },[loading,page,chatId,hasMore]);
 
     const firstMessageElementRef = useCallback(
         (node)=>{
-            if(loading || !hasMore) return;
             if(observer.current) observer.current.disconnect();
+            if (!node || !hasMore) return;
 
             if(typeof window !== 'undefined'){
                 observer.current = new IntersectionObserver(
@@ -114,12 +117,12 @@ const useMessages = ({userId,chatId})=>{
                             fetchOlderMessages();
                         }
                     },
-                {threshold:0.5}
+                {threshold:0.1}
                 )
                 if(node) observer.current.observe(node)
             }
 
-        },[loading,hasMore,fetchOlderMessages,page]
+        },[hasMore,fetchOlderMessages,page]
     )
 
     useEffect(()=>{

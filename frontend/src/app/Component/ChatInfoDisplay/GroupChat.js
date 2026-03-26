@@ -13,7 +13,7 @@ import axiosInterceptor from "../Interceptor";
 import ErrorPrompt from "../ErrorPrompt";
 import { useAuth } from "@/app/context/AuthContext";
 import { fetchUserData } from "@/app/services/userService";
-import { deleteChat, deleteGroupChat } from "@/app/services/chatServices";
+import { deleteChat, deleteGroupChat, fetchAdminsDataService } from "@/app/services/chatServices";
 import { useNotification } from "@/app/context/NotificationContext";
 import { useWebSocket } from "@/app/context/WebSocketContext";
 
@@ -47,15 +47,23 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
       const formData = new FormData();
       formData.append("imageFile", file);
       await axiosInterceptor
-        .patch(`/api/chats/${chatData.chatId}/uploadGroupImage/user/${userId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
+        .patch(
+          `/api/chats/${chatData.chatId}/uploadGroupImage/user/${userId}`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        )
         .then((res) => {
           const newChatData = res.data;
-          setChatData((prev) => (prev.chatId === newChatData.chatId ? newChatData : prev));
+          setChatData((prev) =>
+            prev.chatId === newChatData.chatId ? newChatData : prev,
+          );
         })
         .catch((err) => {
-          setErrorMessage(err.response?.data?.Error || "Something Unexpected Occurred");
+          setErrorMessage(
+            err.response?.data?.Error || "Something Unexpected Occurred",
+          );
         });
     }
   };
@@ -72,32 +80,39 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
       chatId: localChatData.chatId,
       chatName: localChatData.chatName,
       chatType: localChatData.chatType,
-      participantIds:localChatData.participantIds,
-      adminIds:localChatData.adminIds,
-      createdAt:localChatData.createdAt,
-    }
-   await axiosInterceptor
-      .put(
-        `/api/chats/updateGroupChat/${chatData.chatId}`,
-        chatResponse, {}
-      )
+      participantIds: localChatData.participantIds,
+      adminIds: localChatData.adminIds,
+      createdAt: localChatData.createdAt,
+    };
+    await axiosInterceptor
+      .put(`/api/chats/updateGroupChat/${chatData.chatId}`, chatResponse, {})
       .then((response) => {
         const newChatData = response.data;
-        setLocalChatData((prev) => (prev.chatId === newChatData.chatId ? newChatData : prev));
-        setChatData((prev) => (prev.chatId === newChatData.chatId ? newChatData : prev));
+        setLocalChatData((prev) =>
+          prev.chatId === newChatData.chatId ? newChatData : prev,
+        );
+        setChatData((prev) =>
+          prev.chatId === newChatData.chatId ? newChatData : prev,
+        );
         loadUserChats();
         setShowEditChatName(false);
       })
       .catch((err) => {
-        setErrorMessage(err.response?.data?.Error || "Something Unexpected Occurred");
+        setErrorMessage(
+          err.response?.data?.Error || "Something Unexpected Occurred",
+        );
       });
   }, [chatData, localChatData]);
 
   const fetchAdminUsername = async () => {
-    const promises = chatData.adminIds.map(async (admin) => await fetchUserData(admin, logout));
-    const users = await Promise.all(promises);
-    const usernames = users.filter((u) => u != null).map((u) => u.username);
-    setAdminUsernames(usernames);
+    try {
+      const users = await fetchAdminsDataService(chatData.chatId);
+      const usernames = users.filter((u) => u != null).map((u) => u.username);
+      setAdminUsernames(usernames);
+    } catch (err) {
+      console.log("error in fetching admins: ", err.response?.data);
+      setAdminUsernames([]);
+    }
   };
 
   const deleteUserChat = async () => {
@@ -115,7 +130,10 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
   };
 
   const checkUserAdmin = useCallback(() => {
-    if (!userId || !chatData?.adminIds) { setIsAdmin(false); return; }
+    if (!userId || !chatData?.adminIds) {
+      setIsAdmin(false);
+      return;
+    }
     setIsAdmin(chatData.adminIds.includes(userId));
   }, [userId, chatData?.adminIds]);
 
@@ -125,11 +143,17 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
     if (chatData?.adminIds?.length > 0) fetchAdminUsername();
   }, [chatData, logout, checkUserAdmin]);
 
-  useEffect(() => { checkUserAdmin(); }, [userId, checkUserAdmin]);
+  useEffect(() => {
+    checkUserAdmin();
+  }, [userId, checkUserAdmin]);
 
   useEffect(() => {
     const handleClickOutSide = (event) => {
-      if (showEditChatName && inputRef.current && !inputRef.current.contains(event.target)) {
+      if (
+        showEditChatName &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target)
+      ) {
         setShowEditChatName(false);
       }
     };
@@ -148,21 +172,35 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
 
   return (
     <div className={style.infoDisplayContainer}>
-      <ErrorPrompt errorMessage={errorMessage} setErrorMessage={setErrorMessage} />
+      <ErrorPrompt
+        errorMessage={errorMessage}
+        setErrorMessage={setErrorMessage}
+      />
 
       {/* Avatar + edit pencil */}
       <div className={style.image}>
-        <GetGroupImage chatId={chatData.chatId} chatType={chatData.chatType} size={120} />
+        <GetGroupImage
+          chatId={chatData.chatId}
+          chatType={chatData.chatType}
+          size={120}
+        />
         <div className={style.faEdit}>
           <FontAwesomeIcon icon={faEdit} size="sm" onClick={handleEditChat} />
         </div>
-        <input type="file" ref={fileRef} style={{ display: "none" }} onChange={handleFileChange} />
+        <input
+          type="file"
+          ref={fileRef}
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
       </div>
 
       {/* Editable group name */}
       {showEditChatName ? (
         <div ref={inputRef}>
-          <span ref={spanRef} className={style.hiddenSpan}>{localChatData.chatName || ""}</span>
+          <span ref={spanRef} className={style.hiddenSpan}>
+            {localChatData.chatName || ""}
+          </span>
           <input
             type="text"
             name="chatName"
@@ -170,12 +208,16 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
             value={localChatData.chatName}
             className={style.InputStyle}
             onChange={handleValueChange}
-            onKeyDown={(e) => { if (e.key === "Enter") handleUpdateGroupChat(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleUpdateGroupChat();
+            }}
             style={{ width: inputWidth }}
           />
         </div>
       ) : (
-        <p className={style.chatName} onDoubleClick={handleChatName}>{chatData.chatName}</p>
+        <p className={style.chatName} onDoubleClick={handleChatName}>
+          {chatData.chatName}
+        </p>
       )}
 
       {/* Created at */}
@@ -185,7 +227,9 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
           <p>CreatedAt</p>
           <p>
             {new Date(chatData.createdAt).toLocaleDateString("en-us", {
-              day: "2-digit", month: "2-digit", year: "numeric",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
             }) || "Unknown"}
           </p>
         </div>
@@ -197,7 +241,9 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
         <div className={style.chatInfo}>
           <p>Admins</p>
           <div className={style.adminList}>
-            {adminUsernames.map((username, i) => <p key={i}>{username}</p>)}
+            {adminUsernames.map((username, i) => (
+              <p key={i}>{username}</p>
+            ))}
           </div>
         </div>
       </div>
@@ -205,18 +251,28 @@ const GroupChat = ({ chatData, setChatData, loadUserChats, onClose }) => {
       {/* Delete (admin only) */}
       {isAdmin && (
         <>
-          <button className={style.deleteButton} onClick={handleDeleteClick} aria-label="Delete chat">
+          <button
+            className={style.deleteButton}
+            onClick={handleDeleteClick}
+            aria-label="Delete chat"
+          >
             <FontAwesomeIcon icon={faTrashAlt} className={style.deleteIcon} />
             Delete Chat
           </button>
 
           {showDeleteConfirm && (
             <div className={style.confirmDialogOverlay} onClick={cancelDelete}>
-              <div className={style.confirmDialog} onClick={(e) => e.stopPropagation()}>
+              <div
+                className={style.confirmDialog}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className={style.confirmDialogIcon}>
                   <FontAwesomeIcon icon={faExclamationTriangle} />
                 </div>
-                <p>Are you sure you want to delete this chat? This action cannot be undone.</p>
+                <p>
+                  Are you sure you want to delete this chat? This action cannot
+                  be undone.
+                </p>
                 <div className={style.confirmButtons}>
                   <button onClick={confirmDelete}>Yes, Delete</button>
                   <button onClick={cancelDelete}>Cancel</button>

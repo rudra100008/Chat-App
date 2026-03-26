@@ -47,7 +47,7 @@ public class ChatController {
     public ResponseEntity<?> createChat(
             @Valid @RequestBody CreateChatDTO createChatDTO,
             BindingResult result
-            ){
+    ){
         if(result.hasErrors()){
             Map<String,Object> errResponse = new HashMap<>();
             result.getFieldErrors()
@@ -138,13 +138,13 @@ public class ChatController {
     @GetMapping(value = "/groupImage",produces = {MediaType.IMAGE_JPEG_VALUE,MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Object> getGroupImage(
             @RequestParam("chatId")String chatId
-            ){
+    ){
         String uploadDir = baseUploadDir + File.separator + "groupChat";
         ChatResponse chatFetched = chatService.fetchChatById(chatId);
         String imageName = chatFetched.getChatImageUrl();
 
         if(imageName == null || imageName.trim().isEmpty()){
-           imageName = "defaultGroupChat.jpg";
+            imageName = "defaultGroupChat.jpg";
         }
         File directory  = new File(uploadDir);
         if(!directory.exists()){
@@ -154,8 +154,8 @@ public class ChatController {
                     .body(Map.of("Error:","Image directory not found"));
         }
         try{
-             byte[] b = imageService.getImage(uploadDir,imageName);
-             return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
+            byte[] b = imageService.getImage(uploadDir,imageName);
+            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.IMAGE_JPEG).body(b);
         }catch(IOException e){
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -223,6 +223,16 @@ public class ChatController {
                 .body(updatedChat);
     }
 
+
+    // fetch admins of a chat
+    @GetMapping("/{chatId}/admins")
+    public ResponseEntity<List<UserDTO>> fetchAdmins(
+            @PathVariable("chatId")String chatId
+    ){
+        List<UserDTO> userDTOS = this.chatService.fetchAdminsInChat(chatId);
+        return ResponseEntity.status(HttpStatus.OK).body(userDTOS);
+    }
+
     @PutMapping("/promoteUserToAdmin")
     public ResponseEntity<ChatResponse> promoteUserToAdmin(
             @RequestParam("chatId")String chatId,
@@ -232,12 +242,12 @@ public class ChatController {
         return ResponseEntity.ok(chat);
     }
 
-//    @PutMapping("/removeUser")
-//    public ResponseEntity<ChatResponse> removeUser(
-//            @RequestParam("chatId") String chatId,
-//            @RequestParam("userId")String userId
-//    ){
-//        ChatResponse chat= this.chatService.removeUser(chatId,userId);
-//        return ResponseEntity.ok(chat);
-//    }
+    @DeleteMapping("/{chatId}/removeUser/{userId}")
+    public ResponseEntity<ChatResponse> removeUser(
+            @PathVariable("chatId") String chatId,
+            @PathVariable("userId")String userId
+    ){
+        ChatResponse chat= this.chatService.removeUserFromChat(chatId,userId);
+        return ResponseEntity.ok(chat);
+    }
 }

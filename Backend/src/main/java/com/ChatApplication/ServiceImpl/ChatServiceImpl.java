@@ -20,11 +20,13 @@ import com.ChatApplication.Service.*;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UserDetailsPasswordService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
@@ -84,7 +86,7 @@ public class ChatServiceImpl implements ChatService {
         messagingTemplate.convertAndSendToUser(
                 otherUser.getUserId(),
                 "/queue/chats",
-               payload
+                payload
         );
         return this.chatMapper.toChatResponse(chat);
     }
@@ -138,7 +140,7 @@ public class ChatServiceImpl implements ChatService {
             messagingTemplate.convertAndSendToUser(
                     id,
                     "/queue/chats",
-                   payload
+                    payload
             );
         }
         return this.chatMapper.toChatResponse(savedChat);
@@ -147,12 +149,12 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public ChatResponse addParticipants(String chatId, String userId) {
-        if(!StringUtils.hasText(chatId) || !StringUtils.hasText(userId)){
+        if (!StringUtils.hasText(chatId) || !StringUtils.hasText(userId)) {
             throw new IllegalArgumentException("Chat Id and User Id is null or empty");
         }
         User loggedUser = getLoggedInUser();
 
-        if(!this.userRepository.existsById(userId)){
+        if (!this.userRepository.existsById(userId)) {
             throw new ResourceNotFoundException(String.format("User Not Found: userId= %s", userId));
         }
 
@@ -161,31 +163,36 @@ public class ChatServiceImpl implements ChatService {
                         .and("chatType").is(ChatType.GROUP)
                         .and("adminIds").in(loggedUser.getUserId())
         );
-        Update update = new Update().addToSet("participantIds",userId);
-        Chat updatedChat = this.mongoTemplate.findAndModify(query,update,Chat.class);
-        if(updatedChat == null){
+        Update update = new Update().addToSet("participantIds", userId);
+
+        Chat updatedChat = this.mongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options().returnNew(true), // ← fix
+                Chat.class
+        );
+
+        if (updatedChat == null) {
             throw new ResourceNotFoundException("Chat not found or not an admin");
         }
 
+        Query query1 = new Query(Criteria.where("_id").is(userId));
+        Update update1 = new Update().addToSet("chatIds", chatId); // use chatId directly, not updatedChat.getChatId()
+        UpdateResult result1 = this.mongoTemplate.updateFirst(query1, update1, User.class);
 
-        // add chatIds in user chatIds list
-        Query query1 = new Query(
-                Criteria.where("_id").is(userId)
-        );
-        Update update1 = new Update().addToSet("chatIds",updatedChat.getChatId());
-        UpdateResult result1 = this.mongoTemplate.updateFirst(query1,update1,User.class);
-        if(result1.getMatchedCount() == 0){
+        if (result1.getMatchedCount() == 0) {
             throw new ResourceNotFoundException("User not found or invalid type");
         }
-        if (result1.getModifiedCount() == 0){
-            throw new AlreadyExistsException("User already exits in chat");
+        if (result1.getModifiedCount() == 0) {
+            throw new AlreadyExistsException("User already exists in chat");
         }
 
         this.messagingTemplate.convertAndSendToUser(
                 userId,
                 "/queue/chats",
-                Map.of("type","PARTICIPANTS_ADDED","chatId",chatId)
+                Map.of("type", "PARTICIPANTS_ADDED", "chatId", chatId)
         );
+
         return this.chatMapper.toChatResponse(updatedChat);
     }
 
@@ -329,11 +336,11 @@ public class ChatServiceImpl implements ChatService {
 
         User currentUser = getLoggedInUser();
         Chat chat = validateChatAccess(chatId, currentUser.getUserId(), "User does not have access to this chat");
-        
+
         if (!chat.getChatType().equals(ChatType.GROUP)){
             throw new IllegalArgumentException("This is only for GROUP image");
         }
-        
+
         if (!StringUtils.hasText(chat.getSecureUrl())){
             throw new ResourceNotFoundException("Group image has no secureUrl");
         }
@@ -346,17 +353,84 @@ public class ChatServiceImpl implements ChatService {
         return url;
     }
 
+    @Override
+    public List<UserDTO> fetchAdminsInChat(String chatId) {
+        User loggedInUser = getLoggedInUser();
+        Chat chat = validateChatAccess(chatId, loggedInUser.getUserId(),"You are not allowed to access this chat");
+        List<String> adminIds = chat.getAdminIds();
+
+        List<User> admins = this.userRepository.findAllById(adminIds);
+        return this.userMapper.toUserDTOs(admins);
+    }
+
 
     @Override
     public ChatResponse addAdminToChat(String chatId, String userId) {
         User loggedInUser = getLoggedInUser();
+        validateChatAccess(chatId, loggedInUser.getUserId(), "You are not an admin of this chat", true);
+
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found: " + userId);
+        }
+
+        // no need to re-check adminIds in query — validateChatAccess already confirmed it
         Query query = new Query(
                 Criteria.where("_id").is(chatId)
-                        .and("adminIds").in(loggedInUser.getUserId())
+                        .and("chatType").is(ChatType.GROUP)
+                        .and("participantIds").in(userId) // user must be a participant first
+        );
+        Update update = new Update().addToSet("adminIds", userId);
+        Chat updatedChat = this.mongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options().returnNew(true),
+                Chat.class);
+
+        if (updatedChat == null) {
+            throw new ResourceNotFoundException("Chat not found or user is not a participant");
+        }
+
+        return this.chatMapper.toChatResponse(updatedChat);
+    }
+
+    @Override
+    public ChatResponse removeUserFromChat(String chatId, String userId) {
+        User loggedInUser = getLoggedInUser();
+
+        Chat chat = validateChatAccess(chatId, loggedInUser.getUserId(), "You are not an admin of this chat", true);
+
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found: " + userId);
+        }
+
+        if (chat.getAdminIds().contains(userId) && chat.getAdminIds().size() == 1) {
+            throw new IllegalStateException("Cannot remove the only admin. Promote another user first.");
+        }
+
+
+        Query query = new Query(
+                Criteria.where("_id").is(chatId)
                         .and("chatType").is(ChatType.GROUP)
         );
-        Update update = new Update().addToSet("adminIds",userId);
-        Chat updatedChat = this.mongoTemplate.findAndModify(query,update,Chat.class);
+        Update update = new Update()
+                .pull("participantIds", userId)
+                .pull("adminIds", userId);
+
+
+        Chat updatedChat = this.mongoTemplate.findAndModify(
+                query,
+                update,
+                FindAndModifyOptions.options().returnNew(true),
+                Chat.class);
+
+        if (updatedChat == null) {
+            throw new ResourceNotFoundException("Chat not found");
+        }
+
+
+        Query userQuery = new Query(Criteria.where("_id").is(userId));
+        Update userUpdate = new Update().pull("chatIds", chatId);
+        mongoTemplate.updateFirst(userQuery, userUpdate, User.class);
         return this.chatMapper.toChatResponse(updatedChat);
     }
 
@@ -421,11 +495,11 @@ public class ChatServiceImpl implements ChatService {
 
     private boolean chatExistsBetweenUsers(User user1, User user2){
         return mongoTemplate.exists(Query.query(
-            Criteria.where("chatType").is(ChatType.SINGLE)
-                .andOperator(
-                    Criteria.where("participantIds").size(2),
-                    Criteria.where("participantIds").all(List.of(user1.getUserId(), user2.getUserId()))
-                )
+                Criteria.where("chatType").is(ChatType.SINGLE)
+                        .andOperator(
+                                Criteria.where("participantIds").size(2),
+                                Criteria.where("participantIds").all(List.of(user1.getUserId(), user2.getUserId()))
+                        )
         ),Chat.class);
     }
 

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RequiredArgsConstructor
 public class AppConfig  {
-    private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+    private final WebSocketAuthChannelInterceptor webSocketAuthInterceptor;
     private final WebSocketAuthHandshakeInterceptor handshakeInterceptor;
 
     @Bean
