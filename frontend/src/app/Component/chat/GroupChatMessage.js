@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
 import style from "../../Style/chat.module.css";
 import GetUserImage from "../GetUserImage";
-import AttachmentDisplay from "./AttachmentDisplay";
 import { useWebSocket } from "@/app/context/WebSocketContext";
 import useReadMessage from "@/app/hooks/useReadMessage";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheckDouble, faCheck } from "@fortawesome/free-solid-svg-icons";
-
-const formatTime = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString("en-us", {
-        hour: "2-digit", minute: "2-digit", hour12: true
-    });
+import MessageBubble from "../MessageBubble";
 
 const formatDateLabel = (timestamp) => {
     const date = new Date(timestamp);
@@ -25,7 +18,7 @@ const formatDateLabel = (timestamp) => {
 const isSameDay = (a, b) =>
     new Date(a).toDateString() === new Date(b).toDateString();
 
-const GroupChatMessage = ({ message, firstPostElementRef, userId, userChat, fetchUser }) => {
+const GroupChatMessage = ({ message, firstPostElementRef, userId, userChat, fetchUser, setMessages }) => {
     const [userNames, setUserNames] = useState({});
     const { stompClientRef } = useWebSocket();
     const { registerMessage } = useReadMessage({ userId, stompClientRef, chatId: userChat.chatId });
@@ -76,36 +69,28 @@ const GroupChatMessage = ({ message, firstPostElementRef, userId, userChat, fetc
                             data-sender-id={msg.senderId}
                             className={`${style.MessageRow} ${isSent ? style.SentRow : ""} ${isGrouped ? style.grouped : ""}`}
                         >
-                            {/* Avatar — only show on last message in group */}
+                            {/* Avatar slot — only on last message in group */}
                             <div className={`${style.AvatarSlot} ${isSent ? style.SentImage : style.ReceivedImage}`}>
                                 {!isSent && isLastInGroup && userChat.participantIds.includes(msg.senderId) && (
                                     <GetUserImage userId={msg.senderId} size={32} />
                                 )}
                             </div>
 
-                            <div className={`${style.Message} ${isSent ? style.SentMessage : style.ReceivedMessage} ${isLastInGroup ? style.lastInGroup : style.groupedBubble}`}>
-                                {/* Show name only on first message in group */}
+                            <MessageBubble
+                                msg={msg}
+                                isSent={isSent}
+                                userId={userId}
+                                setMessages={setMessages}
+                                isLastInGroup={isLastInGroup}
+                                isGrouped={isGrouped}
+                            >
+                                {/* Sender name — only on first message in group */}
                                 {!isSent && !isGrouped && (
                                     <div className={style.MessageUsername}>
                                         {userNames[msg.senderId] || "..."}
                                     </div>
                                 )}
-                                {msg.content && msg.content !== "" ? (
-                                    <div className={style.MessageContent}>{msg.content}</div>
-                                ) : (
-                                    <AttachmentDisplay message={msg} />
-                                )}
-                                <div className={style.MessageFooter}>
-                                    <span className={style.MessageTimestamp}>
-                                        {formatTime(msg.timestamp)}
-                                    </span>
-                                    {isSent && (
-                                        <span className={`${style.ReadReceipt} ${msg.read ? style.read : ""}`}>
-                                            <FontAwesomeIcon icon={msg.read ? faCheckDouble : faCheck} />
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                            </MessageBubble>
                         </div>
                     </div>
                 );

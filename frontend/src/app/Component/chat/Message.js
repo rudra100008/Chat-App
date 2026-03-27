@@ -1,21 +1,21 @@
 "use client"
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import style from '../../Style/chat.module.css'
 import SingleChatMessage from './SingleChatMessage';
 import GroupChatMessage from './GroupChatMessage';
 import axiosInterceptor from '../Interceptor';
+import { useEffect } from 'react';
 
 export default function Message({ messages, setMessages, userId, loading, firstPostElementRef, userChat, initialLoad }) {
     const messageEndRef = useRef(null);
     const containerRef = useRef(null);
     const prevScrollHeight = useRef(0);
-    const [userName, setUsername] = useState([]);
     const [isNearBottom, setIsNearBottom] = useState(true);
     const prevMessagesLength = useRef(0);
 
     const scrollToBottom = () => {
-        messageEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
     const maintainScrollHeight = () => {
         if (containerRef.current) {
@@ -25,59 +25,40 @@ export default function Message({ messages, setMessages, userId, loading, firstP
             container.scrollTop = container.scrollTop + scrollDiff;
             prevScrollHeight.current = newScrollHeight;
         }
-    }
+    };
 
     const checkIfNearBottom = () => {
-        if (!containerRef.current) return
+        if (!containerRef.current) return true;
         const container = containerRef.current;
-        const threshold = 100;
         const position = container.scrollHeight - container.scrollTop - container.clientHeight;
-        return position < threshold;
-    }
+        return position < 100;
+    };
 
     const fetchUser = async (userId) => {
         try {
-            const response = await axiosInterceptor.get(`/api/users/${userId}`, {
-              
-            })
-            const userData = response.data;
-            console.log("Message: UserData:\n", userData);
-            return userData;
+            const response = await axiosInterceptor.get(`/api/users/${userId}`);
+            return response.data;
         } catch (error) {
-            console.log("Message: error:\n", error.response.data.message)
-        } finally {
-
+            console.log("Message: error fetching user:", error.response?.data?.message);
         }
-    }
+    };
+
     useEffect(() => {
         if (containerRef.current && !loading) {
             prevScrollHeight.current = containerRef.current.scrollHeight;
         }
-    }, [messages.length])
-
-    // Format timestamp function to avoid repetition
-    const formatTimestamp = (timestamp) => {
-        return new Date(timestamp).toLocaleDateString();
-    };
+    }, [messages.length]);
 
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-
-        const handleScroll = () => {
-            setIsNearBottom(checkIfNearBottom());
-        };
-
+        const handleScroll = () => setIsNearBottom(checkIfNearBottom());
         container.addEventListener('scroll', handleScroll);
         return () => container.removeEventListener('scroll', handleScroll);
     }, []);
 
-
     useEffect(() => {
         if (!containerRef.current) return;
-
-        const container = containerRef.current;
-        // const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
 
         if (initialLoad && messages.length > 0) {
             scrollToBottom();
@@ -85,45 +66,36 @@ export default function Message({ messages, setMessages, userId, loading, firstP
         }
 
         if (messages.length > prevMessagesLength.current) {
-            if (isNearBottom) {
-                scrollToBottom();
-            }
-        }
-        else if (loading) {
-            maintainScrollHeight()
+            if (isNearBottom) scrollToBottom();
+        } else if (loading) {
+            maintainScrollHeight();
         }
         prevMessagesLength.current = messages.length;
     }, [messages, initialLoad, loading, isNearBottom]);
 
-    // // console.log("Message.js: UserChat:\n",userChat);
-    // console.log("Scroll Top: ", containerRef?.current?.scrollTop || 0)
     return (
         <div ref={containerRef} className={style.MessageContainer}>
             {loading && (
                 <div className={style.LoadingIndicator}>Loading older messages...</div>
             )}
-            {
-                userChat.chatType === "SINGLE" ? (
-                    <SingleChatMessage
-                        message={messages}
-                        setMessages={setMessages}
-                        userId={userId}
-                        firstPostElementRef={firstPostElementRef}
-                        formatTimestamp={formatTimestamp}
-                        userChat={userChat}
-                    />
-                ) : (
-                    <GroupChatMessage
-                        message={messages}
-                        setMessages={setMessages}
-                        userId={userId}
-                        firstPostElementRef={firstPostElementRef}
-                        formatTimestamp={formatTimestamp}
-                        userChat={userChat}
-                        fetchUser={fetchUser}
-                    />
-                )
-            }
+            {userChat.chatType === "SINGLE" ? (
+                <SingleChatMessage
+                    message={messages}
+                    setMessages={setMessages}   // ← passed down for optimistic updates
+                    userId={userId}
+                    firstPostElementRef={firstPostElementRef}
+                    userChat={userChat}
+                />
+            ) : (
+                <GroupChatMessage
+                    message={messages}
+                    setMessages={setMessages}   // ← passed down for optimistic updates
+                    userId={userId}
+                    firstPostElementRef={firstPostElementRef}
+                    userChat={userChat}
+                    fetchUser={fetchUser}
+                />
+            )}
             <div ref={messageEndRef} />
         </div>
     );

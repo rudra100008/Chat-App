@@ -78,6 +78,9 @@ public class AttachmentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File download failed: " + e.getMessage());
         }
     }
+
+
+
     private StompHeaderAccessor createHeaderAccessorFromHttp(HttpServletRequest request){
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.create(StompCommand.SEND);
         String authToken  = request.getHeader("Authorization");

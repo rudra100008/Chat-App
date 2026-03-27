@@ -117,30 +117,52 @@ public class MessageController {
         return ResponseEntity.ok(messageDTO);
     }
 
+
+    //edit message and broadcast the updated MessageDTO to the chat channel
     @PatchMapping("/{messageId}")
     public ResponseEntity<?> updateMessages(
             @PathVariable("messageId")String messageId,
-            @Valid @RequestBody MessageDTO messageDTO,
+            @RequestBody MessageDTO messageDTO,
             BindingResult result
     )
     {
         if (result.hasErrors()){
             Map<String,Object> error = new HashMap<>();
             result.getFieldErrors().forEach(fieldError -> error.put(fieldError.getField(),fieldError.getDefaultMessage()));
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
-        MessageDTO updateMessages = this.messageService.updateMessage(
+        MessageDTO updateMessage = this.messageService.updateMessage(
                 messageId,
                 messageDTO.getContent()
         );
-        return ResponseEntity.ok(updateMessages);
+
+        messagingTemplate.convertAndSend(
+                "/private/chat/"+updateMessage.getChatId(),
+                updateMessage
+        );
+        return ResponseEntity.ok(updateMessage);
     }
 
-    @DeleteMapping("/delete/{messageId}")
-    public ResponseEntity<String> deleteMessage(@PathVariable("messageId")String messageId)
+    @DeleteMapping("/delete/{messageId}/chat/{chatId}")
+    public ResponseEntity<Map<?,?>> deleteMessage(
+            @PathVariable("messageId")String messageId,
+            @PathVariable ("chatId")String chatId
+    )
     {
         this.messageService.deleteMessage(messageId);
-        return ResponseEntity.ok("Message Deleted.");
+
+
+        Map<String,String> tombstone  = Map.of(
+                "eventType","DELETED",
+                "messageId",messageId,
+                "chatId",chatId
+        );
+
+        messagingTemplate.convertAndSend(
+                "/private/chat/"+chatId,
+                tombstone
+        );
+        return ResponseEntity.ok(Map.of("messageId", messageId, "eventType", "DELETED"));
     }
 
 

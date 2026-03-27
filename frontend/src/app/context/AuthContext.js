@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
-  const [tokenValidationList, setTokenValidationList] = useState({});
 
   useEffect(() => {
     const validateAuth = async () =>{
@@ -63,22 +62,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const isTokenValid = useCallback( async () => {
-    try {
-      const data = await isTokenValidService();
 
-      setTokenValidationList(data);
-    } catch (err) {
-      console.error("Error in isTokenValid: ", err.response?.data);
-    }
-  },[]);
   const value = {
     userId,
     isLoading,
     isAuthenticated: !!userId,
-    tokenValidationList,
 
-    isTokenValid,
     login,
     logout,
     isInitialized,

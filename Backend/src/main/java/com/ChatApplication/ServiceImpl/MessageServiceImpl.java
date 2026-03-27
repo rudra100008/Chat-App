@@ -176,7 +176,7 @@ public class MessageServiceImpl implements MessageService {
         validateChatAccess(message.getChat(),loggedInUsername);
 
         if(!message.getSender().getUserId().equals(loggedInUsername.getUserId())){
-            throw new IllegalArgumentException("You can delete your own messages.");
+            throw new IllegalArgumentException("You can delete only your messages");
         }
         this.messageRepository.delete(message);
     }

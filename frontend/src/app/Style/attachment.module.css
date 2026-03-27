@@ -1,60 +1,145 @@
 /* ============================================================
-   attachment.module.css  — Dark attachment bubble
+   attachment.module.css  — Compact, type-aware attachment bubble
    ============================================================ */
 
-.AttachmentContainer {
+.bubble {
     display: flex;
-    justify-content: flex-start;
-    margin: 6px 0;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    min-width: 0;       
+    max-width: 100%;     
+    width: 100%;         
+    box-sizing: border-box;
+    transition: background 0.2s ease;
 }
 
-.AttachmentBubble {
-    background-color: #1b3a4b;
-    padding: 12px 14px;
-    border-radius: 14px;
-    color: #c8d6e5;
-    max-width: 280px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+.bubble:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Left icon block ── */
+.iconBlock {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    border: 1px solid #2a4a5c;
-}
-
-.FileInfo {
-    font-size: 0.82rem;
-    display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 8px;
-    word-break: break-word;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #2a4a5c;
-    color: #8899aa;
-}
-
-.FileInfo svg {
-    color: #4fc3f7;
+    justify-content: center;
+    gap: 2px;
     flex-shrink: 0;
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
 }
 
-.SaveButton {
-    margin: auto;
-    align-self: flex-start;
-    background-color: #4fc3f7;
-    color: #0d1b2a;
-    border: none;
-    padding: 6px 14px;
-    font-size: 0.78rem;
+.bubble:hover .iconBlock {
+    transform: scale(1.05);
+}
+
+.typeLabel {
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+/* ── File info ── */
+.fileInfo {
+    flex: 1;
+    min-width: 0;        
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;    
+}
+
+.fileName {
+    font-size: 0.82rem;
     font-weight: 600;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.15s ease;
+    color: #c8d6e5;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    max-width: 100%;     
 }
 
-.SaveButton:hover {
-    background-color: #81d4fa;
+.fileSize {
+    font-size: 0.68rem;
+    color: #4a5a70;
+    margin: 0;
+    font-weight: 400;
 }
-.SaveButton:active {
+
+/* ── Download button ── */
+.downloadBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(79, 195, 247, 0.2);
+    background: rgba(79, 195, 247, 0.08);
+    color: #4fc3f7;
+    font-size: 0.82rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.downloadBtn:hover:not(:disabled) {
+    background: #4fc3f7;
+    color: #0d1b2a;
+    border-color: #4fc3f7;
+    transform: scale(1.08);
+    box-shadow: 0 3px 12px rgba(79, 195, 247, 0.3);
+}
+
+.downloadBtn:active:not(:disabled) {
     transform: scale(0.94);
+}
+
+.downloadBtn:disabled {
+    cursor: not-allowed;
+}
+
+/* Downloading state */
+.downloading {
+    border-color: rgba(79, 195, 247, 0.4);
+    background: rgba(79, 195, 247, 0.06);
+}
+
+/* Done (checkmark) state */
+.done {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.4);
+    color: #66bb6a;
+}
+
+.doneCheck {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #66bb6a;
+}
+
+/* ── Spinner ── */
+.spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(79, 195, 247, 0.2);
+    border-top-color: #4fc3f7;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }

@@ -16,71 +16,72 @@ const useChatWebSocket = ({ userId, chatId, messages, setMessages, router }) => 
         }
     }, []);
 
-
-
     const connectWebSocket = useCallback(() => {
-        if (!userId || !chatId ) {
-            console.log("Missing params:", { userId, chatId });
-            return;
-        }
+        if (!userId || !chatId) return;
 
-        if(!isWebSocketConnected && stompClientRef.current && stompClientRef.current.active){
-            console.log("WebSocket is not ready.")
-            setError("WebSocket is  not connected.");
+        if (!isWebSocketConnected && stompClientRef.current && stompClientRef.current.active) {
+            setError("WebSocket is not connected.");
             setConnected(false);
             return;
         }
 
         try {
-            console.log("Connecting chat WebSocket for chatId:", chatId);
+            subscriptionRef.current = stompClientRef.current.subscribe(
+                `/private/chat/${chatId}`,
+                (message) => {
+                    try {
+                        const payload = JSON.parse(message.body);
 
-            subscriptionRef.current = stompClientRef.current.subscribe(`/private/chat/${chatId}`, (message) => {
-                console.log("=== CHAT MESSAGE RECEIVED ===");
-                console.log("Raw message:", message);
-                console.log("Message body:", message.body);
-                console.log("================================");
-
-                try {
-                    const receivedMessage = JSON.parse(message.body);
-                    console.log("Parsed message:", receivedMessage);
-
-                    setMessages((prevMessages) => {
-                        const index = prevMessages.findIndex(msg =>
-                            msg.messageId === receivedMessage.messageId
-                        );
-
-                        if(index !== -1){
-                            const updated = [...prevMessages];
-
-                            updated[index] ={
-                                ...updated[index],
-                                ...receivedMessage,
-                            }
-                            return updated
+                        // ── Tombstone from DELETE /api/messages/delete/{id} ──
+                        // The controller sends { messageId, chatId, eventType: "DELETED" }
+                        if (payload.eventType === "DELETED") {
+                            setMessages(prev =>
+                                prev.filter(m => m.messageId !== payload.messageId)
+                            );
+                            return;
                         }
-                        return [...prevMessages,receivedMessage]
-                    });
-                } catch (error) {
-                    console.error("Error processing received message:", error);
-                }
-            },
-                {
-                    onError: (error) => {
-                        console.log("Subscription error:", error);
-                        setError("Subscription failed")
+
+                        // ── Normal message or edit update ──
+                        // For edits, the server sends the full updated MessageDTO.
+                        // We detect an edit by checking if the messageId already exists.
+                        setMessages(prev => {
+                            const existingIndex = prev.findIndex(
+                                m => m.messageId === payload.messageId
+                            );
+
+                            if (existingIndex !== -1) {
+                                // Replace existing message (edit or read-receipt update)
+                                const updated = [...prev];
+                                updated[existingIndex] = {
+                                    ...updated[existingIndex],
+                                    ...payload,
+                                };
+                                return updated;
+                            }
+
+                            // New message — append
+                            return [...prev, payload];
+                        });
+                    } catch (err) {
+                        console.error("Error processing WebSocket message:", err);
                     }
+                },
+                {
+                    onError: (err) => {
+                        console.error("Subscription error:", err);
+                        setError("Subscription failed");
+                    },
                 }
             );
 
-            console.log("Subscribed to chat:", chatId);
             setConnected(true);
             setError('');
-        } catch (error) {
-            console.error("Error subscribing to chat:", error);
+        } catch (err) {
+            console.error("Error subscribing to chat:", err);
             setError("Failed to subscribe to chat");
             setConnected(false);
         }
-    }, [userId, chatId, setMessages, stompClientRef,isWebSocketConnected]);
+    }, [userId, chatId, setMessages, stompClientRef, isWebSocketConnected]);
 
     useEffect(() => {
         if (!chatId) {
@@ -90,12 +91,7 @@ const useChatWebSocket = ({ userId, chatId, messages, setMessages, router }) => 
         }
 
         if (chatId !== currentChatIdRef.current) {
-            console.log("ChatId changed from", currentChatIdRef.current, "to", chatId);
-
-            
             disconnectWebSocket();
-
-            
             currentChatIdRef.current = chatId;
 
             if (isWebSocketConnected && stompClientRef.current) {
@@ -106,18 +102,19 @@ const useChatWebSocket = ({ userId, chatId, messages, setMessages, router }) => 
         return () => {
             disconnectWebSocket();
         };
-    }, [chatId, connectWebSocket, disconnectWebSocket,stompClientRef,isWebSocketConnected]);
+    }, [chatId, connectWebSocket, disconnectWebSocket, stompClientRef, isWebSocketConnected]);
 
-    useEffect(()=>{
-        if(isWebSocketConnected && chatId && !connected && currentChatIdRef.current === chatId){
+    useEffect(() => {
+        if (isWebSocketConnected && chatId && !connected && currentChatIdRef.current === chatId) {
             connectWebSocket();
         }
-    },[isWebSocketConnected,connectWebSocket,chatId,connected])
+    }, [isWebSocketConnected, connectWebSocket, chatId, connected]);
+
     return {
         connected: isWebSocketConnected && !!subscriptionRef.current,
         stompClient: stompClientRef.current,
         error,
     };
-}
+};
 
 export default useChatWebSocket;
