@@ -157,7 +157,6 @@ Chat-App/
 - **Node.js 18+** and **npm**
 - **MongoDB** (local or Atlas)
 - **Cloudinary** account (for media uploads)
-- **Twilio** account (for SMS 2FA — optional)
 
 ### 1. Clone the Repository
 
@@ -176,9 +175,6 @@ cd Chat-App
 2. Create a `.env` file with your credentials:
    ```env
    CLOUDINARY_URL=cloudinary://your_api_key:your_api_secret@your_cloud_name
-   ACCOUNT_SID=your_twilio_account_sid
-   AUTH_TOKEN=your_twilio_auth_token
-   SERVICE_SID=your_twilio_service_sid
    ```
 
 3. Configure `application.properties` with your MongoDB URI and other settings.
