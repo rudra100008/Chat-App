@@ -42,9 +42,9 @@ export const WebSocketProvider = ({ children }) => {
 
 
     const client = new Client({
-        brokerURL: `wss://chat-app-c4hv.onrender.com/server`,
+        //brokerURL: `wss://chat-app-c4hv.onrender.com/server`,
 
-        //brokerURL: `ws://localhost:8080/server`,
+        brokerURL: `ws://localhost:8080/server`,
         connectHeaders: {
           Authorization : `Bearer ${token}`
         },
