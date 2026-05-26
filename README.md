@@ -31,8 +31,6 @@ A full-stack real-time chat application inspired by **WhatsApp**, built with **S
 
 ### 🔐 Authentication & Security
 - **JWT-based authentication** with HTTP-only cookie support
-- **Two-Factor Authentication (2FA)** via Twilio SMS OTP
-- **Phone number login** support
 - Token verification and refresh
 - Route protection with **PathGuard** on the frontend
 - Spring Security integration
@@ -69,7 +67,6 @@ A full-stack real-time chat application inspired by **WhatsApp**, built with **S
 | **Spring Security** | Authentication & authorization |
 | **Spring WebSocket** | Real-time communication (STOMP) |
 | **JWT (jjwt)** | Token-based auth |
-| **Twilio SDK** | SMS OTP for 2FA |
 | **Cloudinary** | Cloud file/image storage |
 | **Lombok** | Boilerplate reduction |
 | **MapStruct** | DTO ↔ Entity mapping |
@@ -157,7 +154,6 @@ Chat-App/
 - **Node.js 18+** and **npm**
 - **MongoDB** (local or Atlas)
 - **Cloudinary** account (for media uploads)
-- **Twilio** account (for SMS 2FA — optional)
 
 ### 1. Clone the Repository
 
@@ -280,7 +276,6 @@ The app uses **STOMP over SockJS** for real-time communication:
 - **Spring Security** filter chain for API protection
 - **WebSocket authentication** via custom handshake & channel interceptors
 - **Token verification** on both frontend and backend
-- **Two-Factor Authentication** with Twilio SMS OTP
 - **CORS** configuration for cross-origin requests
 
 ---
